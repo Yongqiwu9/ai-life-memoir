@@ -27,6 +27,10 @@ def get_family_member(
     return db.scalar(statement)
 
 
+def get_family_member_by_id(db: Session, *, member_id: uuid.UUID) -> FamilyMember | None:
+    return db.get(FamilyMember, member_id)
+
+
 def list_family_members(
     db: Session,
     *,

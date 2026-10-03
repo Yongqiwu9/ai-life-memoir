@@ -9,6 +9,7 @@ from app.database.base import Base
 
 if TYPE_CHECKING:
     from app.models.family import Family
+    from app.models.interview import Interview
 
 
 class FamilyMember(Base):
@@ -27,3 +28,4 @@ class FamilyMember(Base):
     )
 
     family: Mapped["Family"] = relationship(back_populates="members")
+    interviews: Mapped[list["Interview"]] = relationship(back_populates="member")
