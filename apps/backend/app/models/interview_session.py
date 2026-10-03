@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.base import Base
 
 if TYPE_CHECKING:
+    from app.models.audio_recording import AudioRecording
     from app.models.interview import Interview
     from app.models.interview_message import InterviewMessage
 
@@ -30,6 +31,7 @@ class InterviewSession(Base):
     )
 
     interview: Mapped["Interview"] = relationship(back_populates="sessions")
+    audio_recordings: Mapped[list["AudioRecording"]] = relationship(back_populates="session")
     messages: Mapped[list["InterviewMessage"]] = relationship(
         back_populates="session", cascade="all, delete-orphan"
     )

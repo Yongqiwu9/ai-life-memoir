@@ -19,6 +19,12 @@ class InterviewMessage(Base):
         ForeignKey("interview_sessions.id", ondelete="CASCADE"), index=True, nullable=False
     )
     role: Mapped[str] = mapped_column(String(32), nullable=False)
+    source: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="text", server_default="text"
+    )
+    transcript_segment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("transcript_segments.id", ondelete="SET NULL"), index=True, nullable=True
+    )
     content: Mapped[str] = mapped_column(Text, nullable=False)
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

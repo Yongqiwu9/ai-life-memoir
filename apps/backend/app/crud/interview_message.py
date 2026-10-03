@@ -11,10 +11,19 @@ def create_message(
     *,
     session_id: uuid.UUID,
     role: str,
+    source: str,
     content: str,
     sequence: int,
+    transcript_segment_id: uuid.UUID | None = None,
 ) -> InterviewMessage:
-    message = InterviewMessage(session_id=session_id, role=role, content=content, sequence=sequence)
+    message = InterviewMessage(
+        session_id=session_id,
+        role=role,
+        source=source,
+        content=content,
+        sequence=sequence,
+        transcript_segment_id=transcript_segment_id,
+    )
     db.add(message)
     db.commit()
     db.refresh(message)

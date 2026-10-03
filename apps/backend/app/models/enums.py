@@ -27,3 +27,24 @@ class MessageRole(StrEnum):
     ASSISTANT = "assistant"
     USER = "user"
     SYSTEM = "system"
+
+
+class MessageSource(StrEnum):
+    TEXT = "text"
+    AUDIO_TRANSCRIPT = "audio_transcript"
+    AI_GENERATED = "ai_generated"
+    SYSTEM = "system"
+
+
+class AudioStatus(StrEnum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class TranscriptStatus(StrEnum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"

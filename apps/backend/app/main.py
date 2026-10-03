@@ -2,7 +2,16 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api.v1 import auth, families, family_members, interviews, sessions, users
+from app.api.v1 import (
+    audios,
+    auth,
+    families,
+    family_members,
+    interviews,
+    sessions,
+    transcripts,
+    users,
+)
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
@@ -24,10 +33,12 @@ app = FastAPI(
 register_exception_handlers(app)
 
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
+app.include_router(audios.router, prefix=settings.API_V1_PREFIX)
 app.include_router(families.router, prefix=settings.API_V1_PREFIX)
 app.include_router(family_members.router, prefix=settings.API_V1_PREFIX)
 app.include_router(interviews.router, prefix=settings.API_V1_PREFIX)
 app.include_router(sessions.router, prefix=settings.API_V1_PREFIX)
+app.include_router(transcripts.router, prefix=settings.API_V1_PREFIX)
 app.include_router(users.router, prefix=settings.API_V1_PREFIX)
 
 
