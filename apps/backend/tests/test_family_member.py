@@ -60,6 +60,54 @@ def test_list_members_of_own_family(client) -> None:
     assert {item["name"] for item in listing["items"]} == {"父亲", "母亲"}
 
 
+def test_list_members_does_not_leak_other_users_members(client) -> None:
+    headers_a = _register_and_login(client, "a@example.com")
+    headers_b = _register_and_login(client, "b@example.com")
+    family_a = _create_family(client, headers_a, "Family A")
+    family_b = _create_family(client, headers_b, "Family B")
+    _create_member(client, headers_a, family_a["id"], "Member A")
+    _create_member(client, headers_b, family_b["id"], "Member B")
+
+    listing_a = client.get(f"/api/v1/families/{family_a['id']}/members", headers=headers_a).json()
+    listing_b = client.get(f"/api/v1/families/{family_b['id']}/members", headers=headers_b).json()
+
+    assert [item["name"] for item in listing_a["items"]] == ["Member A"]
+    assert [item["name"] for item in listing_b["items"]] == ["Member B"]
+    assert listing_a["total"] == 1
+    assert listing_b["total"] == 1
+
+
+def test_list_members_isolated_between_families(client) -> None:
+    headers = _register_and_login(client, "owner@example.com")
+    family_one = _create_family(client, headers, "Family One")
+    family_two = _create_family(client, headers, "Family Two")
+    _create_member(client, headers, family_one["id"], "Member One")
+    _create_member(client, headers, family_two["id"], "Member Two")
+
+    listing_one = client.get(
+        f"/api/v1/families/{family_one['id']}/members",
+        headers=headers,
+    ).json()
+    listing_two = client.get(
+        f"/api/v1/families/{family_two['id']}/members",
+        headers=headers,
+    ).json()
+
+    assert [item["name"] for item in listing_one["items"]] == ["Member One"]
+    assert [item["name"] for item in listing_two["items"]] == ["Member Two"]
+
+
+def test_list_members_of_other_users_family_returns_404(client) -> None:
+    headers_a = _register_and_login(client, "a@example.com")
+    headers_b = _register_and_login(client, "b@example.com")
+    family_b = _create_family(client, headers_b)
+    _create_member(client, headers_b, family_b["id"], "Member B")
+
+    response = client.get(f"/api/v1/families/{family_b['id']}/members", headers=headers_a)
+
+    assert response.status_code == 404
+
+
 def test_get_own_member(client) -> None:
     headers = _register_and_login(client, "owner@example.com")
     family = _create_family(client, headers)
