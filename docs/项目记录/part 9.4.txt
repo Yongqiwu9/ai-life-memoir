@@ -1,0 +1,26 @@
+我建议正式记录：
+
+Part 9.4 — Interview
+────────────────────────
+Implementation: PASS
+Security: PASS WITH FINDINGS
+Database: PASS
+Owner Isolation: PASS
+Tests: PASS
+Migration: PASS
+Git Scope: PASS
+
+Final:
+PASS WITH FINDINGS
+
+并保留两个主要技术债：
+
+M1 sequence concurrency
+M2 user deletion / cascade policy
+
+以及几个低优先级事项：
+
+L1 状态机
+L2 分页
+L3 ownership 查询优化
+L4 DB enum constraint
