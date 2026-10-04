@@ -31,10 +31,10 @@ interview_messages.transcript_segment_id
 采用：
 
 ```text
-TranscriptSegment : InterviewMessage = 1 : N
+TranscriptSegment : InterviewMessage = 0..N
 ```
 
-即：一个 TranscriptSegment 可以关联多个 InterviewMessage。
+即：一个 TranscriptSegment 可以关联零个或多个 InterviewMessage；每个 InterviewMessage 最多关联一个 TranscriptSegment，且该关联可以为空。
 
 数据库不增加：
 
