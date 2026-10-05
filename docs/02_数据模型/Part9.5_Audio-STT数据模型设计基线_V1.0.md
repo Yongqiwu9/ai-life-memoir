@@ -1,5 +1,8 @@
 # Part 9.5 — Audio/STT 数据模型设计基线 V1.0
 
+> 本文保留 Part 9.5 既有模型/API 基线，不代表录音上传或真实 STT 已完成。Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)（DESIGN FROZEN / IMPLEMENTATION NOT STARTED）。
+> C 对 Speaker 核验、Consent、Source Provenance 和正文复制删除传播的补充以该 SSOT 为准；既有 speaker 字符串不构成身份核验，SET NULL 不等于清除 Message 正文。本文不复制新增表结构，也不声明其已实施。
+
 ## 1. 关系总览
 
 ```text

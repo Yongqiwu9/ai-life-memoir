@@ -1,5 +1,8 @@
 # Database Schema Evolution_V1.0
 
+> 下文 V1–V4 及数据库原则记录既有数据库基线。Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)（DESIGN FROZEN / IMPLEMENTATION NOT STARTED）。
+> 新增实体、FK 调整、历史资料 fail closed、来源及删除传播的迁移设计以该 SSOT 为准；尚未创建或执行 C 的 Migration。既有 CASCADE 声明不能代替冻结的生命周期政策。
+
 ## V1 基础模型
 
 User

@@ -1,5 +1,9 @@
 # AI人生回忆录平台 — 系统架构总览 V1.1
 
+> Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)。
+> 当前状态：9.5.5-B Completed；9.5.5-C DESIGN FROZEN / IMPLEMENTATION NOT STARTED；9.5.5-C1 Next；9.6 Planned。阶段来源为 [README](../../README.md) 和 [路线图](../05_开发阶段记录/Part开发路线图_V2.0.md)。
+> 下文保留 Part 9.5 / 9.5.5-A 架构快照，包括当时的阶段、ADR 状态及未决项；已在 C 冻结的权限、身份、Consent、来源、修订和删除决策以该 SSOT 及更新后的 ADR 为准。ADR-004/005/006 已 Accepted，但 FamilyMembership、Consent、Deletion Pipeline、Sanitization 均尚未实现。
+
 ## 1. 平台目标
 
 将用户口述、录音、访谈内容整理为结构化 Memory，并进一步生成可编辑的人生回忆录（Memoir）。

@@ -4,7 +4,7 @@
 
 Proposed
 
-架构约束与已确认本人授权原则记录在 Decision Constraints。Provider 选择、数据处理政策及具体集成协议尚未冻结。
+架构约束与本人授权原则继续适用。Part 9.5.5-C 已冻结第三方副本 Registry、当前 Consent / epoch 校验、迟到结果门禁、清除待完成与证据合同，见 [Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)。Provider 选择、实际数据处理条件及具体集成/证据协议仍未冻结，ADR 保持 Proposed；真实集成尚未实现。
 
 ## Context
 
@@ -37,7 +37,7 @@ LLM / STT Provider
 
 业务数据仍遵守 `Client → Backend API → Database`。Backend 校验用户/Family 访问权限、相应用途的讲述者授权及业务状态，向 AI Service 发起允许的处理；AI Service 调用 Provider。结果返回受控业务入口，由 Backend Service 校验并通过 CRUD 写入数据库。
 
-客户端不得直接调用 LLM / STT Provider，Provider 不得直接写 Backend Database。未来 Provider 如需异步回调，其接收方、身份验证、任务关联和结果校验协议仍待设计；回调不构成直连数据库或绕过 Backend 权限的理由。
+客户端不得直接调用 LLM / STT Provider，Provider 不得直接写 Backend Database。C 已冻结 worker / callback 写入前重新检查身份、任务、Source epoch 和当前用途授权，迟到结果不得重新发布已受限或删除内容；具体服务间认证和 Provider 回调协议仍待设计。
 
 在选择 Provider 和集成方案前，列明实际发送内容、用途、处理结果、可见的元数据及删除传播能力。需要产品和架构负责人明确保存、训练使用、地域、加密、日志/脱敏和备份规则；本轮只记录边界及问题，不指定厂商或固定政策。
 
@@ -47,7 +47,7 @@ LLM / STT Provider
 - Backend 负责业务数据、权限及事务；AI Service 负责提取/生成等 AI 能力。权限判断不能交给 Provider，也不能信任客户端提交的 `user_id` 或处理完成状态。
 - 实际讲述者需要同意录音、转写、AI 分析与 Family 共享。Owner 不能代替具有自主决定能力的成年讲述者同意。
 - 有效撤回后，未来针对本人内容的相应处理和共享必须停止。有效本人删除请求不能被 Owner 否决；正常产品路径需要立即移除已删除内容。
-- 外部留存、训练使用、地域、加密方案、日志政策、删除传播和备份最终清除周期均未确定。本轮不得把 OpenAI、DeepSeek 或其他 Provider 作为最终产品选择。
+- C 的删除传播、最小化 Ledger 和备份恢复隔离合同已冻结，但生产期限、外部留存、训练使用、地域、加密及日志政策尚待 Provider 能力确认。本轮不得把 OpenAI、DeepSeek 或其他 Provider 作为最终产品选择。
 - Part 9.5 只完成 Audio/STT 数据模型/API 范围，不代表上传、存储、STT Provider 或 AI Pipeline 已完成。
 
 ## Consequences
@@ -74,7 +74,7 @@ LLM / STT Provider
 
 本轮没有选择 Provider、修改配置、实现 AI Service、添加第三方 SDK 或创建数据库迁移。当前 `Transcript.provider/model` 元数据保持原状。
 
-未来可能需要记录处理任务、Provider 请求与删除传播证据，以及与来源和 Consent 的关联；具体结构取决于选定协议与政策，需另行设计并通过 Alembic 落地，不在本轮冻结。
+C 已冻结 SourceArtifact 的 provider_copy 等目标类型、DeletionTarget / Ledger / Outbox 及 Source / Consent 关联的通用结构，迁移计划见 C SSOT；实际 Provider adapter、请求字段及 evidence protocol 仍需按选定能力实现，不能把通用模型存在当作第三方删除完成。
 
 ## Open Questions
 
@@ -84,9 +84,8 @@ LLM / STT Provider
 - 处理区域、跨区域副本、访问主体和部署地域由谁确认，有哪些产品要求？
 - 传输与存储加密、密钥管理、服务间认证和异步回调验证采用什么方案？
 - Backend / AI Service / Provider 的日志与错误报告允许含哪些内容，如何脱敏，权限与保留期是什么？
-- Consent 是否需要就外部处理方式补充说明或重新取得本人同意，授权范围如何关联任务？
-- 撤回时如何取消队列或运行中的调用，Provider 已接收内容和迟到结果如何处理？
-- 本人或 Owner 的有效删除如何传播至 Provider 及其他副本，如何取得删除证据，失败或不支持删除时如何处理？
+- 实际 Provider 处理条件是否导致 PrivacyPolicyVersion 更新及本人重新授权，告知文本如何呈现？任务必须按已冻结 Consent / Source 绑定合同校验。
+- Provider adapter 如何取消调用、接收迟到结果并取得可验证清除证据？C 已冻结受限结果不得发布、未取得证据保持 pending/retry、不得虚报完成的规则，实际能力尚待验证。
 - Object Storage、业务存储及第三方备份最终清除周期如何确定？不得在本轮推定固定天数。
 
 ## Related Documents
@@ -116,3 +115,4 @@ LLM / STT Provider
 | 日期 | 修订 |
 | --- | --- |
 | 2026-10-05 | Part 9.5.5-A：记录第三方处理架构与授权边界；Provider 和具体数据处理政策保持 Proposed，未接入实际服务。 |
+| 2026-10-05 | Part 9.5.5-C：引用来源、授权门禁、第三方清理及证据合同；Provider 选型、生产条件与 adapter 协议仍 Proposed，未接入实际服务。 |

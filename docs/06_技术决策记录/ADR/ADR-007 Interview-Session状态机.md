@@ -6,6 +6,8 @@ Proposed
 
 本 ADR 记录实现与目标文档的冲突。目标枚举、转换条件和迁移策略尚未获产品负责人确认，不因本次文档整理成为 Accepted。
 
+Part 9.5.5-C 已冻结权限/Consent/删除门禁、迟到任务行为及 Message / Segment 序号的父记录锁与 UNIQUE 方案，见 [Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)，实现尚未开始。下文保留 9.5.5-A 的生命周期议题快照；上述已解决子项以 C SSOT 为准。Interview / Session 的具体目标状态、转换、完成条件和历史状态映射仍独立未决，本 ADR 保持 Proposed。
+
 ## Context
 
 Part 9.6 Memory Extraction 将消费 InterviewSession 的 Message 流，需要清楚区分访谈进行状态、音频处理状态以及内容是否可处理。[Interview 生命周期设计](../../03_业务流程/Interview生命周期状态机设计_V1.0.md)提出的状态与 Part 9.4–9.5 代码不一致；真实上传、Object Storage、STT Provider 和 AI Pipeline 尚未实现。

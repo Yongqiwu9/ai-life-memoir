@@ -4,7 +4,7 @@
 
 Proposed
 
-人工审查与来源保留作为本轮任务边界记录在 Decision Constraints。确认权限、编辑审批、版本策略及具体状态/数据结构尚未冻结。
+Part 9.5.5-C 已冻结 Owner 最终确认、协作者逐版本审批、当前 Consent 门禁、来源恢复后重新审批的边界，见 [Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)。MemoryCandidate / Memory 的完整业务数据结构、提取与审查流程仍属于 Part 9.6，ADR 保持 Proposed。设计合同尚未实现。
 
 ## Context
 
@@ -45,14 +45,14 @@ Candidate 应能追踪到所用 Message，存在音频来源时继续回链 Segm
 
 提取模型、提示词/提取版本、源内容范围及人工修改的记录方式属于待设计的可追溯能力。AI 重跑是否新建版本、如何与人工修订合并、是否保留旧候选，尚未决定；不得默认为覆盖已确认 Memory。
 
-人工作出确认后才进入 Memory。后续 Memoir / RAG 对 Candidate 与 Memory 的使用应与已有 Memory 生成链路边界一致；具体确认者和发布规则需要先解决 Open Questions。
+Owner 最终批准 Candidate 后才进入正式 Memory；Speaker 和 Collaborator 可以提交纠错或修订意见。历史来源恢复后需重新核验，必要时重生成衍生物，正式 Memory 必须重新经过 Owner 审批；旧审批不能绕过当前 Consent。后续 Memoir / RAG 的完整业务流程仍在 Part 9.6+ 设计范围。
 
 ## Decision Constraints
 
 - 本轮任务要求 AI 生成的是 Candidate，不能绕过 Human Review 直接作为最终人生事实或已确认 Memory。
 - 必须保留来源追踪，使整理结果可以查看原文；有音频来源时，应支持沿分段关系定位原音。
 - 已确认一个 Interview 只有一个主要 subject，可以有多个 speaker / participant；不能把 FamilyMember、登录 User 或 `role=user` 当作同一个真实讲述者身份。
-- 已确认协作者提出的编辑需要 Owner 同意，但“逐次审批”与“持续编辑权限”尚未决定；不能据此推定 Owner 唯一拥有 Candidate 确认权。
+- 已冻结协作者对已有内容每次提交不可变的新版本，Owner 逐版本审批后生效；Owner 最终批准 Candidate 成为正式 Memory，Speaker / Collaborator 可提交纠错。审批不覆盖原文，不代替本人 Consent 或删除权。
 - 已确认实际讲述者须同意 AI 分析和 Family 共享，并可以有效撤回/删除本人来源及可识别派生内容。确认后的 Memory 不因此免于这些约束，Owner 不得否决本人有效删除请求。
 - 产品要求尽量保留讲述者情感态度、风格和原意，不无端虚构补充情节，并保存原文供后续人工修订。当前没有实现或验证该生成能力。
 
@@ -78,20 +78,18 @@ Candidate 应能追踪到所用 Message，存在音频来源时继续回链 Segm
 
 ## Migration Impact
 
-本轮没有创建 MemoryCandidate / Memory 模型、Schema、Service、API 或 Alembic 迁移。未来实施需设计候选与 Memory 的关联、来源与讲述者追踪、审查和版本记录；结构取决于确认权限及重跑规则，不能在本轮冻结。
+本轮没有创建 MemoryCandidate / Memory 模型、Schema、Service、API 或 Alembic 迁移。C 已冻结通用 SourceArtifact / DerivedSource / ArtifactContribution、RevisionProposal 和恢复后审批合同，供 Part 9.6+ 接入；Candidate / Memory 的完整业务字段、提取与重跑规则仍需在 Part 9.6 设计。
 
 已有 Message 不能自动迁移为“已确认 Memory”；缺少讲述者和授权证据的历史来源也不能自动认定可用于 AI 提取。序号并发风险需要在提取依赖确定输入顺序前单独处理。
 
 ## Open Questions
 
-- 谁能确认 Candidate：Owner 是否唯一确认者，Collaborator 是否可确认，subject / speaker 是否有确认权，未登录的本人如何参与？
-- 多个讲述者对同一候选有不同意见时，如何保存不同版本或不确定叙述，谁决定候选结果？
-- 修改 Candidate 后是否需要重新审批，谁可以编辑；与协作者逐次审批或持续编辑权限如何衔接？
+- 多个讲述者对同一候选有不同意见时，审查界面如何保存和展示不同版本或不确定叙述？Owner 的最终批准权已冻结，不能代替事实核验。
 - AI 重跑采用新版本、覆盖还是合并策略？如何保护人工修订和已确认 Memory，并处理重复候选？
 - Human Review 的必填内容、允许的退回/拒绝/再编辑操作及完整状态转换有哪些？
 - 一次提取使用哪些来源、提取范围与消息顺序如何界定，提取失败/重试如何避免重复写入？
-- 来源撤回/删除后，混合多人来源 Candidate / Memory 如何拆分或重生成，结果是否须重新确认？
-- 来源引用、原文、AI 输出和人工版本各保留多久，在本人删除与备份清除要求下如何保持可追踪且不继续暴露已删内容？
+- 混合多人来源 Candidate / Memory 的可靠拆分或重生成算法与验收如何落地？C 已冻结隔离、净化失败删除、当前授权门禁及正式 Memory 重新审批，算法尚未实现。
+- 生产 Policy 的实际保留期限与 Provider / Storage / Backup 能力待单独确认；最小化 Ledger 与来源删除传播合同已在 C 冻结。
 
 ## Related Documents
 
@@ -121,3 +119,4 @@ Candidate 应能追踪到所用 Message，存在音频来源时继续回链 Segm
 | 日期 | 修订 |
 | --- | --- |
 | 2026-10-05 | Part 9.5.5-A：记录候选提取、人工审查和来源边界；确认权限、版本与完整流程保持 Proposed，未实现 Memory 功能。 |
+| 2026-10-05 | Part 9.5.5-C：引用已冻结的 Owner 确认、逐版本审批与来源恢复合同；Part 9.6 业务结构/流程仍 Proposed，未实现 Memory 功能。 |

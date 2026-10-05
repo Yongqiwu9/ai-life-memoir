@@ -58,9 +58,9 @@ Extraction → Memory → Memoir
 -   InterviewSession
 -   InterviewMessage
 
-实现：
+已建立的数据关系：
 
-User ↓ Family ↓ Member ↓ Interview ↓ Session ↓ Message
+User → Family → FamilyMember → Interview → InterviewSession → InterviewMessage
 
 ### Part 9.5 Audio/STT
 
@@ -74,9 +74,11 @@ e30f043 feat: implement audio and stt data infrastructure
 -   Transcript
 -   TranscriptSegment
 
-实现：
+已建立的数据关系：
 
-Audio ↓ STT ↓ Transcript ↓ Segment ↓ Message
+AudioRecording → Transcript → TranscriptSegment → InterviewMessage
+
+说明：这是 Audio/STT 元数据与来源关系，不代表已实现 Audio upload、真实 STT Provider 或自动转写 Pipeline。
 
 ### Part 9.5.5-A Memory 前置产品决策与 ADR 冻结
 
@@ -124,19 +126,39 @@ Completed，2026-10-05 本地 PostgreSQL 与真实远程 GitHub Actions 验证�
 -   PostgreSQL integration tests: PASS（2 passed / 0 failed / 0 skipped / 94 deselected）
 -   GitHub Actions: Backend CI；[run 37283732708](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37283732708)，对应上述 implementation commit，master，completed / success
 -   Remote CI execution verified: YES；Remote CI result: PASS。Python 3.12 / PostgreSQL 16 的远程流程包含 Ruff/format、fast tests、fresh upgrade、current/check、integration 及测试后的 current/check，均成功
--   Next: Part 9.5.5-C — Family Collaboration + Participant + Consent（Planned，尚未开始）
+-   历史交接记录：验收完成时下一项为 Part 9.5.5-C；其后已完成设计冻结，当前状态见下节
 -   Part 9.5 Audio/STT 仍仅为 data/API infrastructure；真实 Audio upload、STT Provider 与生产 STT pipeline 尚未完成
+
+### Part 9.5.5-C Family Collaboration + Participant + Consent Design Freeze
+
+状态：
+
+Design Frozen / Implementation Not Started。
+
+已完成：
+
+-   冻结 Family Collaboration、Participant、Consent、Source Provenance、Revision、Deletion、Sanitization 与 Privacy Policy 的实施设计
+-   明确统一 User 身份体系、本人授权、用途隔离、历史恢复、删除传播、净化验收与 fail-safe 边界
+-   形成后续 C1–C8 实施的单一设计依据：[Part 9.5.5-C Final Implementation Design Freeze](<../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>)
+-   ADR-001、003、004、005、006 为 Accepted；ADR-002、007 为 Proposed；ADR-008、009 仍为 Proposed，其中部分合同已冻结
+
+实施边界：
+
+-   本阶段完成的是设计封板，尚未实现 Model、Migration、Schema、Service/API、权限切换或测试
+-   当前生产代码仍执行 Owner-only isolation
+-   Next：C1；后续 C1–C8 依据 SSOT 实施
+-   Part 9.6 Memory Extraction 保持 Planned，尚未开始
 
 未完成：
 
--   Family Collaboration、Participant、Consent
--   状态机收敛、Message / Segment sequence 并发修复
+-   Family Collaboration、Participant、Consent 的 C1–C8 实施
+-   已冻结隐私状态机的代码落地、Message / Segment sequence 并发修复
 -   MemoryCandidate、Memory Extraction
 -   真实 Audio upload、STT Provider、AI Pipeline
 
 下一阶段：
 
-Part 9.5.5-C Family Collaboration + Participant + Consent
+Part 9.5.5-C1，依据 Design Freeze SSOT 开始实施。
 
 ------------------------------------------------------------------------
 
@@ -152,8 +174,8 @@ Part 9.5.5-C Family Collaboration + Participant + Consent
 
 当前周期：
 
-Part 9.5.5-B — Completed。Local validation: PASS；Remote CI: VERIFIED / PASS。
+Part 9.5.5-C — Design Frozen / Implementation Not Started。Part 9.5.5-B 的 Local validation: PASS、Remote CI: VERIFIED / PASS 作为历史验收记录保留。
 
 下一阶段：
 
-Part 9.5.5-C Family Collaboration + Participant + Consent
+Part 9.5.5-C1。后续 C1–C8 依据 Design Freeze SSOT 实施；Part 9.6 保持 Planned。

@@ -42,7 +42,9 @@ Owner 删除整个 Family Archive 与 Speaker 对本人来源及可识别派生�
 
 未来删除流程需要以 Family 为范围识别其归属数据，并覆盖实际部署后使用的媒体存储、派生数据与正在执行的处理任务。删除请求完成产品访问限制后，相关内容不得继续通过正常产品路径访问或继续处理。
 
-本 ADR 不选择软删除、硬删除、清理任务结构或物理清除时点；这些实现方案必须在未决问题明确后另行评审。Family 删除也不自动确定 User Account 删除、Ownership Transfer 或 Speaker 删除的完整处理策略。
+Part 9.5.5-C 已冻结逻辑隔离、在线清除、衍生物清除、第三方清除、备份淘汰及声明范围清除完成的独立 Deletion Pipeline 合同，以及来源追踪、最小化 Deletion Ledger 和净化上限规则。详细结构与状态机仅保存在 [Part 9.5.5-C Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 第 3、6、7、9、10 部分；本 ADR 不重复表结构。
+
+DESIGN FROZEN != FEATURE IMPLEMENTED：上述流程尚未实现。生产 retention 值及 Storage / Backup / Provider 能力仍待确认；Family 删除不自动决定 User Account 删除或 Ownership Transfer，ADR-002 继续 Proposed。
 
 ## Decision Constraints
 
@@ -50,7 +52,7 @@ Owner 删除整个 Family Archive 与 Speaker 对本人来源及可识别派生�
 2. Speaker 对本人数据的有效撤回/删除请求不得等待 Owner 许可，也不得被 Owner 否决。
 3. 多人来源的派生内容需要识别来源并处理受影响部分；具体拆分/重新生成算法未实现，不能把全部混合内容直接归为 Owner 数据。
 4. 备份最终清除周期、不可逆物理清除时间、法定留存要求尚未确定；不得在此写死任何天数或期限。
-5. Accepted 仅冻结已确认的产品边界。当前数据库的 CASCADE 声明不是所有生命周期的最终政策，也不是未来数据库迁移方案的批准。
+5. Accepted 冻结已确认的产品边界及 C 的设计合同，不表示 Migration 已执行或清除已验收；当前 CASCADE 声明不能代替该生命周期合同。
 
 ## Consequences
 
@@ -68,24 +70,22 @@ Owner 删除整个 Family Archive 与 Speaker 对本人来源及可识别派生�
 
 ## Security & Privacy Impact
 
-未来 Backend 处理 Owner 的整体删除请求时必须校验请求者确为该 Family 的 Owner，不能信任客户端提交的 `owner_id`。Collaborator 身份不自动授予整体删除权；其是否可以提出删除申请或获得其他操作授权，仍需结合 ADR-004 的最终权限模型确认。
+未来 Backend 处理 Owner 的整体删除请求时必须校验请求者确为该 Family 的 Owner，不能信任客户端提交的 `owner_id`。Collaborator 无整体 Family 删除权；作为经过核验的 Speaker，可独立请求删除本人来源及受影响衍生物，无须 Owner 批准。完整矩阵见 C SSOT 与 ADR-004/006。
 
 撤回后隐藏历史内容与永久删除是不同处理阶段。产品访问移除需要覆盖普通读取及派生内容读取；备份、第三方副本和物理清除的限制必须如实说明，不能把访问隐藏描述为已经完成物理清除。
 
 ## Migration Impact
 
-本轮仅新增 ADR，不修改代码、数据库结构或数据，不创建或执行 Alembic migration。
+本次同步仅归档设计和更新 ADR，不修改代码、数据库结构或数据，不创建或执行 Alembic migration。
 
-后续实施前需只读核对现有数据归属、外键和 ORM 删除行为，再决定需要调整的迁移与删除服务。未来 Membership、Consent、Participant、Memory 等数据加入时，必须同时审查它们的生命周期，不能直接复制现有 CASCADE 作为产品结论。
+后续实施按 C SSOT 的迁移顺序核对数据归属、外键及 ORM 删除行为，并落实 Registry、隔离及独立清理服务。Membership、Consent、Participant 及未来 Memory 均需纳入生命周期，不能直接复制现有 CASCADE 作为产品结论。
 
 ## Open Questions
 
-- 正常访问移除与物理清理分别如何实现，如何跟踪失败和重复请求？
-- 备份最终清除周期、不可逆物理清除时点以及是否存在需适用的法定留存要求是什么？
-- 整体删除前如何展示范围、确认请求并通知受影响协作者？
-- 正在执行的 STT / AI 作业、缓存、未来媒体和第三方副本如何停止及清理？
-- 删除审计保留哪些最小信息、谁可访问、保留多久？
-- Family 删除、Speaker 删除与 User Account 删除同时发生时，如何协调执行和完成状态？
+- 生产 Policy 的具体清除与保留期限，需在 Storage / Backup / Provider 能力验证后单独冻结；不得自行填入默认天数。
+- 整体删除前的范围展示与受影响协作者通知界面仍需落实，不能阻止有效请求进入隔离与删除流程。
+- 实际媒体、Provider、缓存和备份的 cleanup adapter / evidence protocol 及能力验证尚未完成；冻结合同不能替代执行证据。
+- User Account 删除、Owner 转移及任何法定留存例外仍不在 C 的冻结范围；按 ADR-002 独立处理，不得由实现自行推定。
 
 ## Related Documents
 
@@ -108,3 +108,4 @@ Owner 删除整个 Family Archive 与 Speaker 对本人来源及可识别派生�
 | 日期 | 版本 | 变更 |
 | --- | --- | --- |
 | 2026-10-05 | V1.0 | Part 9.5.5-A；将已确认的 Owner 整体删除权限记录为 Accepted，保留具体删除和留存机制的未决项。 |
+| 2026-10-05 | V1.1 | 引用 Part 9.5.5-C 冻结删除合同；移除已解决的机制未决项，保留生产能力/期限与独立账号政策；未实施删除功能。 |

@@ -2,99 +2,85 @@
 
 ## Status
 
-Proposed
+Accepted
 
-一个 Interview 有一个主要回忆对象、可以有多个讲述者的产品原则已确认。参与者最小基数、身份映射、来源归属和实际模型结构尚未冻结。
+Implementation: Not Started
+
+本 ADR 摘要记录 Part 9.5.5-C 已冻结的统一 User 主体、InterviewParticipant、本人核验和来源讲述者边界。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
 ## Context
 
-“回忆我自己”需要知道登录用户对应哪位档案人物；代为讲述亲人的经历时，故事对象与实际讲述者又可能不同。多人补充同一人物的回忆，还需要将每份来源归属到实际讲述者，才能判断本人授权、撤回、删除和派生 Memory 的来源。
-
-不能根据 Interview 的 FamilyMember 或 API 调用者就推定全部原话由该人物或该账号本人讲述，也不能用 STT 的字符串 speaker 标签代替经确认的人的身份。
+“回忆我自己”、代述亲人经历和多人补充同一人物的回忆，都需要区分登录主体、档案人物、访谈参与者、操作人和实际讲述者。只有明确的本人身份与来源归属，才能正确执行 Consent、撤回、删除、修订和派生内容门禁。
 
 ## Current Implementation
 
-- `User` 是 JWT 认证的登录账号；没有“本人 FamilyMember”关联。
+- `User` 是当前 JWT 认证账号；email 和 password_hash 非空，尚不支持 rights_only 主体、UserContact 或即时本人验证。
 - `FamilyMember` 是归属于 Family 的档案人物，当前字段不包含 User、Membership 或 Participant 身份关系。
 - `Interview.family_member_id` 为非空外键，一个 Interview 当前关联一个 FamilyMember；这是回忆对象关系，没有独立 Participant 集合。
 - Session 只关联 Interview。Message 只关联 Session，并具有 `role`、`source` 和可空的 `transcript_segment_id`；没有实际讲述者字段。
 - Message 的 `role=user` 表示消息角色，不能确定是哪位人类讲述。客户端文本输入仅允许 `user/text`；服务端可从 Segment 创建 `user/audio_transcript` 消息。
-- `TranscriptSegment.speaker` 是可空的普通字符串，创建 Schema 接受该标签。它不是 User 或 Participant 外键，也不是经过验证的授权主体。
-- 当前没有 FamilyMembership、InterviewParticipant、讲述者身份核验、Consent 或多人来源 Memory 实现。
+- `TranscriptSegment.speaker` 是可空字符串，不是 User、Participant 或经确认的授权主体。
+- 当前没有 FamilyMembership、InterviewParticipant、本人资格核验、SourceSpeakerBinding、Consent 或多人来源 Memory 实现。
 
-## Proposed Decision
+## Decision
 
-### Target Design
+### 统一主体与档案人物
 
-继续保持一个 Interview 对应一个主要回忆对象，同时独立表达实际参与讲述的人。概念边界如下：
+- 现有 `User.id` 是唯一认证主体，不新增平行 SpeakerIdentity。User 支持 account、rights_only、system 三种能力类型。
+- UserContact 是 User 的手机或邮箱验证渠道，不是另一个身份。rights_only 会话只提供本人 Consent、撤回、恢复和删除能力，不获得普通 Family 浏览或协作权限。
+- FamilyMember 继续表示档案人物和 Interview 的单一主要 subject，不是认证主体、Membership 或 Speaker。
+- User 与 FamilyMember 的本人关系只能显式确认并审计；不得按姓名、邮箱、STT 标签、Owner 身份或当前调用者自动合并或推断。
 
-| 概念 | 含义 | 是否已实现 |
-| --- | --- | --- |
-| User | 登录账号，JWT 身份主体 | 已实现 |
-| Family | 家庭档案归属范围，当前由 Owner 持有 | 已实现 |
-| FamilyMember | 回忆档案中的人物，可作为 Interview 的主要回忆对象 | 已实现 |
-| FamilyMembership | User 与 Family 的访问关系 | 目标概念，未实现 |
-| Interview subject | Interview 的主要回忆对象；当前由 `family_member_id` 表达 | 单一对象关系已实现 |
-| Interview participant / speaker | 实际参与或讲述的人；实际讲述者的来源与 Consent 需可识别 | 目标概念，未实现 |
+### Participant 与来源 Speaker
 
-一个 Interview 可以包含多个实际讲述者。最终采用 `0..N` 还是 `1..N` 的参与者最小基数尚未决定，也可能需要分别讨论草稿创建阶段与实际采集阶段。本 ADR 不冻结该基数。
+- InterviewParticipant 表达某个 User 参与某次 Interview 的关系；草稿 Interview 可以有零个 Participant，实际采集前必须至少有一位已确认 Speaker，多人来源必须覆盖全部实际 Speaker。
+- Participant 可以显式关联 FamilyMember，用于表达 subject 与 speaker 是同一人；该关联不授予 Family 访问权。
+- SourceSpeakerBinding 将具体 Source 与实际 Participant 绑定。Speaker 身份须本人确认；未知、冲突或 disputed 归属保持隔离，不能发布或进入 AI 输入。
+- operator、speaker、consenter 分别记录：operator 是执行操作的 User，speaker 是 SourceSpeakerBinding 对应 Participant/User，consenter 是 ConsentEvent 中亲自授权的 User。三者可以是同一人，但不能相互推导。
+- Owner 或 Collaborator 可以协助或发起他人录音，不能代替具有自主决定能力的成年 Speaker 确认身份、来源归属或授权。
 
-参与者与 User、FamilyMember、Membership 之间是否关联、如何关联及有无账号的讲述者如何表示，需要后续决定。这里的概念区分不要求每种概念立即建成一张表，也不批准具体数据库结构。
+### V1 本人资格
 
-### Product Decision
-
-默认入口为“回忆我自己”，仍使用 Family / FamilyMember / Interview 统一模型，不另建独立个人档案系统。也支持实际讲述者讲述其他人的经历，以及多人讲述同一 subject。
-
-## Decision Constraints
-
-1. 一个 Interview 只有一个主要 subject；可以有多个实际 speaker / participant。
-2. FamilyMember 不能直接等同于登录 User、Family Collaborator 或实际 Speaker。
-3. Subject 与 Speaker 可以是同一个人，也可以不同；“回忆我自己”需要明确身份映射，不能根据姓名自动认定。
-4. FamilyMembership 表达访问关系，Participant/Speaker 表达参与或讲述关系；成为讲述者不自动成为 Collaborator，成为 Collaborator 不自动成为某段来源的讲述者。
-5. 实际讲述者须本人同意录音、转写、AI 分析和 Family 共享；Owner 不能代替具有自主决定能力的成年讲述者同意。
-6. 本人有效撤回/删除请求需要定位本人来源及可识别派生内容。多人来源 Memory 的拆分/重生成算法未实现。
-7. `role=user`、客户端传入的身份或 STT speaker 标签不能单独作为本人身份及 Consent 已成立的证据。
-8. 保留来源原文以供追溯和人工修订；讲述者身份不可因 AI 生成或整理而被无依据地替换。
+- V1 只支持能自主决定的成年人。
+- 本人确认要求即时手机或邮箱验证、成年自主决定声明、Participant 与本人 Source 归属确认。
+- 渠道冲突不自动合并 User；冲突未解决前保持受限。现有邮箱不得回填为 verified，也不能仅凭旧邮箱加密码登录建立有效 Consent。
+- Membership 被撤销不影响 Speaker 的 rights_only 本人权利入口。
 
 ## Consequences
 
 ### Positive
 
-- 同一领域模型支持本人回忆、他人代述和多人补充，不需要复制一套个人档案模块。
-- 回忆对象与原话讲述者分开，便于保留叙述者的情感、态度和来源。
-- 后续 Consent、删除与 Memory 审核可以依据实际来源判断，而非误用 Owner 或 subject 身份。
+- 一个统一 User 主体覆盖账号用户与无注册 Speaker，避免第二套身份体系和跨 Interview 身份漂移。
+- FamilyMember、Participant、Speaker 归属和协作访问各自承担单一职责。
+- 代录与本人授权可以同时表达，operator 不会被误认为 speaker 或 consenter。
 
-### Negative / Trade-offs
+### Trade-offs
 
-- 需要处理无账号讲述者、账号与人物映射及匿名 STT 标签的身份确认；当前模型没有这些能力。
-- 历史 Message / Segment 缺少可验证的讲述者归属，不能无依据地回填为 Owner 或 subject。
-- 多人同段、重叠发言、后续身份更正会增加来源记录和派生内容重算的复杂度。
+- 现有 User 凭据模型需要扩展，普通账号 token 与 rights_only token 必须严格隔离能力。
+- 每份原始来源和派生贡献都需要稳定的 Participant / Speaker 归属；未知历史数据不能自动开放。
+- 多 Speaker、重叠发言和后续纠错需要 Provenance 与来源贡献图支持，不能只依赖 Segment 的字符串标签。
 
 ## Security & Privacy Impact
 
-实际讲述者的身份和 Family 访问权限必须分别校验。知道某人的名字或成为采访参与者，不能据此访问该 Family 全部档案。讲述者的 Consent 也不能代替 Family 对调用者的访问许可。
+Family 访问、Participant 身份和 Speaker 本人权利分别校验。知道某人的姓名、成为采访参与者或控制一个协作账号，都不能据此读取该 Family 全部档案或代替本人授权。
 
-未来来源处理需避免把未经确认的 STT 标签当作本人授权依据。对身份未知、身份冲突或缺少同意记录的历史资料如何处理必须先决定，不能默认具有授权或默认是 Owner 的贡献。
+认证上下文必须决定实际 User 和能力范围。客户端传入的 User ID、Participant ID、role、STT speaker 标签或 operator 身份，均不能单独建立 verified Speaker 或有效 Consent。
 
 ## Migration Impact
 
-本轮不创建 Participant Model，不修改 `family_member_id`、Message、Segment、Schema、Service 或 API，不创建和执行 migration。
+本 ADR 更新仅归档设计，不创建 Model、Schema、Service、API 或 Alembic revision。后续实现按 SSOT 追加迁移：条件放宽现有 User 凭据字段，新增 UserContact / AuthChallenge / Participant / SourceSpeakerBinding，并将现有来源接入 Provenance 图。
 
-未来落地需要单独确定身份关系与来源关联方式，并审查现有 Interview、Message、Segment 的回填条件。没有证据的历史讲述者信息应作为未决数据处理问题，不得自动推定和迁移。
+历史 User 仅回填为 account；旧邮箱标记 legacy_unverified。不得把 Owner 回填为 Speaker，不得按 FamilyMember 姓名或 STT 标签创建 Participant / Speaker 归属。历史来源没有可核验身份和 Consent 时，Owner 也只能看到必要状态。
 
-## Open Questions
+## Future Boundaries
 
-- Participant 的最小基数是 `0..N` 还是 `1..N`？草稿创建与真实采集是否采用不同要求？
-- 无账号讲述者如何表示、验证身份和本人同意？Participant 是否必须或可选关联 User / FamilyMember？
-- “回忆我自己”如何建立或确认 User 与 FamilyMember 的本人映射？如何防止重复人物和误认？
-- Participant 与 Speaker 是否需要进一步区分采访者、陪同者和实际发言者？
-- Message、Audio、Transcript、Segment 各自如何表达来源归属？多人同段或重叠发言如何处理？
-- STT speaker 标签如何与经确认的实际讲述者关联，谁可以更正该关联？
-- 缺少讲述者身份和 Consent 的历史数据能否进入 Part 9.6 提取，补充核验方式是什么？
-- Subject 与 Speaker 是否拥有 Candidate 确认或纠错权限？与 Family Collaborator 权限如何配合？
+- V1 不开放 User hard delete、共享联系渠道自动合并、失联身份恢复或代理授权。
+- User Account 删除、Owner 转移与身份匿名化继续由 ADR-002 单独决定。
+- 实际音频剪切、STT Speaker Identification 和 AI 生成不因本 ADR Accepted 而视为完成。
 
 ## Related Documents
 
+- [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)
 - [系统架构总览](../../01_架构设计/AI人生回忆录平台_系统架构总览_V1.1.md)
 - [Audio/STT 数据模型设计基线](../../02_数据模型/Part9.5_Audio-STT数据模型设计基线_V1.0.md)
 - [Message 事件模型设计](../../03_业务流程/Message事件模型设计_V1.0.md)
@@ -115,4 +101,5 @@ Proposed
 
 | 日期 | 版本 | 变更 |
 | --- | --- | --- |
-| 2026-10-05 | V1.0 | Part 9.5.5-A；区分账号、档案人物、访问关系和实际讲述者，记录已确认产品约束，保留基数与来源身份结构的未决项。 |
+| 2026-10-05 | V1.0 | Part 9.5.5-A；区分账号、档案人物、访问关系和实际讲述者。 |
+| 2026-10-05 | V1.1 | Part 9.5.5-C Design Freeze；冻结统一 User、Participant、本人核验及 operator/speaker/consenter 边界；Implementation Not Started。 |

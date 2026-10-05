@@ -71,6 +71,12 @@ Message B: "后来去了上海"
 
 - 需要通过业务层控制重复引用
 
+## Part 9.5.5-C 补充（设计冻结，未实施）
+
+既有 Segment : Message = 0..N 决策保持不变，不新增 UNIQUE(transcript_segment_id)。
+
+TranscriptSegment.text → InterviewMessage.content 的正文复制必须登记 SourceArtifact / DerivedSource / ArtifactContribution，删除传播覆盖每份正文及其后续衍生物；SET NULL 只断开 FK，不能作为正文清除证明。C 的 Registry、来源门禁及清理合同尚未实现，详细设计见 [Part 9.5.5-C Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 第 3、7、9、10 部分。
+
 ## Future
 
 如果未来业务要求一个 Segment 必须只产生一个 Message，再增加唯一约束。

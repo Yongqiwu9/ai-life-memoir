@@ -6,6 +6,8 @@ Proposed
 
 本 ADR 尚未冻结 User Account 删除方式、保留范围或 Owner 转移规则。产品已确认的 Family Archive 删除权限见 ADR-003，讲述者本人数据生命周期见 ADR-006。
 
+Part 9.5.5-C 已冻结 Speaker / Family / 用途分支删除执行合同，见 [Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)，实现尚未开始。下文保留 9.5.5-A 的账号删除议题快照；涉及 Speaker 执行方案的历史 Proposed 描述以 C SSOT 和已更新的 ADR-006 为准。本 ADR 的独立账号注销、Owner 转移和身份处置问题仍未决，状态保持 Proposed。
+
 ## Context
 
 User 是登录账号。注销账号可能涉及认证身份、其拥有的 Family、在其他 Family 的协作关系，以及其作为讲述者贡献的内容。三种删除需要分别决定：
