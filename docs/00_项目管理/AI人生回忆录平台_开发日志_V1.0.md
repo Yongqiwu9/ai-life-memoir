@@ -93,7 +93,7 @@ Audio ↓ STT ↓ Transcript ↓ Segment ↓ Message
 
 状态：
 
-Completed (Local Validation)，2026-10-05 完成本地 PostgreSQL 验证；远程 GitHub Actions 执行尚未验证。
+Completed，2026-10-05 本地 PostgreSQL 与真实远程 GitHub Actions 验证均通过。
 
 已实现：
 
@@ -113,7 +113,19 @@ Completed (Local Validation)，2026-10-05 完成本地 PostgreSQL 验证；远�
 -   实际 PostgreSQL 核心表、UUID、FK 关系链、MessageSource text/audio_transcript、CASCADE 与 SET NULL 验证通过；这是数据基础设施验证，不代表录音/STT 功能完成
 -   SQLite fast tests：94 passed / 0 failed / 0 skipped / 2 deselected；PostgreSQL integration tests：2 passed / 0 failed / 0 skipped / 94 deselected
 -   非阻塞警告：Starlette TestClient/httpx 弃用提示、pytest 缓存目录写入权限提示；测试退出码均为 0。无需为本轮验证修改业务代码
--   GitHub Actions workflow 已实现；remote execution not yet verified
+-   本地验证完成时 GitHub Actions workflow 已实现，远程执行当时尚未验证；后续成功结果见最终封板记录
+
+最终封板记录（2026-10-05）：
+
+-   Part 9.5.5-B status: Completed
+-   Implementation commit: `07d1f51699b9fbcdaa09b2652be23d3349948921`，`test: add PostgreSQL integration and CI baseline`
+-   Local PostgreSQL validation: PASS；Alembic fresh migration validation: PASS
+-   Fast tests: PASS（94 passed / 0 failed / 0 skipped / 2 deselected）
+-   PostgreSQL integration tests: PASS（2 passed / 0 failed / 0 skipped / 94 deselected）
+-   GitHub Actions: Backend CI；[run 37283732708](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37283732708)，对应上述 implementation commit，master，completed / success
+-   Remote CI execution verified: YES；Remote CI result: PASS。Python 3.12 / PostgreSQL 16 的远程流程包含 Ruff/format、fast tests、fresh upgrade、current/check、integration 及测试后的 current/check，均成功
+-   Next: Part 9.5.5-C — Family Collaboration + Participant + Consent（Planned，尚未开始）
+-   Part 9.5 Audio/STT 仍仅为 data/API infrastructure；真实 Audio upload、STT Provider 与生产 STT pipeline 尚未完成
 
 未完成：
 
@@ -140,7 +152,7 @@ Part 9.5.5-C Family Collaboration + Participant + Consent
 
 当前周期：
 
-Part 9.5.5-B — Completed (Local Validation)。GitHub Actions CI workflow implemented; remote execution not yet verified。
+Part 9.5.5-B — Completed。Local validation: PASS；Remote CI: VERIFIED / PASS。
 
 下一阶段：
 
