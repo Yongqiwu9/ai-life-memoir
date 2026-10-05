@@ -7,14 +7,18 @@
 | Part | 状态与交付边界 |
 | --- | --- |
 | 9.1–9.5 | 基础 Backend / 数据模型与 API 阶段完成：认证、Family/FamilyMember、Interview/Session/Message、Audio/Transcript/Segment 元数据 |
-| 9.5.5 | Memory 前置基础设施/架构决策阶段；9.5.5-A 为产品约束与 ADR 文档整理，本轮交付供人工审查 |
+| 9.5.5 | Memory 前置基础设施/架构决策阶段；9.5.5-A 已完成产品约束与 ADR 文档整理。9.5.5-B — Completed (Local Validation)；远程 CI 尚未验证 |
 | 9.6 | Memory Extraction — Planned；MemoryCandidate、Memory、提取及人工确认流程尚未实现 |
 
 Part 9.5 完成不代表 Audio upload、Object Storage、STT Provider 或 AI pipeline 已完成。当前权限实现为 Owner-only；首版 Family Collaboration 是已确认产品方向，具体权限方案仍为 Proposed。
 
 本轮 ADR-003 Accepted 只冻结 Owner 删除整个 Family Archive 的产品权限。ADR-002、004–009 为 Proposed，包含已确认约束与尚未冻结的设计；已有 ADR-001 保持 Accepted。Accepted 不代表对应功能已实施。
 
+Part 9.5.5-B 保留 SQLite 快速测试，并为 PostgreSQL 引入独立的 `TEST_DATABASE_URL` 集成测试。进程环境变量优先；本地还可从 Git 忽略的 `apps/backend/.env.test` 读取该变量。集成测试只接受 PostgreSQL 且数据库名包含 `test` 的地址。测试迁移须显式设置 `TEST_MIGRATION_MODE=1`，并使用相同的测试 URL 校验；缺失时立即失败，不回退到开发 `DATABASE_URL`。普通 Alembic 命令仍按原有 `DATABASE_URL` 运行。GitHub Actions 通过环境变量提供测试 URL 并启用测试迁移模式，远程执行尚未验证。
+
 ## 项目资料
+
+Current Part: Part 9.5.5-B — Completed (Local Validation)。2026-10-05 在专用 `ai_life_memoir_test`（PostgreSQL 18.6）完成空 public schema → Alembic 单 head `adf9c60d178d`、current/check 及测试后的 current/check。Ruff 和格式检查通过；SQLite fast tests：94 passed / 0 failed / 0 skipped / 2 deselected；PostgreSQL integration tests：2 passed / 0 failed / 0 skipped / 94 deselected。GitHub Actions CI workflow implemented; remote execution not yet verified。Next: Part 9.5.5-C — Family Collaboration + Participant + Consent。
 
 - [Part 开发路线图](docs/05_开发阶段记录/Part开发路线图_V2.0.md)
 - [系统架构总览](docs/01_架构设计/AI人生回忆录平台_系统架构总览_V1.1.md)

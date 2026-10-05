@@ -1,0 +1,61 @@
+name: Backend CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci_test_user
+          POSTGRES_PASSWORD: ci_test_password
+          POSTGRES_DB: ai_life_memoir_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_test_user -d ai_life_memoir_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://ci_test_user:ci_test_password@localhost:5432/ai_life_memoir_test
+      TEST_MIGRATION_MODE: "1"
+      JWT_SECRET_KEY: ci-test-secret-key-at-least-32-bytes-long
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev]"
+      - name: Ruff
+        run: python -m ruff check app tests alembic test_support
+      - name: Ruff format
+        run: python -m ruff format --check app tests alembic test_support
+      - name: SQLite fast tests
+        run: python -m pytest -m "not integration"
+      - name: Alembic heads
+        run: python -m alembic heads
+      - name: Fresh PostgreSQL upgrade
+        run: python -m alembic upgrade head
+      - name: Alembic current
+        run: python -m alembic current
+      - name: Alembic check
+        run: python -m alembic check
+      - name: PostgreSQL integration tests
+        run: python -m pytest -m integration
+      - name: Post-integration Alembic current
+        run: python -m alembic current
+      - name: Post-integration Alembic check
+        run: python -m alembic check

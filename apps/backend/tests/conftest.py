@@ -16,6 +16,23 @@ from app.database.session import get_db
 from app.main import app
 
 
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Keep the default suite fast while making explicit integration runs safe."""
+    integration_items = [item for item in items if item.get_closest_marker("integration")]
+    if not integration_items:
+        return
+
+    marker_expression = config.option.markexpr.replace(" ", "")
+    if marker_expression == "integration":
+        return
+
+    skip = pytest.mark.skip(
+        reason="PostgreSQL integration tests require `pytest -m integration` and TEST_DATABASE_URL"
+    )
+    for item in integration_items:
+        item.add_marker(skip)
+
+
 @pytest.fixture()
 def db_session():
     engine = create_engine(
