@@ -1,7 +1,7 @@
 # AI人生回忆录平台 — 系统架构总览 V1.1
 
 > Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)。
-> 当前状态：9.5.5-B Completed / Sealed；9.5.5-C DESIGN FROZEN / IMPLEMENTATION IN PROGRESS；C1 Completed / Sealed；C2A Implementation Written / Audit Remediation Completed / Pre-Commit Re-Audit Pending；C2B Next / Not Started；9.6 Planned。阶段来源为 [README](../../README.md) 和 [路线图](../05_开发阶段记录/Part开发路线图_V2.0.md)。
+> 当前状态：9.5.5-B Completed / Sealed；9.5.5-C DESIGN FROZEN / IMPLEMENTATION IN PROGRESS；C1 Completed / Sealed；C2A Completed / Sealed；C2B Next / Not Started；9.6 Planned。阶段来源为 [README](../../README.md) 和 [路线图](../05_开发阶段记录/Part开发路线图_V2.0.md)。
 > 下文保留 Part 9.5 / 9.5.5-A 架构快照，包括当时的阶段、ADR 状态及未决项；已在 C 冻结的权限、身份、Consent、来源、修订和删除决策以该 SSOT 及更新后的 ADR 为准。ADR-004/005/006 已 Accepted；C2A 已实现 FamilyMembership / FamilyInvitation 基础，但 InterviewParticipant、Consent、Deletion Pipeline、Sanitization 尚未实现。
 
 ## 1. 平台目标
@@ -21,7 +21,7 @@ C1 当前增量：现有 User 增加 account / rights_only / system 能力类型
 
 C1 已由 implementation commit `35ec7e33a060b07e4834091b04c2caeb852b707c` 实施，并由 Backend CI run `37412935434` 远程验证成功。该封板只证明上述基础范围：rights_only authentication 不等于 Speaker identity、Consent、Source ownership 或 Family collaboration permission。
 
-C2A working tree 增量：新增 CommandIdempotencyRecord、FamilyInvitation、FamilyMembership、Owner/active Collaborator 协作管理门禁、`invitation_acceptance` challenge 与 context-bound verification proof。Owner 邀请直接 approved；Collaborator 邀请进入 pending_owner；本人核验接受后以同一事务创建或重启 Membership。幂等重放只持久化按 operation 注册的强类型安全 snapshot，未知字段和未声明嵌套对象默认拒绝。既有内容 API 没有因此向 Collaborator 开放，并由完整内容拒绝矩阵验证。
+C2A 已由 implementation commit `a33f6eb6160a2e0eb5276b0c08d9a5d9c2534cfd` 和 migration `b7e2c4d891a0` 实施并封板，Backend CI run `37492358055` 远程验证成功。其增量包括 CommandIdempotencyRecord、FamilyInvitation、FamilyMembership、Owner/active Collaborator 协作管理门禁、`invitation_acceptance` challenge 与 context-bound verification proof。Owner 邀请直接 approved；Collaborator 邀请进入 pending_owner；本人核验接受后以同一事务创建或重启 Membership。幂等重放只持久化按 operation 注册的强类型安全 snapshot，未知字段和未声明嵌套对象默认拒绝。既有内容 API 没有因此向 Collaborator 开放，并由完整内容拒绝矩阵验证。
 
 生产认证渠道的加密、密钥管理、投递与限流仍待经过验证的 Provider adapter；默认拒绝开放。测试替身使用内存 opaque vault，不能作为生产密码学实现。新增 migration 仅在专用测试库验证，没有运行生产迁移。下文既有快照不用于判断 C1 是否已实施。
 
@@ -103,7 +103,7 @@ AI 输出的是候选内容，须人工确认后成为 Memory；来源追踪必�
 | 9.3 | Family + FamilyMember | 数据模型/API 完成；当前 Owner-only |
 | 9.4 | Interview / InterviewSession / InterviewMessage | 数据模型/API 完成；目标状态机 Proposed |
 | 9.5 | AudioRecording / Transcript / TranscriptSegment | 元数据模型/API 完成；真实上传/STT 未实现 |
-| 9.5.5 | Memory 前置基础设施/架构决策 | C1 Completed / Sealed；C2A Implementation Written / Audit Remediation Completed / Pre-Commit Re-Audit Pending；C2B Next |
+| 9.5.5 | Memory 前置基础设施/架构决策 | C1 Completed / Sealed；C2A Completed / Sealed；C2B Next / Not Started |
 | 9.6 | Memory Extraction | Planned；模型、提取及确认流程尚未实现 |
 
 当前数据模型已形成：

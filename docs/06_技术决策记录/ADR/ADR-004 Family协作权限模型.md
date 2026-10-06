@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Partial — C2A Implementation Written / Audit Remediation Completed / Pre-Commit Re-Audit Pending；FamilyInvitation / FamilyMembership / durable idempotency 已写入 working tree；Revision 与内容访问门禁尚未实现。
+Implementation: Partial — C2A Completed / Sealed；FamilyInvitation / FamilyMembership / durable idempotency 已正式实施并通过本地与远程验证；Revision 与内容访问门禁尚未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的 Family 协作、邀请、修订审批和权限边界。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -67,7 +67,15 @@ Owner 审批只确认协作操作或修订版本，不允许代替自主成年 S
 
 ## Migration Impact
 
-C2A revision `b7e2c4d891a0` 已在 working tree 新增 CommandIdempotencyRecord、Invitation、Membership，并将 `Family.owner_id` 外键删除行为调整为 RESTRICT；新业务表不做历史 backfill。RevisionProposal 与完整内容权限切换仍按 SSOT 后续实施。
+C2A revision `b7e2c4d891a0` 已新增 CommandIdempotencyRecord、Invitation、Membership，并将 `Family.owner_id` 外键删除行为调整为 RESTRICT；新业务表不做历史 backfill。RevisionProposal 与完整内容权限切换仍按 SSOT 后续实施。
+
+## Implementation Evidence
+
+- Implementation commit：`a33f6eb6160a2e0eb5276b0c08d9a5d9c2534cfd`。
+- Migration：`b7e2c4d891a0`，down revision `c1a7d45e92b0`。
+- Remote validation：Backend CI run [`37492358055`](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37492358055)，completed / success。
+- Seal status：C2A Completed / Sealed；C2B Next / Not Started。
+- 已验证安全边界：转发的 Invitation token 被拒绝；Collaborator 未获得既有档案内容访问；Membership revoke 竞争线性化；幂等响应使用 operation-specific allowlist / default deny；request fingerprint 不保存原始 recipient/token/proof/OTP canonical input；Provider 不可用时 fail closed。
 
 历史数据不得通过 FamilyMember 姓名推断 User、Collaborator、Participant、Speaker 或 Consent。V1 不开放 User hard delete、Owner 转移或身份自动合并。
 
@@ -103,3 +111,4 @@ C2A revision `b7e2c4d891a0` 已在 working tree 新增 CommandIdempotencyRecord�
 | 2026-10-05 | V1.0 | Part 9.5.5-A；记录家庭协作约束与 Proposed 访问关系。 |
 | 2026-10-05 | V1.1 | Part 9.5.5-C Design Freeze；冻结 Owner/Membership、邀请、不可变修订、Owner 审批及权限门禁；Implementation Not Started。 |
 | 2026-10-06 | V1.2 | C2A Invitation / Membership / durable idempotency implementation written；audit remediation completed，Pre-Commit Re-Audit pending；内容权限与 Revision 仍未实现。 |
+| 2026-10-07 | V1.3 | C2A implementation `a33f6eb...` 与 migration `b7e2c4d891a0` 通过 Backend CI 并封板；内容权限、Revision、Participant 与 Consent 仍未实现。 |

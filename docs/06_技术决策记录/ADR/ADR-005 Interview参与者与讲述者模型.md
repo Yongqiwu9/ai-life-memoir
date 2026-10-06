@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Partial — C1 Identity Foundation Completed / Sealed；C2A 已实现 account-bound invitation verification proof 与 Membership 基础并通过本地验证；InterviewParticipant / `participant_confirmation` / Speaker 归属仍未实现。
+Implementation: Partial — C1 Identity Foundation Completed / Sealed；C2A account-bound invitation verification proof 与 Membership 基础已 Completed / Sealed；InterviewParticipant / `participant_confirmation` / Speaker 归属仍未实现，C2B Next / Not Started。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的统一 User 主体、InterviewParticipant、本人核验和来源讲述者边界。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -107,3 +107,4 @@ Family 访问、Participant 身份和 Speaker 本人权利分别校验。知道�
 | 2026-10-05 | V1.1 | Part 9.5.5-C Design Freeze；冻结统一 User、Participant、本人核验及 operator/speaker/consenter 边界；Implementation Not Started。 |
 | 2026-10-05 | V1.2 | C1 Identity Foundation Implemented / Validated；普通访问仍 Owner-only，生产验证能力未开放，Participant / Consent 尚未实现。 |
 | 2026-10-06 | V1.3 | C2A invitation-bound account verification 与 Membership 基础已本地验证；Participant verified / Speaker / Consent 仍未实现。 |
+| 2026-10-07 | V1.4 | C2A 已 Completed / Sealed；Participant verified、Speaker 归属与 Consent 仍未实现，C2B Next / Not Started。 |

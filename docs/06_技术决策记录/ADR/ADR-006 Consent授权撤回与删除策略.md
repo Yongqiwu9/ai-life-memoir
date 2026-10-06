@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Partial — C1 Policy / Identity Foundation Completed / Sealed；C2A 已实现邀请专用 account-bound verification proof 和 FamilyMembership 基础并通过本地验证；Consent / Withdrawal / Deletion / Restore / Sanitization 尚未实现。
+Implementation: Partial — C1 Policy / Identity Foundation Completed / Sealed；C2A 邀请专用 account-bound verification proof 和 FamilyMembership 基础已 Completed / Sealed；Participant verification 不等于 Consent，Consent / Withdrawal / Deletion / Restore / Sanitization 尚未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的 Consent、用途分支、撤回、历史恢复、净化、删除传播、备份恢复和 Policy 合同。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -123,3 +123,4 @@ ConsentEvent、DeletionLedger、错误日志和处理证据遵守数据最小化
 | 2026-10-05 | V1.0 | Part 9.5.5-A；记录 Consent、撤回和删除的已确认约束及 Proposed 实施问题。 |
 | 2026-10-05 | V1.1 | Part 9.5.5-C Design Freeze；冻结用途/Source 授权、撤回、恢复、净化、六阶段删除、Ledger、备份恢复与 Policy fail-safe；Implementation Not Started。 |
 | 2026-10-06 | V1.2 | C2A invitation-bound proof 与 Membership 基础已本地验证；明确 proof/Membership 不构成 Consent，Consent 及删除生命周期仍未实现。 |
+| 2026-10-07 | V1.3 | C2A 已 Completed / Sealed；再次确认 Participant verification / invitation proof / Membership 均不构成 Consent，Consent 与删除生命周期仍未实现。 |

@@ -5,7 +5,7 @@
 | Status | ACCEPTED DESIGN ADDENDUM |
 | Parent | Part 9.5.5-C Design Freeze V1.0 |
 | Scope | C2A + C2B implementation clarification |
-| Implementation | PARTIAL — C2A audit remediation completed / pre-commit re-audit pending; C2B not started; overall C2 not complete |
+| Implementation | PARTIAL — C2A Completed / Sealed; C2B Next / Not Started; overall C2 not complete |
 | Baseline | `0add93b755422afcf69c6029c4c72879405eb98d` |
 
 本 Addendum 补充但不推翻 Part 9.5.5-C Design Freeze。未在此处修改的设计继续以父级 Design Freeze 为准。
@@ -157,3 +157,12 @@ verification proof 等短期结果的 replay 不得延长原 exp，也不得重�
 - PostgreSQL migration and tests
 
 C2A revision 接 C1 head；C2B revision 接 C2A。
+
+## 5. Implementation Evidence
+
+- C2A implementation：`a33f6eb6160a2e0eb5276b0c08d9a5d9c2534cfd`（`feat: implement family collaboration foundation`）。
+- C2A migration：`b7e2c4d891a0`，down revision `c1a7d45e92b0`。
+- Remote validation：Backend CI run [`37492358055`](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37492358055)，completed / success。
+- Seal status：C2A Completed / Sealed；C2B Next / Not Started；Part 9.5.5-C Implementation In Progress。
+
+本节只记录 C2A 实施证据，不修改本 Addendum 已接受的 B1 Participant domain、B2 context-bound verification 或 B3 durable idempotency semantics。

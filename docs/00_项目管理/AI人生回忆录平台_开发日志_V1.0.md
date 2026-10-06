@@ -174,11 +174,11 @@ Part 9.5.5-C1，依据 Design Freeze SSOT 开始实施。
 
 当前周期：
 
-Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identity Foundation — Completed / Sealed。Part 9.5.5-B — Completed / Sealed，其 Local validation: PASS、Remote CI: VERIFIED / PASS 作为历史验收记录保留。
+Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identity Foundation — Completed / Sealed。C2A Family Collaboration Foundation — Completed / Sealed。Part 9.5.5-B — Completed / Sealed，其 Local validation: PASS、Remote CI: VERIFIED / PASS 作为历史验收记录保留。
 
 下一阶段：
 
-Part 9.5.5-C2（Not Started，C1 验收后进入）。后续依据 Design Freeze SSOT 实施；Part 9.6 保持 Planned。
+Part 9.5.5-C2B（Next / Not Started）。后续依据 Design Freeze SSOT 与 C2 Design Addendum 实施 InterviewParticipant / `participant_confirmation`；Part 9.6 保持 Planned。
 
 ## 4. Part 9.5.5-C1 Policy + Identity Foundation 本地实施记录
 
@@ -242,7 +242,7 @@ python -m alembic check
 - C2：Next / Not Started；未实现 FamilyMembership、FamilyInvitation、InterviewParticipant、Consent、SourceArtifact、Deletion Pipeline、Sanitization 或 MemoryCandidate。
 - Part 9.6：Planned。
 
-## 5. Part 9.5.5-C2A Family Collaboration Foundation 本地实施记录
+## 5. Part 9.5.5-C2A Family Collaboration Foundation 历史本地实施记录
 
 日期：2026-10-06。起始/结束 HEAD：`0add93b755422afcf69c6029c4c72879405eb98d`；本轮未暂存、未提交、未推送。
 
@@ -261,4 +261,20 @@ python -m alembic check
 - 未实现 InterviewParticipant、`participant_confirmation`、Consent、Source/Provenance、RevisionProposal、Deletion、PrivacyOutbox、Sanitization、MemoryCandidate、Memory 或 Memoir；未修改 workflow，未运行生产 migration。
 - Git 安全：staging empty；16 项既有模板删除继续 unstaged；`ad` 保持 untracked；`.env.test` 保持 ignored 且未输出内容。
 
-结论：C2A Implementation Written / Audit Remediation Completed / Pre-Commit Re-Audit Pending；C2B Next / Not Started；Part 9.6 Planned。此状态不构成暂存、提交或推送授权。
+历史结论（已由下方 Final Documentation Seal 取代）：C2A Implementation Written / Audit Remediation Completed / Pre-Commit Re-Audit Pending；C2B Next / Not Started；Part 9.6 Planned。本节保留实施与审计轨迹，不表示当前状态。
+
+### Part 9.5.5-C2A Final Documentation Seal（2026-10-07）
+
+- Part：9.5.5-C2A Family Collaboration Foundation。
+- Status：Completed / Sealed；Part 9.5.5-C 整体仍为 Implementation In Progress。
+- Implementation commit：`a33f6eb6160a2e0eb5276b0c08d9a5d9c2534cfd`，`feat: implement family collaboration foundation`。
+- Migration：`b7e2c4d891a0`，down revision `c1a7d45e92b0`；单 head；未修改历史 migration，未运行生产 migration。
+- Remote CI：Backend CI；Run ID [`37492358055`](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37492358055)；master；completed / success。
+- Validation：Fast 163 passed / 29 deselected；PostgreSQL integration 29 passed / 163 deselected；Ruff PASS；Format PASS；Alembic heads / fresh upgrade / current / check / post-integration current/check PASS；Concurrency PASS；Security PASS。
+- Audit history：Initial Pre-Commit Audit FAIL；Remediation #1 PASS；Re-Audit #1 FAIL；Remediation #2 PASS；Final Pre-Commit Re-Audit PASS WITH FINDINGS；blocking findings at seal：0。
+- 实施范围：CommandIdempotencyRecord、FamilyInvitation、FamilyMembership、Owner / active Collaborator 协作管理门禁、`invitation_acceptance` context-bound verification proof、Invitation / Membership API，以及 `families.owner_id` ON DELETE RESTRICT。
+- 安全边界：转发 Invitation token 拒绝；Collaborator 没有既有档案内容访问扩张；Membership revoke race 线性化；幂等响应使用 operation-specific allowlist / default deny；request fingerprint 不保存原始 recipient/token/proof/OTP canonical input；Provider 不可用时 fail closed。
+- Membership 只代表 Family collaboration relation，不等于 archive content access。既有 Family、FamilyMember、Interview、Session、Audio、Transcript、Segment、Message API 仍为 Owner-only。
+- 未实现：InterviewParticipant、`participant_confirmation`、ConsentGrant / ConsentEvent、Source / Provenance、RevisionProposal、Deletion Pipeline、Sanitization runtime、MemoryCandidate、Memory、Memoir。
+- 生产限制：encryption provider、verification/invitation delivery、key management/rotation、production rate limiting 仍未实现；相关入口默认 fail closed。
+- 下一阶段：C2B Next / Not Started；Part 9.6 Planned。
