@@ -27,7 +27,12 @@ def db_session(postgres_engine: Engine) -> Session:
     """Rollback each test instead of dropping or truncating a database."""
     connection = postgres_engine.connect()
     transaction = connection.begin()
-    session = Session(bind=connection, autoflush=False, expire_on_commit=False)
+    session = Session(
+        bind=connection,
+        autoflush=False,
+        expire_on_commit=False,
+        join_transaction_mode="create_savepoint",
+    )
     try:
         yield session
     finally:

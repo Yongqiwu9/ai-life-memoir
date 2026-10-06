@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Not Started
+Implementation: Partial — C1 Identity Foundation Implemented / Validated；InterviewParticipant / Speaker 归属尚未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的统一 User 主体、InterviewParticipant、本人核验和来源讲述者边界。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -14,7 +14,8 @@ Implementation: Not Started
 
 ## Current Implementation
 
-- `User` 是当前 JWT 认证账号；email 和 password_hash 非空，尚不支持 rights_only 主体、UserContact 或即时本人验证。
+- C1 扩展现有 `User` 为 account / rights_only / system，增加 auth_generation；email/password_hash 条件可空，非账号主体无密码登录能力。
+- C1 新增 UserContact / AuthChallenge 和受限 rights-auth 验证入口；生产加密、投递与限流 Provider 默认不可用，尚未开放生产即时本人验证。rights/me 只返回认证主体及 rights:identity，不能确认 Speaker 资格或来源归属。
 - `FamilyMember` 是归属于 Family 的档案人物，当前字段不包含 User、Membership 或 Participant 身份关系。
 - `Interview.family_member_id` 为非空外键，一个 Interview 当前关联一个 FamilyMember；这是回忆对象关系，没有独立 Participant 集合。
 - Session 只关联 Interview。Message 只关联 Session，并具有 `role`、`source` 和可空的 `transcript_segment_id`；没有实际讲述者字段。
@@ -68,9 +69,9 @@ Family 访问、Participant 身份和 Speaker 本人权利分别校验。知道�
 
 ## Migration Impact
 
-本 ADR 更新仅归档设计，不创建 Model、Schema、Service、API 或 Alembic revision。后续实现按 SSOT 追加迁移：条件放宽现有 User 凭据字段，新增 UserContact / AuthChallenge / Participant / SourceSpeakerBinding，并将现有来源接入 Provenance 图。
+设计冻结时本 ADR 仅归档设计。C1 已追加 revision `c1a7d45e92b0`（down `adf9c60d178d`），扩展 User 并新增 UserContact / AuthChallenge / PrivacyPolicyVersion；Participant / SourceSpeakerBinding / Provenance 仍待后续实现。
 
-历史 User 仅回填为 account；旧邮箱标记 legacy_unverified。不得把 Owner 回填为 Speaker，不得按 FamilyMember 姓名或 STT 标签创建 Participant / Speaker 归属。历史来源没有可核验身份和 Consent 时，Owner 也只能看到必要状态。
+历史 User 仅回填为 account / generation=1；旧邮箱语义保持未验证，C1 不自动生成 Contact，不伪造 ciphertext 或 verified 证据。未验证渠道按 legacy_unverified 规则处理。不得把 Owner 回填为 Speaker，不得按 FamilyMember 姓名或 STT 标签创建 Participant / Speaker 归属。历史来源 fail-closed 门禁属于后续 Source / Consent 实施，C1 未改写既有来源访问行为。
 
 ## Future Boundaries
 
@@ -103,3 +104,4 @@ Family 访问、Participant 身份和 Speaker 本人权利分别校验。知道�
 | --- | --- | --- |
 | 2026-10-05 | V1.0 | Part 9.5.5-A；区分账号、档案人物、访问关系和实际讲述者。 |
 | 2026-10-05 | V1.1 | Part 9.5.5-C Design Freeze；冻结统一 User、Participant、本人核验及 operator/speaker/consenter 边界；Implementation Not Started。 |
+| 2026-10-05 | V1.2 | C1 Identity Foundation Implemented / Validated；普通访问仍 Owner-only，生产验证能力未开放，Participant / Consent 尚未实现。 |

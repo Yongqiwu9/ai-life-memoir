@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Not Started
+Implementation: Partial — C1 Policy / Identity Foundation Implemented / Validated；Consent / Withdrawal / Deletion / Restore / Sanitization 尚未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的 Consent、用途分支、撤回、历史恢复、净化、删除传播、备份恢复和 Policy 合同。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -13,6 +13,9 @@ Implementation: Not Started
 真实 Speaker 可能与登录账号能力、Family Owner、Interview subject 或实际 operator 不同。Family 访问权限不能替代 Speaker 对本人来源的处理授权；撤回用途、请求删除本人来源、Owner 删除整个 Family Archive 和 User Account 删除也是不同生命周期。
 
 ## Current Implementation
+
+- C1 新增 PrivacyPolicyVersion / UserContact / AuthChallenge 与 User capability / generation。Policy 草稿允许缺参，发布必须完整校验正整数 seconds、期限覆盖、告知及能力证据；已发布内容不可变，只有一个 active 版本，缺失/篡改/未验证时处理门禁拒绝开放。
+- rights-auth 是本人认证基础，不等于 Consent 生效或 Speaker / Source 身份已确认；默认生产 Provider 不可用。Policy-independent safety path 仅分类 withdrawal/deletion，不受 active Policy 缺失阻挡，但尚无这些业务 API 或 Pipeline，后续仍须核验本人及来源范围。
 
 - 当前资源访问通过 `Family.owner_id` 沿 Interview / Session / Audio / Transcript 等关系校验 Owner；尚无 FamilyMembership、InterviewParticipant、SourceSpeakerBinding 或 Consent 模型/API。
 - `Interview.family_member_id` 指向回忆对象。`InterviewMessage.role=user` 只表示消息角色；`TranscriptSegment.speaker` 是可空字符串，均不能作为本人身份或授权证据。
@@ -78,7 +81,7 @@ ConsentEvent、DeletionLedger、错误日志和处理证据遵守数据最小化
 
 ## Migration Impact
 
-本 ADR 更新仅归档设计，不创建 Model、Schema、Service、API 或 Alembic revision。后续实现按 SSOT 追加迁移，创建 Consent / Provenance / Restore / Revision / Deletion / Policy / Sanitization 结构，将现有内容接入 Artifact Registry，并统一替换直接硬删入口。
+设计冻结时本 ADR 仅归档设计。C1 已追加 `c1a7d45e92b0` 实现 Policy / Identity 基础；后续仍须按 SSOT 创建 Consent / Provenance / Restore / Revision / Deletion / Sanitization 结构，将现有内容接入 Artifact Registry，并统一替换直接硬删入口。当前不可把 Policy gate 存在视为这些流程已经完成。
 
 历史 Artifact 只回填确定性来源边并保持 `legacy_unknown`；不回填 active Consent，不创建虚假 Owner Speaker，不把 STT 标签升级为真人身份。隐私事件产生后不得通过 schema downgrade 清除 Ledger 或恢复旧访问。
 

@@ -174,8 +174,55 @@ Part 9.5.5-C1，依据 Design Freeze SSOT 开始实施。
 
 当前周期：
 
-Part 9.5.5-C — Design Frozen / Implementation Not Started。Part 9.5.5-B 的 Local validation: PASS、Remote CI: VERIFIED / PASS 作为历史验收记录保留。
+Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identity Foundation — Implemented / Validated。Part 9.5.5-B 的 Local validation: PASS、Remote CI: VERIFIED / PASS 作为历史验收记录保留。
 
 下一阶段：
 
-Part 9.5.5-C1。后续 C1–C8 依据 Design Freeze SSOT 实施；Part 9.6 保持 Planned。
+Part 9.5.5-C2（Not Started，C1 验收后进入）。后续依据 Design Freeze SSOT 实施；Part 9.6 保持 Planned。
+
+## 4. Part 9.5.5-C1 Policy + Identity Foundation 本地实施记录
+
+日期：2026-10-05。起始 HEAD：`ade0f0ca2dbecab474d315a853b2e7721e9e9609`，master；本轮不暂存、不提交、不推送。
+
+- 仅新增 PrivacyPolicyVersion / UserContact / AuthChallenge；User 新增 principal_kind / auth_generation，条件放宽凭据字段。既有 User 只回填 account / generation=1，不自动验证邮箱、不合并主体。
+- Policy 使用显式正整数 seconds 和独立非负 retry_limit；draft 可缺参，active 必须完整且能力证据有效，发布正文不可变。没有生产默认期限。
+- rights-auth challenges / verify / rights/me 为最小认证入口；rights:identity 不授予 Family 浏览、Speaker 身份或 Consent。普通账号接口保持形状；旧无类型/无 generation JWT 须重新登录。
+- OTP 不保存明文，摘要由服务器密钥和 challenge 上下文绑定；校验有到期、尝试上限、事务消费、重放拒绝、渠道冲突拒绝与当前 generation / Contact 状态校验。错误响应不回显渠道或验证码。
+- 生产 encryption / key lifecycle / delivery / rate limiting Provider 未接入，默认 503。测试 opaque memory vault 仅为测试替身，不是生产加密；没有新增生产密钥或默认 TTL。
+- migration `c1a7d45e92b0` → down `adf9c60d178d`，单 head。真实专用 PostgreSQL 测试库 upgrade / current / check 已通过；临时 schema 空库迁移及有旧 User 的 backfill、空 C1 安全 downgrade / re-upgrade 已验证。存在 C1 证据、非 account 或 generation 变更时 downgrade 拒绝执行。没有迁移开发/生产库。
+- 首轮 fast：125 passed / 17 deselected。此后新增边界用例，最终完整 fast 复验待完成，不能沿用首轮结果作为最新全量通过证明。
+- 最新 PostgreSQL integration：17 passed / 139 deselected；Ruff check 通过，format check：104 files already formatted。环境存在 Starlette TestClient/httpx 弃用提示。
+- 自动审批审核模型容量不足，阻止最终 fast（本地 socketpair）和 Alembic 最后复查；属于审核服务执行障碍，不是判定操作不安全。当前不满足提交验收条件。
+- 未实现 FamilyMembership / FamilyInvitation / InterviewParticipant / Consent / SourceArtifact / Deletion / Sanitization / MemoryCandidate；workflow 未改动，C1 远程 CI 未运行。
+- 保留 16 项既有模板删除为 unstaged；ad untouched/untracked；.env.test ignored；staging empty。冻结 SSOT 未修改，9.5.5-B Completed、C Design Frozen、C Implementation In Progress、C2 Not Started、9.6 Planned。
+
+验收命令（Backend 目录；只允许安全 TEST_DATABASE_URL 的测试迁移模式）：
+
+```powershell
+python -m ruff check .
+python -m ruff format --check .
+python -m pytest -m "not integration" -q -p no:cacheprovider
+python -m pytest -m integration -q -p no:cacheprovider
+$env:TEST_MIGRATION_MODE = '1'
+python -m alembic heads
+python -m alembic current
+python -m alembic check
+```
+
+原结论（已由下方最终验证闭环取代）：C1 implementation written / final validation pending。本节状态优先于上文设计归档时的 Implementation Not Started 历史记录。
+
+### C1 Final Validation Closure（2026-10-05）
+
+- Ruff：PASS；format check：PASS（103 files already formatted）。
+- 最新完整 Fast：139 passed / 0 failed / 0 skipped / 17 deselected；新增身份与安全边界测试均实际执行。
+- C1 定向安全测试：45 passed / 0 failed / 0 skipped。
+- PostgreSQL integration：17 passed / 0 failed / 0 skipped / 139 deselected。
+- Alembic before/after：single head/current 均为 `c1a7d45e92b0`；两次 `alembic check` 均为 `No new upgrade operations detected`。
+- 账号回归：register、login、users/me、Family、Interview 全部通过最新 Fast suite；rights/account token 与 principal 能力隔离通过。
+- 安全审计：generation mismatch、Contact revoked、Challenge expired/locked/consumed replay、OTP 非明文、反枚举、敏感错误不回显、legacy email 不自动验证、Policy fail-safe、已发布 Policy 不可普通修改均通过。
+- migration 审计：down revision、历史 User account/generation=1 backfill、数据库约束、JSONB/BYTEA/TIMESTAMPTZ、partial unique、RESTRICT FK 与 downgrade guard 符合 C1 范围；没有修改历史 migration。
+- Production encryption、contact delivery、key management 与生产 rate limiter 仍为 NOT IMPLEMENTED；默认 fail closed / 503。测试内存 vault 仅为 TEST ONLY。
+- 非阻塞警告：Starlette TestClient/httpx 弃用提示；pytest cache 目录 WinError 183。测试与检查退出码均为 0。
+- Git：HEAD 未变、staging empty、16 项历史删除 unstaged、`ad` untracked/untouched、`.env.test` ignored；未 commit / push。
+
+结论：C1 Implemented / Validated；Part C 仍为 Implementation In Progress；C2 Not Started / Next；Part 9.6 Planned。READY FOR C1 PRE-COMMIT AUDIT，不代表已获授权暂存或提交。

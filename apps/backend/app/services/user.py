@@ -42,11 +42,17 @@ def register_user(db: Session, *, email: str, password: str) -> User:
 def authenticate_user(db: Session, *, email: str, password: str) -> User:
     normalized_email = _normalize_email(email)
     user = user_crud.get_user_by_email(db, normalized_email)
-    if user is None or not user.is_active or not verify_password(password, user.password_hash):
+    if (
+        user is None
+        or user.principal_kind != "account"
+        or not user.is_active
+        or not user.password_hash
+        or not verify_password(password, user.password_hash)
+    ):
         raise InvalidCredentialsError()
     return user
 
 
 def login_user(db: Session, *, email: str, password: str) -> str:
     user = authenticate_user(db, email=email, password=password)
-    return create_access_token(subject=str(user.id))
+    return create_access_token(subject=str(user.id), auth_generation=user.auth_generation)

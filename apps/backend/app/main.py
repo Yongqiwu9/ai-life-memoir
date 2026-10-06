@@ -8,6 +8,7 @@ from app.api.v1 import (
     families,
     family_members,
     interviews,
+    rights_auth,
     sessions,
     transcripts,
     users,
@@ -40,6 +41,7 @@ app.include_router(interviews.router, prefix=settings.API_V1_PREFIX)
 app.include_router(sessions.router, prefix=settings.API_V1_PREFIX)
 app.include_router(transcripts.router, prefix=settings.API_V1_PREFIX)
 app.include_router(users.router, prefix=settings.API_V1_PREFIX)
+app.include_router(rights_auth.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health", tags=["system"])

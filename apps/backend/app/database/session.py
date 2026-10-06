@@ -8,6 +8,7 @@ from app.core.config import settings
 engine = create_engine(
     settings.DATABASE_URL,
     echo=settings.DB_ECHO,
+    hide_parameters=True,
     pool_pre_ping=settings.DB_POOL_PRE_PING,
     pool_size=settings.DB_POOL_SIZE,
     max_overflow=settings.DB_MAX_OVERFLOW,

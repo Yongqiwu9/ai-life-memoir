@@ -7,7 +7,7 @@
 | Part | 状态与交付边界 |
 | --- | --- |
 | 9.1–9.5 | 基础 Backend / 数据模型与 API 阶段完成：认证、Family/FamilyMember、Interview/Session/Message、Audio/Transcript/Segment 元数据 |
-| 9.5.5 | Memory 前置基础设施/架构决策阶段；9.5.5-A 已完成产品约束与 ADR 文档整理；9.5.5-B — Completed，本地及远程 CI 验证通过；9.5.5-C — Design Frozen / Implementation Not Started；Next：C1 |
+| 9.5.5 | Memory 前置基础设施/架构决策阶段；9.5.5-B — Completed；9.5.5-C — Design Frozen / Implementation In Progress；C1 — Implemented / Validated；C2 — Not Started / Next |
 | 9.6 | Memory Extraction — Planned；MemoryCandidate、Memory、提取及人工确认流程尚未实现 |
 
 Part 9.5 完成不代表 Audio upload、Object Storage、STT Provider 或 AI pipeline 已完成。当前代码权限仍为 Owner-only；首版 Family Collaboration、Participant、Consent、来源追踪、修订、删除与净化的实施设计已经冻结，但尚未实现。
@@ -20,7 +20,13 @@ Part 9.5.5-B 保留 SQLite 快速测试，并为 PostgreSQL 引入独立的 `TES
 
 Part 9.5.5-B — Completed。2026-10-05 在专用 `ai_life_memoir_test`（PostgreSQL 18.6）完成空 public schema → Alembic 单 head `adf9c60d178d`、current/check 及测试后的 current/check。Ruff 和格式检查通过；SQLite fast tests：94 passed / 0 failed / 0 skipped / 2 deselected；PostgreSQL integration tests：2 passed / 0 failed / 0 skipped / 94 deselected。Local PostgreSQL Validation: PASS；Remote GitHub Actions Validation: PASS；Remote CI execution verified: YES。Implementation commit: `07d1f51699b9fbcdaa09b2652be23d3349948921`；[Backend CI run 37283732708](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37283732708)，completed / success。
 
-Current Part: Part 9.5.5-C — Design Frozen / Implementation Not Started。详细设计见 [Part 9.5.5-C Final Implementation Design Freeze](<docs/03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>)。Next：C1；后续 C1–C8 依据该 SSOT 实施。Part 9.6 — Planned，尚未开始。
+Current Part: Part 9.5.5-C — Design Frozen / Implementation In Progress。详细设计见 [Part 9.5.5-C Final Implementation Design Freeze](<docs/03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>)。C1：Policy + Identity Foundation — Implemented / Validated；C2：Not Started / Next。Part 9.6 — Planned，尚未开始。冻结文档的 Implementation Not Started 是归档时的历史快照。
+
+C1 仅新增 PrivacyPolicyVersion、UserContact、AuthChallenge，扩展现有 User 的 principal_kind/auth_generation，并提供受限的 rights-auth 验证入口。普通账号访问仍按 Owner-only 校验。Policy 期限必须显式使用正整数 seconds，没有生产默认值；未发布完整 Policy 或未验证能力时，新处理门禁拒绝开放，未来撤回/删除安全路径不依赖 active Policy（这些业务流程尚未实现）。
+
+rights token 与 account token 分别校验类型、scope、主体能力及当前 generation；rights token 额外校验 aud/iss 和验证记录。旧的无类型/无 generation 账号 JWT 需要重新登录。既有注册/密码登录接口保持原形。旧邮箱不自动生成 verified Contact，也不自动合并身份。
+
+生产加密、密钥轮换、验证渠道投递及分布式限流适配器尚未接入：默认 rights-auth 返回能力不可用，不能视为生产本人验证已开放。测试用 opaque memory vault 不是生产加密。C1 的本地测试结果与迁移边界见 [开发日志](docs/00_项目管理/AI人生回忆录平台_开发日志_V1.0.md)；本轮没有提交、推送或生产数据库迁移。
 
 - [Part 开发路线图](docs/05_开发阶段记录/Part开发路线图_V2.0.md)
 - [系统架构总览](docs/01_架构设计/AI人生回忆录平台_系统架构总览_V1.1.md)

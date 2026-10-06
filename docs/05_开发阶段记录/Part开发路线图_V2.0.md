@@ -9,7 +9,7 @@
 | 9.3 | Family + FamilyMember | 数据模型/API 完成 | 家庭与档案人物 CRUD、当前 Owner-only isolation |
 | 9.4 | Interview | 数据模型/API 完成 | Interview / InterviewSession / InterviewMessage、当前所有权查询链；状态机仍待决策与落地 |
 | 9.5 | Audio/STT 数据基础设施 | 数据模型/API 完成 | AudioRecording / Transcript / TranscriptSegment 元数据、Message source/segment 扩展 |
-| 9.5.5 | Memory 前置基础设施/架构决策 | C Design Frozen；Implementation Not Started | 9.5.5-A 已完成 ADR 文档整理；9.5.5-B 本地及远程 CI 验证通过；9.5.5-C 实施设计已冻结；Next：C1 |
+| 9.5.5 | Memory 前置基础设施/架构决策 | C Design Frozen；Implementation In Progress | B Completed；C1 Policy + Identity Foundation Implemented / Validated；C2 Not Started / Next |
 | 9.6 | Memory Extraction | Planned（规划中） | MemoryCandidate / Memory、提取与人工确认流程，尚未实现 |
 | 9.7 | AI Agent | 规划中 | 访谈追问、assistant 消息生成 |
 | 9.8 | Memoir Generation | 规划中 | Memory → Memoir 组装与编辑 |
@@ -22,7 +22,7 @@ Part 9.5.5-B 保留现有 SQLite 快速测试，增加标记为 `integration` �
 
 2026-10-05 Part 9.5.5-B 最终验收完成：专用 PostgreSQL 18.6 测试库空 public schema 成功迁移至唯一 head `adf9c60d178d`，current/check 及集成测试后的 current/check 均通过。Ruff/format 通过；SQLite fast tests：94 passed / 0 failed / 0 skipped / 2 deselected；PostgreSQL integration tests：2 passed / 0 failed / 0 skipped / 94 deselected。Local validation: PASS；Remote CI: VERIFIED / PASS。Implementation commit: `07d1f51699b9fbcdaa09b2652be23d3349948921`；[Backend CI run 37283732708](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37283732708)，master，completed / success。
 
-Current Part: Part 9.5.5-C — Design Frozen / Implementation Not Started。详细设计以 [Part 9.5.5-C Final Implementation Design Freeze](<../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>) 为 SSOT。Next：C1；后续 C1–C8 依据该 SSOT 实施，不在路线图中提前制定未确认分项。Part 9.6 — Planned。
+Current Part: Part 9.5.5-C — Design Frozen / Implementation In Progress。详细设计以 [Part 9.5.5-C Final Implementation Design Freeze](<../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>) 为 SSOT。C1 Policy + Identity Foundation — Implemented / Validated；C2 — Not Started / Next。Part 9.6 — Planned。
 
 决策明细见 [Part 9.5.5-C Final Implementation Design Freeze](<../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>)；ADR 总览见[系统架构总览的 ADR 状态表](../01_架构设计/AI人生回忆录平台_系统架构总览_V1.1.md#7-memory-前置决策边界)。
 
@@ -41,4 +41,4 @@ Current Part: Part 9.5.5-C — Design Frozen / Implementation Not Started。详�
 4. 每个 Part 完成必须通过 pytest / ruff / alembic check / PostgreSQL smoke。
 5. 每个 Part 独立 commit，保留历史审计轨迹。
 
-Part 9.5.5-C Design Freeze 是文档封板，不包含 Model、Migration、数据库、API 或测试实现；后续从 C1 开始依据 SSOT 实施。
+Part 9.5.5-C Design Freeze 文档保留设计封板时的历史快照。C1 本轮仅实现 PrivacyPolicyVersion、User 扩展、UserContact、AuthChallenge 与最小 rights-auth 基础；不含 Participant、Consent、协作、来源、删除或净化业务。生产加密/投递/限流能力未接入时，验证入口保持关闭；生产 retention 值尚未冻结。

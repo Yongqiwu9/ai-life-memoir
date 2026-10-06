@@ -1,6 +1,8 @@
 import logging
 
 from fastapi import FastAPI, Request, status
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
@@ -64,3 +66,13 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppException, app_exception_handler)
     app.add_exception_handler(Exception, unhandled_exception_handler)
+    app.add_exception_handler(RequestValidationError, privacy_validation_exception_handler)
+
+
+async def privacy_validation_exception_handler(request: Request, exc: RequestValidationError):
+    from app.core.config import settings
+
+    if request.url.path.startswith(settings.API_V1_PREFIX + "/rights-auth/"):
+        # Pydantic's default `input` can disclose a raw channel or verification code.
+        return JSONResponse(status_code=422, content={"detail": "Invalid rights-auth request"})
+    return await request_validation_exception_handler(request, exc)

@@ -53,7 +53,7 @@ def get_current_user(
 
     try:
         user_id = uuid.UUID(subject)
-    except ValueError as exc:
+    except (ValueError, TypeError, AttributeError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
@@ -61,7 +61,16 @@ def get_current_user(
         ) from exc
 
     user = user_crud.get_user_by_id(db, user_id)
-    if user is None or not user.is_active:
+    if (
+        user is None
+        or not user.is_active
+        or user.principal_kind != "account"
+        or payload.get("token_type") != "account"
+        or payload.get("principal_kind") != "account"
+        or payload.get("scope") != ["account:api"]
+        or type(payload.get("auth_generation")) is not int
+        or payload["auth_generation"] != user.auth_generation
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
