@@ -72,7 +72,11 @@ def register_exception_handlers(app: FastAPI) -> None:
 async def privacy_validation_exception_handler(request: Request, exc: RequestValidationError):
     from app.core.config import settings
 
-    if request.url.path.startswith(settings.API_V1_PREFIX + "/rights-auth/"):
+    privacy_paths = (
+        settings.API_V1_PREFIX + "/rights-auth/",
+        settings.API_V1_PREFIX + "/identity-verifications/",
+    )
+    if request.url.path.startswith(privacy_paths) or "/invitations" in request.url.path:
         # Pydantic's default `input` can disclose a raw channel or verification code.
         return JSONResponse(status_code=422, content={"detail": "Invalid rights-auth request"})
     return await request_validation_exception_handler(request, exc)

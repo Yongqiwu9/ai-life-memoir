@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Not Started
+Implementation: Partial — C2A Implementation Written / Audit Remediation Completed / Pre-Commit Re-Audit Pending；FamilyInvitation / FamilyMembership / durable idempotency 已写入 working tree；Revision 与内容访问门禁尚未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的 Family 协作、邀请、修订审批和权限边界。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -14,11 +14,13 @@ Implementation: Not Started
 
 ## Current Implementation
 
-- `Family` 只有 `owner_id` 这一账号归属；当前没有 FamilyMembership、FamilyInvitation 或修订审批模型。
-- Family Service / CRUD 使用 `Family.id + owner_id` 校验和查询。FamilyMember、Interview 及其 Session / Message / Audio / Transcript 数据继续沿归属链检查同一个 Owner。
-- API 从 JWT 得到当前 User。现有 Family/FamilyMember/Interview 的创建和编辑操作没有邀请或 Owner 审批流程。
+- `Family.owner_id` 仍是唯一 Owner 权威；其 User FK 已由 CASCADE 改为 RESTRICT。Owner 不建立 Membership。
+- C2A 已新增 FamilyInvitation、FamilyMembership 与持久化 CommandIdempotencyRecord。Membership 仅允许 collaborator，状态为 active/revoked/left；revoke、leave、rejoin 均递增 generation，重入复用同一行。
+- Owner 可直接创建 approved Invitation；active Collaborator 创建 pending_owner Invitation，由 Owner approve/reject；requester 可 cancel，Owner 可 revoke 未接受邀请。接受要求 account JWT、邀请 token、本人 Contact 即时核验和 invitation-bound verification proof。
+- 新增 Owner / active Collaborator authorization primitive 只用于邀请和 Membership 管理。Family、FamilyMember、Interview 及 Session / Message / Audio / Transcript 等既有内容 API 继续沿 Owner 链隔离。
+- 所有 C2A public mutation 要求 Idempotency-Key；业务变更与安全响应元数据同事务提交。response_body 只接受按 operation 注册的强类型安全 snapshot，未知字段和未声明嵌套对象默认拒绝；重放不持久化 OTP、邀请明文 token、proof 或 recipient PII，proof 重签保持原始签发与过期时间语义。
 - `FamilyMember` 只有 `family_id`、`name` 与基础主键/时间字段，没有与 User 的登录身份映射。
-- 当前 Owner-only 是已经实现的访问限制；Family Collaboration 及本 ADR 的目标权限尚未实现。
+- RevisionProposal、Participant/Consent 门禁、内容共享和 Speaker 权利流程尚未实现；因此 C2A 不是完整 Family Collaboration 上线。
 
 ## Decision
 
@@ -65,7 +67,7 @@ Owner 审批只确认协作操作或修订版本，不允许代替自主成年 S
 
 ## Migration Impact
 
-本 ADR 更新仅归档设计，不创建 Model、Schema、Service、API 或 Alembic revision。后续实现按 SSOT 追加迁移：保留 `Family.owner_id`，将其外键删除行为调整为 RESTRICT，新增 Invitation / Membership / Revision 等结构，并在完整权限门禁切换前保持当前 Owner-only 行为。
+C2A revision `b7e2c4d891a0` 已在 working tree 新增 CommandIdempotencyRecord、Invitation、Membership，并将 `Family.owner_id` 外键删除行为调整为 RESTRICT；新业务表不做历史 backfill。RevisionProposal 与完整内容权限切换仍按 SSOT 后续实施。
 
 历史数据不得通过 FamilyMember 姓名推断 User、Collaborator、Participant、Speaker 或 Consent。V1 不开放 User hard delete、Owner 转移或身份自动合并。
 
@@ -92,6 +94,7 @@ Owner 审批只确认协作操作或修订版本，不允许代替自主成年 S
 - [Family Schema](../../../apps/backend/app/schemas/family.py)、[FamilyMember Schema](../../../apps/backend/app/schemas/family_member.py)
 - [Family Service](../../../apps/backend/app/services/family.py)、[FamilyMember Service](../../../apps/backend/app/services/family_member.py)、[Interview Service](../../../apps/backend/app/services/interview.py)
 - [Family CRUD](../../../apps/backend/app/crud/family.py)、[Family API](../../../apps/backend/app/api/v1/families.py)、[FamilyMember API](../../../apps/backend/app/api/v1/family_members.py)
+- [Collaboration Model](../../../apps/backend/app/models/collaboration.py)、[Collaboration Service](../../../apps/backend/app/services/collaboration.py)、[Collaboration API](../../../apps/backend/app/api/v1/collaboration.py)
 
 ## Revision History
 
@@ -99,3 +102,4 @@ Owner 审批只确认协作操作或修订版本，不允许代替自主成年 S
 | --- | --- | --- |
 | 2026-10-05 | V1.0 | Part 9.5.5-A；记录家庭协作约束与 Proposed 访问关系。 |
 | 2026-10-05 | V1.1 | Part 9.5.5-C Design Freeze；冻结 Owner/Membership、邀请、不可变修订、Owner 审批及权限门禁；Implementation Not Started。 |
+| 2026-10-06 | V1.2 | C2A Invitation / Membership / durable idempotency implementation written；audit remediation completed，Pre-Commit Re-Audit pending；内容权限与 Revision 仍未实现。 |

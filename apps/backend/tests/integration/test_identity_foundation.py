@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, delete, inspect, select, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import DBAPIError, IntegrityError
@@ -94,10 +95,11 @@ def test_downgrade_refuses_identity_or_privacy_evidence(migration_schema, unsafe
     with pytest.raises(RuntimeError, match="downgrade refused"):
         command.downgrade(config, "adf9c60d178d")
     command.check(config)
+    expected_head = ScriptDirectory.from_config(config).get_current_head()
     with engine.connect() as connection:
         assert (
             connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-            == "c1a7d45e92b0"
+            == expected_head
         )
 
 

@@ -241,3 +241,24 @@ python -m alembic check
 - 生产限制：encryption provider、verification delivery、key management/rotation、production rate limiting 仍未实现，默认 fail closed。
 - C2：Next / Not Started；未实现 FamilyMembership、FamilyInvitation、InterviewParticipant、Consent、SourceArtifact、Deletion Pipeline、Sanitization 或 MemoryCandidate。
 - Part 9.6：Planned。
+
+## 5. Part 9.5.5-C2A Family Collaboration Foundation 本地实施记录
+
+日期：2026-10-06。起始/结束 HEAD：`0add93b755422afcf69c6029c4c72879405eb98d`；本轮未暂存、未提交、未推送。
+
+- 归档 C2 Design Addendum 和 C2A Implementation Task；C2A 与整个 C2 完成状态明确分离。
+- 新增 CommandIdempotencyRecord、FamilyInvitation、FamilyMembership；`Family.owner_id` 仍是唯一 Owner 权威，FK 从 CASCADE 调整为 RESTRICT，不为 Owner 创建 Membership，不做历史业务 backfill。
+- Membership 仅允许 collaborator；active/revoked/left；revoke、leave、rejoin 递增 generation；新邀请重入复用同一 `(family_id,user_id)` 行。
+- Owner 邀请直接 approved；active Collaborator 邀请进入 pending_owner 并需 Owner 审批。accept 在单事务内锁定并校验 Invitation、token、context-bound proof、account/UserContact，再创建或重启 Membership并标记 Invitation accepted。
+- 新增 invitation_acceptance challenge 和短期 verification_proof；严格校验 token type、scope、aud/iss、context、account、Contact 和 auth_generation。proof 不能访问 account、Family 或 rights API，也不表示 Participant verified 或 Consent。
+- public mutation 使用持久化 Idempotency-Key / canonical digest；同 key 同 digest 重放 operation-specific 强类型安全 snapshot，不同 digest 返回冲突；未知 operation、错误 snapshot、额外字段和未声明嵌套对象默认拒绝。response_body 不保存 OTP、邀请明文 token、proof、Contact PII/hash/ciphertext 或 provider credential；proof 重放保持原始 `iat`/`exp`。
+- 新增邀请和 Membership API。可复用 Owner / active Collaborator 门禁只用于协作管理；既有 Family/FamilyMember/Interview/Session/Audio/Transcript/Segment/Message 内容 API 继续 Owner-only。
+- revision `b7e2c4d891a0` → down `c1a7d45e92b0`，单 head；新表有 CHECK、partial unique、token digest unique、Membership unique 和明确 FK 删除行为。存在 C2A 业务/幂等证据时 downgrade 拒绝。
+- Audit remediation：补齐 active Collaborator 对 Family/FamilyMember/Interview/Session/Audio/Transcript/Segment/Message 的精确 404 与无内容泄露矩阵；验证其仍可发起 pending_owner Invitation。新增 Collaborator create Invitation 与 Owner revoke Membership 的 PostgreSQL 竞争测试，证明现有 Family→Membership 锁顺序线性化，并验证 revoke 后新命令拒绝、Owner 命令不受影响。
+- Validation：Ruff PASS；format PASS；Fast 161 passed / 29 integration deselected；PostgreSQL integration 29 passed / 161 non-integration deselected；Alembic heads/current/check 及测试后 current/check PASS；最终 head `b7e2c4d891a0`，无 schema drift。
+- PostgreSQL 覆盖 fresh isolated schema migration、JSONB/BYTEA/TIMESTAMPTZ、FK/CHECK/partial unique、身份字段和完成幂等记录不可变约束、double accept、accept/expire、approve/cancel、approve/revoke、rejoin/stale-generation、Membership revoke authorization race、duplicate invitation 和重复幂等命令的竞争结果。
+- 非阻塞警告：Starlette TestClient/httpx 弃用提示；pytest cache 目录 WinError 183。所有要求的检查退出码为 0。
+- 未实现 InterviewParticipant、`participant_confirmation`、Consent、Source/Provenance、RevisionProposal、Deletion、PrivacyOutbox、Sanitization、MemoryCandidate、Memory 或 Memoir；未修改 workflow，未运行生产 migration。
+- Git 安全：staging empty；16 项既有模板删除继续 unstaged；`ad` 保持 untracked；`.env.test` 保持 ignored 且未输出内容。
+
+结论：C2A Implementation Written / Audit Remediation Completed / Pre-Commit Re-Audit Pending；C2B Next / Not Started；Part 9.6 Planned。此状态不构成暂存、提交或推送授权。

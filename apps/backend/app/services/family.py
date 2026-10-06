@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import NotFoundException
 from app.crud import family as family_crud
 from app.models.family import Family
+from app.models.user import User
 from app.schemas.family import FamilyCreate, FamilyUpdate
 
 
@@ -15,8 +16,10 @@ def _get_owned_family(db: Session, *, user_id: uuid.UUID, family_id: uuid.UUID) 
     return family
 
 
-def create_family(db: Session, *, user_id: uuid.UUID, data: FamilyCreate) -> Family:
-    return family_crud.create_family(db, owner_id=user_id, name=data.name)
+def create_family(db: Session, *, actor: User, data: FamilyCreate) -> Family:
+    if actor.principal_kind != "account":
+        raise NotFoundException("User not found")
+    return family_crud.create_family(db, owner_id=actor.id, name=data.name)
 
 
 def get_family(db: Session, *, user_id: uuid.UUID, family_id: uuid.UUID) -> Family:

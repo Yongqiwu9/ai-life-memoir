@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Partial — C1 Policy / Identity Foundation Completed / Sealed（commit `35ec7e33a060b07e4834091b04c2caeb852b707c`；Backend CI run `37412935434` success）；Consent / Withdrawal / Deletion / Restore / Sanitization 尚未实现。
+Implementation: Partial — C1 Policy / Identity Foundation Completed / Sealed；C2A 已实现邀请专用 account-bound verification proof 和 FamilyMembership 基础并通过本地验证；Consent / Withdrawal / Deletion / Restore / Sanitization 尚未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的 Consent、用途分支、撤回、历史恢复、净化、删除传播、备份恢复和 Policy 合同。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -17,7 +17,8 @@ Implementation: Partial — C1 Policy / Identity Foundation Completed / Sealed�
 - C1 新增 PrivacyPolicyVersion / UserContact / AuthChallenge 与 User capability / generation。Policy 草稿允许缺参，发布必须完整校验正整数 seconds、期限覆盖、告知及能力证据；已发布内容不可变，只有一个 active 版本，缺失/篡改/未验证时处理门禁拒绝开放。
 - rights-auth 是本人认证基础，不等于 Consent 生效或 Speaker / Source 身份已确认；默认生产 Provider 不可用。Policy-independent safety path 仅分类 withdrawal/deletion，不受 active Policy 缺失阻挡，但尚无这些业务 API 或 Pipeline，后续仍须核验本人及来源范围。
 
-- 当前资源访问通过 `Family.owner_id` 沿 Interview / Session / Audio / Transcript 等关系校验 Owner；尚无 FamilyMembership、InterviewParticipant、SourceSpeakerBinding 或 Consent 模型/API。
+- C2A 已新增 FamilyMembership，但仅用于邀请/成员管理；现有内容资源仍通过 `Family.owner_id` 沿 Interview / Session / Audio / Transcript 等关系校验 Owner。尚无 InterviewParticipant、SourceSpeakerBinding 或 Consent 模型/API。
+- `invitation_acceptance` verification proof 严格绑定 account、Contact、Invitation 和 auth_generation；它不表示 Speaker 身份、来源归属或任何 Consent，不能复用于未来授权接口。
 - `Interview.family_member_id` 指向回忆对象。`InterviewMessage.role=user` 只表示消息角色；`TranscriptSegment.speaker` 是可空字符串，均不能作为本人身份或授权证据。
 - AudioRecording、Transcript、TranscriptSegment 只有元数据模型/API。没有真实录音上传、对象存储、外部 STT、AI Pipeline、撤回处理或本人来源删除流程。
 - Message 可通过 `transcript_segment_id` 回链 Segment；该外键为 `ON DELETE SET NULL`，删除 Segment 不会删除 Message 正文副本。
@@ -121,3 +122,4 @@ ConsentEvent、DeletionLedger、错误日志和处理证据遵守数据最小化
 | --- | --- | --- |
 | 2026-10-05 | V1.0 | Part 9.5.5-A；记录 Consent、撤回和删除的已确认约束及 Proposed 实施问题。 |
 | 2026-10-05 | V1.1 | Part 9.5.5-C Design Freeze；冻结用途/Source 授权、撤回、恢复、净化、六阶段删除、Ledger、备份恢复与 Policy fail-safe；Implementation Not Started。 |
+| 2026-10-06 | V1.2 | C2A invitation-bound proof 与 Membership 基础已本地验证；明确 proof/Membership 不构成 Consent，Consent 及删除生命周期仍未实现。 |

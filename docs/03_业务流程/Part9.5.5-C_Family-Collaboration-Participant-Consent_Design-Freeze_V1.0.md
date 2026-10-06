@@ -13,6 +13,8 @@
 
 本文件是 Part 9.5.5-C 后续 C1–C8 实现的详细设计 SSOT。以下正文完整归档已确认的 Final Implementation Design Freeze；正文中的“本轮”指只读设计冻结讨论，归档任务仅修改文档。Markdown 标记及内部链接已整理，设计语义保持不变。
 
+C2 implementation clarification 见 [Part 9.5.5-C2 Design Freeze Addendum V1.0](Part9.5.5-C2_Design-Addendum_V1.0.md)。该 Addendum 补充 C2 Participant domain、context-bound identity verification 与 durable command idempotency，不推翻本文其他冻结决策。
+
 ---
 
 基线已核对：master @ 10d28f3b327022f651976089c6ae58a78a0de7c1。

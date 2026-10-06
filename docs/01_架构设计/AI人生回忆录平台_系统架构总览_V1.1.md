@@ -1,8 +1,8 @@
 # AI人生回忆录平台 — 系统架构总览 V1.1
 
 > Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)。
-> 当前状态：9.5.5-B Completed / Sealed；9.5.5-C DESIGN FROZEN / IMPLEMENTATION IN PROGRESS；C1 Completed / Sealed；C2 Next / Not Started；9.6 Planned。阶段来源为 [README](../../README.md) 和 [路线图](../05_开发阶段记录/Part开发路线图_V2.0.md)。
-> 下文保留 Part 9.5 / 9.5.5-A 架构快照，包括当时的阶段、ADR 状态及未决项；已在 C 冻结的权限、身份、Consent、来源、修订和删除决策以该 SSOT 及更新后的 ADR 为准。ADR-004/005/006 已 Accepted，但 FamilyMembership、Consent、Deletion Pipeline、Sanitization 均尚未实现。
+> 当前状态：9.5.5-B Completed / Sealed；9.5.5-C DESIGN FROZEN / IMPLEMENTATION IN PROGRESS；C1 Completed / Sealed；C2A Implementation Written / Audit Remediation Completed / Pre-Commit Re-Audit Pending；C2B Next / Not Started；9.6 Planned。阶段来源为 [README](../../README.md) 和 [路线图](../05_开发阶段记录/Part开发路线图_V2.0.md)。
+> 下文保留 Part 9.5 / 9.5.5-A 架构快照，包括当时的阶段、ADR 状态及未决项；已在 C 冻结的权限、身份、Consent、来源、修订和删除决策以该 SSOT 及更新后的 ADR 为准。ADR-004/005/006 已 Accepted；C2A 已实现 FamilyMembership / FamilyInvitation 基础，但 InterviewParticipant、Consent、Deletion Pipeline、Sanitization 尚未实现。
 
 ## 1. 平台目标
 
@@ -20,6 +20,8 @@ User → Family → FamilyMember → Interview → InterviewSession
 C1 当前增量：现有 User 增加 account / rights_only / system 能力类型与 auth_generation；仅新建 PrivacyPolicyVersion、UserContact、AuthChallenge。rights-auth challenge、verify 与 rights/me 提供认证基础，不建立 Speaker、Participant、Consent 或 Family 访问权。account 与 rights JWT 分离校验，旧无类型 token 须重新登录。PrivacyPolicyVersion 发布后内容不可变；缺值、缺能力证据或完整性失败时，新处理保持关闭。撤回/删除仅预留独立安全路径分类，没有实现流程。
 
 C1 已由 implementation commit `35ec7e33a060b07e4834091b04c2caeb852b707c` 实施，并由 Backend CI run `37412935434` 远程验证成功。该封板只证明上述基础范围：rights_only authentication 不等于 Speaker identity、Consent、Source ownership 或 Family collaboration permission。
+
+C2A working tree 增量：新增 CommandIdempotencyRecord、FamilyInvitation、FamilyMembership、Owner/active Collaborator 协作管理门禁、`invitation_acceptance` challenge 与 context-bound verification proof。Owner 邀请直接 approved；Collaborator 邀请进入 pending_owner；本人核验接受后以同一事务创建或重启 Membership。幂等重放只持久化按 operation 注册的强类型安全 snapshot，未知字段和未声明嵌套对象默认拒绝。既有内容 API 没有因此向 Collaborator 开放，并由完整内容拒绝矩阵验证。
 
 生产认证渠道的加密、密钥管理、投递与限流仍待经过验证的 Provider adapter；默认拒绝开放。测试替身使用内存 opaque vault，不能作为生产密码学实现。新增 migration 仅在专用测试库验证，没有运行生产迁移。下文既有快照不用于判断 C1 是否已实施。
 
@@ -43,7 +45,7 @@ Dependency = 认证/权限
 - CRUD：纯数据库访问。
 - Model：SQLAlchemy 2.x typed mapping，UUID 主键、timezone-aware UTC。
 
-Current Implementation 为 Owner-only isolation，当前用户一律来自 JWT，禁止信任 request body 中的 user_id。首版支持 Family Collaboration 是已确认 Product Decision，目标 User → FamilyMembership → Family 的权限方案仍为 Proposed；不能把 Owner-only 描述为最终产品权限模型。
+Current Implementation 对既有档案内容仍执行 Owner-only isolation，当前用户一律来自 JWT，禁止信任 request body 中的 user_id。C2A 已实现 User → FamilyMembership → Family 的协作管理基础；Membership 只证明 active collaborator 状态，不授予内容读取、Speaker 身份或 Consent。
 
 ## 3. AI Service 未来职责
 
@@ -101,14 +103,16 @@ AI 输出的是候选内容，须人工确认后成为 Memory；来源追踪必�
 | 9.3 | Family + FamilyMember | 数据模型/API 完成；当前 Owner-only |
 | 9.4 | Interview / InterviewSession / InterviewMessage | 数据模型/API 完成；目标状态机 Proposed |
 | 9.5 | AudioRecording / Transcript / TranscriptSegment | 元数据模型/API 完成；真实上传/STT 未实现 |
-| 9.5.5 | Memory 前置基础设施/架构决策 | 进行中；9.5.5-A 文档交付供人工审查 |
+| 9.5.5 | Memory 前置基础设施/架构决策 | C1 Completed / Sealed；C2A Implementation Written / Audit Remediation Completed / Pre-Commit Re-Audit Pending；C2B Next |
 | 9.6 | Memory Extraction | Planned；模型、提取及确认流程尚未实现 |
 
 当前数据模型已形成：
 
 ```text
 User
- └── Family
+ └── Family（owner_id 唯一 Owner 权威）
+      ├── FamilyInvitation
+      ├── FamilyMembership（Collaborator only）
       └── FamilyMember
             └── Interview
                   └── InterviewSession
@@ -122,16 +126,16 @@ User
 
 ## 7. Memory 前置决策边界
 
-本轮 Part 9.5.5-A 只整理文档。Accepted 表示对应决策范围已确认，不表示代码实现或全链删除已验收。
+下表记录 ADR 的当前设计状态。Accepted 表示决策范围已确认；具体实现范围仍须结合 C1/C2A 状态判断，不表示全链功能已验收。
 
 | ADR | Status | 决策范围 |
 | --- | --- | --- |
 | [ADR-001 Segment-Message关系](<../06_技术决策记录/ADR/ADR-001 Segment-Message关系.md>) | Accepted（既有） | Segment 可关联 0..N 个 Message，每个 Message 最多回链一个 Segment |
 | [ADR-002 User账号删除策略](<../06_技术决策记录/ADR/ADR-002 User账号删除策略.md>) | Proposed | 账号处置、Owner 转移和保留规则未定；记录现有 User→Family CASCADE 风险 |
 | [ADR-003 Family档案删除策略](<../06_技术决策记录/ADR/ADR-003 Family档案删除策略.md>) | Accepted | Owner 可删除整个 Family Archive，包括协作者贡献；不能否决 Speaker 本人有效撤回/删除 |
-| [ADR-004 Family协作权限模型](<../06_技术决策记录/ADR/ADR-004 Family协作权限模型.md>) | Proposed | 协作方向已确认，角色能力和编辑审批粒度未定 |
-| [ADR-005 Interview参与者与讲述者模型](<../06_技术决策记录/ADR/ADR-005 Interview参与者与讲述者模型.md>) | Proposed | 一个 subject、多个 speaker 的概念已确认，身份关联和最小参与者基数未定 |
-| [ADR-006 Consent授权撤回与删除策略](<../06_技术决策记录/ADR/ADR-006 Consent授权撤回与删除策略.md>) | Proposed | 本人同意、撤回与删除原则已确认，结构、核验和派生处理流程未定 |
+| [ADR-004 Family协作权限模型](<../06_技术决策记录/ADR/ADR-004 Family协作权限模型.md>) | Accepted；C2A partial implementation | Invitation / Membership / generation /协作管理门禁已实现；Revision 与内容权限门禁未实现 |
+| [ADR-005 Interview参与者与讲述者模型](<../06_技术决策记录/ADR/ADR-005 Interview参与者与讲述者模型.md>) | Accepted；C1/C2A foundation only | 统一 User/Contact/核验基础已有；InterviewParticipant / Speaker 归属仍待 C2B |
+| [ADR-006 Consent授权撤回与删除策略](<../06_技术决策记录/ADR/ADR-006 Consent授权撤回与删除策略.md>) | Accepted；foundation only | Policy、身份核验与 context proof 基础已有；Consent / Withdrawal / Deletion 尚未实现 |
 | [ADR-007 Interview-Session状态机](<../06_技术决策记录/ADR/ADR-007 Interview-Session状态机.md>) | Proposed | 当前代码与目标状态枚举冲突；目标转换和历史迁移未冻结 |
 | [ADR-008 MemoryCandidate确认流程](<../06_技术决策记录/ADR/ADR-008 MemoryCandidate确认流程.md>) | Proposed | 候选→人工审阅→Memory 的目标链；确认权和版本策略未定 |
 | [ADR-009 AI-STT第三方数据处理边界](<../06_技术决策记录/ADR/ADR-009 AI-STT第三方数据处理边界.md>) | Proposed | 遵守 Backend/AI Service 边界；Provider、留存、训练和删除传播未定 |

@@ -27,7 +27,7 @@ Family Archive 是产品范围的概念，当前没有独立的 `FamilyArchive` 
 - Family 下已有 FamilyMember、Interview、InterviewSession、InterviewMessage 和 Audio/Transcript/Segment 的模型与元数据 API；主要归属外键声明 CASCADE。
 - ORM 关系的删除配置不完全一致，例如 `FamilyMember.interviews`、`InterviewSession.audio_recordings` 未配置 ORM 删除级联或 `passive_deletes`。因此不能仅依据外键声明就断言现有 API 已完成或已经验证全链删除。
 - `InterviewMessage.transcript_segment_id` 为 `SET NULL`；单独删除 Segment 不会凭该外键删除 Message。来源删除不能仅通过断开引用实现。
-- 当前没有 FamilyMembership、讲述者身份、Consent、本人数据删除申请或派生内容清理实现。MemoryCandidate / Memory 尚未实现。
+- C2A 已新增 FamilyMembership / FamilyInvitation；讲述者身份、Consent、本人数据删除申请和派生内容清理仍未实现。MemoryCandidate / Memory 尚未实现。
 - AudioRecording 当前只是元数据；没有实际音频上传、对象存储和 STT Provider 集成。没有可据此宣称已完成的音频二进制或第三方清理流程。
 
 ## Decision

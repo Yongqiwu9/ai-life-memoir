@@ -5,8 +5,10 @@ from fastapi import FastAPI
 from app.api.v1 import (
     audios,
     auth,
+    collaboration,
     families,
     family_members,
+    identity_verifications,
     interviews,
     rights_auth,
     sessions,
@@ -35,9 +37,11 @@ register_exception_handlers(app)
 
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(audios.router, prefix=settings.API_V1_PREFIX)
+app.include_router(collaboration.router, prefix=settings.API_V1_PREFIX)
 app.include_router(families.router, prefix=settings.API_V1_PREFIX)
 app.include_router(family_members.router, prefix=settings.API_V1_PREFIX)
 app.include_router(interviews.router, prefix=settings.API_V1_PREFIX)
+app.include_router(identity_verifications.router, prefix=settings.API_V1_PREFIX)
 app.include_router(sessions.router, prefix=settings.API_V1_PREFIX)
 app.include_router(transcripts.router, prefix=settings.API_V1_PREFIX)
 app.include_router(users.router, prefix=settings.API_V1_PREFIX)

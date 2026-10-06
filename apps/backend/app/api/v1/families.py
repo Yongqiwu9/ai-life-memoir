@@ -20,7 +20,7 @@ PageSize = Annotated[int, Query(ge=1, le=100)]
 
 @router.post("", response_model=FamilyRead, status_code=status.HTTP_201_CREATED)
 def create_family(data: FamilyCreate, db: SessionDep, current_user: CurrentUser) -> FamilyRead:
-    family = family_service.create_family(db, user_id=current_user.id, data=data)
+    family = family_service.create_family(db, actor=current_user, data=data)
     return FamilyRead.model_validate(family)
 
 

@@ -137,6 +137,23 @@ def require_processing_capability(db: Session, capability: ProcessingCapability)
     return policy
 
 
+def invitation_window_seconds(db: Session) -> int:
+    """Return the explicit active-policy invitation window; never invent a default."""
+    policies = crud.active_policies(db)
+    try:
+        if len(policies) != 1:
+            raise ValueError("No unique active policy")
+        policy = policies[0]
+        _validate_complete(policy)
+        if policy.published_at is None:
+            raise ValueError("Unpublished policy")
+        return PolicyParameters.model_validate(policy.parameters).invitation_window.seconds
+    except (ValidationError, ValueError, TypeError):
+        raise AppException(
+            "Invitation policy unavailable", code="POLICY_UNAVAILABLE", status_code=503
+        ) from None
+
+
 def privacy_safety_path(action: PrivacySafetyAction) -> None:
     """Policy-independent classification only, not a withdrawal/deletion implementation.
 

@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Partial — C1 Identity Foundation Completed / Sealed（commit `35ec7e33a060b07e4834091b04c2caeb852b707c`；Backend CI run `37412935434` success）；InterviewParticipant / Speaker 归属尚未实现。
+Implementation: Partial — C1 Identity Foundation Completed / Sealed；C2A 已实现 account-bound invitation verification proof 与 Membership 基础并通过本地验证；InterviewParticipant / `participant_confirmation` / Speaker 归属仍未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的统一 User 主体、InterviewParticipant、本人核验和来源讲述者边界。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -21,7 +21,8 @@ Implementation: Partial — C1 Identity Foundation Completed / Sealed（commit `
 - Session 只关联 Interview。Message 只关联 Session，并具有 `role`、`source` 和可空的 `transcript_segment_id`；没有实际讲述者字段。
 - Message 的 `role=user` 表示消息角色，不能确定是哪位人类讲述。客户端文本输入仅允许 `user/text`；服务端可从 Segment 创建 `user/audio_transcript` 消息。
 - `TranscriptSegment.speaker` 是可空字符串，不是 User、Participant 或经确认的授权主体。
-- 当前没有 FamilyMembership、InterviewParticipant、本人资格核验、SourceSpeakerBinding、Consent 或多人来源 Memory 实现。
+- C2A 已有 FamilyMembership 和 account-bound `invitation_acceptance` 核验，但该证明只用于接受特定 Invitation，不能作为 Participant verified、Speaker 归属或 Consent。
+- 当前没有 InterviewParticipant、`participant_confirmation`、Speaker 本人资格投影、SourceSpeakerBinding、Consent 或多人来源 Memory 实现。
 
 ## Decision
 
@@ -105,3 +106,4 @@ Family 访问、Participant 身份和 Speaker 本人权利分别校验。知道�
 | 2026-10-05 | V1.0 | Part 9.5.5-A；区分账号、档案人物、访问关系和实际讲述者。 |
 | 2026-10-05 | V1.1 | Part 9.5.5-C Design Freeze；冻结统一 User、Participant、本人核验及 operator/speaker/consenter 边界；Implementation Not Started。 |
 | 2026-10-05 | V1.2 | C1 Identity Foundation Implemented / Validated；普通访问仍 Owner-only，生产验证能力未开放，Participant / Consent 尚未实现。 |
+| 2026-10-06 | V1.3 | C2A invitation-bound account verification 与 Membership 基础已本地验证；Participant verified / Speaker / Consent 仍未实现。 |

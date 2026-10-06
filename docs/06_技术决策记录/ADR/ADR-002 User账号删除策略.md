@@ -27,7 +27,7 @@ Owner 可以删除整个 Family，不能据此推定“注销 Owner 账号时自
 - Family.owner_id 为非空外键，声明 ondelete="CASCADE"。对应 Alembic 迁移也声明了该数据库级联行为。
 - 下游 FamilyMember、Interview、Session、Audio、Transcript、Segment 等外键存在 CASCADE。直接通过 SQL 删除 User 可能沿该关系删除其 Family 数据树。
 - User.families 的 ORM relationship 没有显式配置删除级联。ORM 行为与数据库外键级联不能混为一谈，当前声明不能作为账号删除功能已定义的证据。
-- 当前没有 FamilyMembership、独立 Participant/Consent 模型，也没有 Memory/MemoryCandidate 实现。关联这些目标概念后的账号删除影响尚未覆盖。
+- C2A 已新增 FamilyMembership，并将 `families.owner_id` 改为 RESTRICT；独立 Participant/Consent、Memory/MemoryCandidate 仍未实现。账号注销、Owner 转移及这些后续关系的处置仍未决定。
 
 ## Proposed Decision
 
