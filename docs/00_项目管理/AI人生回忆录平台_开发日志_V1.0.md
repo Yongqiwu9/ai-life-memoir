@@ -174,7 +174,7 @@ Part 9.5.5-C1，依据 Design Freeze SSOT 开始实施。
 
 当前周期：
 
-Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identity Foundation — Implemented / Validated。Part 9.5.5-B 的 Local validation: PASS、Remote CI: VERIFIED / PASS 作为历史验收记录保留。
+Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identity Foundation — Completed / Sealed。Part 9.5.5-B — Completed / Sealed，其 Local validation: PASS、Remote CI: VERIFIED / PASS 作为历史验收记录保留。
 
 下一阶段：
 
@@ -226,3 +226,18 @@ python -m alembic check
 - Git：HEAD 未变、staging empty、16 项历史删除 unstaged、`ad` untracked/untouched、`.env.test` ignored；未 commit / push。
 
 结论：C1 Implemented / Validated；Part C 仍为 Implementation In Progress；C2 Not Started / Next；Part 9.6 Planned。READY FOR C1 PRE-COMMIT AUDIT，不代表已获授权暂存或提交。
+
+### Part 9.5.5-C1 Final Documentation Seal（2026-10-06）
+
+- Part：9.5.5-C1 Policy + Identity Foundation。
+- Status：Completed / Sealed；Part 9.5.5-C 整体仍为 Implementation In Progress。
+- Implementation commit：`35ec7e33a060b07e4834091b04c2caeb852b707c`，`feat: implement policy and identity foundation`。
+- Remote：`origin/master`；push 后 HEAD 与 origin/master 一致。
+- Remote CI：Backend CI；Run ID `37412935434`；[Run URL](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37412935434)；completed / success。
+- Local validation：Fast 139 passed / 17 deselected；targeted security 45 passed；PostgreSQL integration 17 passed / 139 deselected；Ruff PASS；Format PASS；Alembic heads/current/check 及测试后 current/check PASS。
+- Security audit：Critical 0；High 0；Medium 0。
+- 实施范围：PrivacyPolicyVersion、User principal_kind/auth_generation、UserContact、AuthChallenge、rights_only authentication foundation、Policy capability gate。
+- 边界：rights_only authentication 不等于 Speaker identity、Consent、Source ownership 或 Family collaboration permission。
+- 生产限制：encryption provider、verification delivery、key management/rotation、production rate limiting 仍未实现，默认 fail closed。
+- C2：Next / Not Started；未实现 FamilyMembership、FamilyInvitation、InterviewParticipant、Consent、SourceArtifact、Deletion Pipeline、Sanitization 或 MemoryCandidate。
+- Part 9.6：Planned。

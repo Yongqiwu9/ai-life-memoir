@@ -1,7 +1,7 @@
 # AI人生回忆录平台 — 系统架构总览 V1.1
 
 > Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)。
-> 当前状态：9.5.5-B Completed；9.5.5-C DESIGN FROZEN / IMPLEMENTATION IN PROGRESS；C1 Implemented / Validated；C2 Not Started / Next；9.6 Planned。阶段来源为 [README](../../README.md) 和 [路线图](../05_开发阶段记录/Part开发路线图_V2.0.md)。
+> 当前状态：9.5.5-B Completed / Sealed；9.5.5-C DESIGN FROZEN / IMPLEMENTATION IN PROGRESS；C1 Completed / Sealed；C2 Next / Not Started；9.6 Planned。阶段来源为 [README](../../README.md) 和 [路线图](../05_开发阶段记录/Part开发路线图_V2.0.md)。
 > 下文保留 Part 9.5 / 9.5.5-A 架构快照，包括当时的阶段、ADR 状态及未决项；已在 C 冻结的权限、身份、Consent、来源、修订和删除决策以该 SSOT 及更新后的 ADR 为准。ADR-004/005/006 已 Accepted，但 FamilyMembership、Consent、Deletion Pipeline、Sanitization 均尚未实现。
 
 ## 1. 平台目标
@@ -18,6 +18,8 @@ User → Family → FamilyMember → Interview → InterviewSession
 ## 2. Backend 架构
 
 C1 当前增量：现有 User 增加 account / rights_only / system 能力类型与 auth_generation；仅新建 PrivacyPolicyVersion、UserContact、AuthChallenge。rights-auth challenge、verify 与 rights/me 提供认证基础，不建立 Speaker、Participant、Consent 或 Family 访问权。account 与 rights JWT 分离校验，旧无类型 token 须重新登录。PrivacyPolicyVersion 发布后内容不可变；缺值、缺能力证据或完整性失败时，新处理保持关闭。撤回/删除仅预留独立安全路径分类，没有实现流程。
+
+C1 已由 implementation commit `35ec7e33a060b07e4834091b04c2caeb852b707c` 实施，并由 Backend CI run `37412935434` 远程验证成功。该封板只证明上述基础范围：rights_only authentication 不等于 Speaker identity、Consent、Source ownership 或 Family collaboration permission。
 
 生产认证渠道的加密、密钥管理、投递与限流仍待经过验证的 Provider adapter；默认拒绝开放。测试替身使用内存 opaque vault，不能作为生产密码学实现。新增 migration 仅在专用测试库验证，没有运行生产迁移。下文既有快照不用于判断 C1 是否已实施。
 

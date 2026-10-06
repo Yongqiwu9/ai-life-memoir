@@ -1,6 +1,6 @@
 # Database Schema Evolution_V1.0
 
-> 下文 V1–V4 及数据库原则记录既有数据库基线。Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)（DESIGN FROZEN / IMPLEMENTATION NOT STARTED）。
+> 下文 V1–V4 及数据库原则记录既有数据库基线。Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)；其 `IMPLEMENTATION NOT STARTED` 是归档时的历史状态。当前 Part C 为 Implementation In Progress，C1 已 Completed / Sealed。
 > 新增实体、FK 调整、历史资料 fail closed、来源及删除传播的迁移设计以该 SSOT 为准；尚未创建或执行 C 的 Migration。既有 CASCADE 声明不能代替冻结的生命周期政策。
 
 ## V1 基础模型
@@ -57,7 +57,9 @@ transcript_segment_id
 
 ## 当前数据库原则
 
-### C1 Policy + Identity Foundation（Implemented / Validated）
+### C1 Policy + Identity Foundation（Completed / Sealed）
+
+Implementation commit：`35ec7e33a060b07e4834091b04c2caeb852b707c`；Backend CI run `37412935434`：completed / success。
 
 - revision：`c1a7d45e92b0`，down revision：`adf9c60d178d`，单 head。
 - `users`：新增 `principal_kind`（account/rights_only/system）和 `auth_generation`；email/password_hash 按能力条件可空，CHECK 保证 account 有凭据、非 account 无密码凭据。已有用户仅回填 account / generation=1。

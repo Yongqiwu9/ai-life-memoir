@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Partial — C1 Policy / Identity Foundation Implemented / Validated；Consent / Withdrawal / Deletion / Restore / Sanitization 尚未实现。
+Implementation: Partial — C1 Policy / Identity Foundation Completed / Sealed（commit `35ec7e33a060b07e4834091b04c2caeb852b707c`；Backend CI run `37412935434` success）；Consent / Withdrawal / Deletion / Restore / Sanitization 尚未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的 Consent、用途分支、撤回、历史恢复、净化、删除传播、备份恢复和 Policy 合同。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
