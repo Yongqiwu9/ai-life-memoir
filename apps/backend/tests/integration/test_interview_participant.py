@@ -203,7 +203,7 @@ def test_postgres_parent_set_null_and_manual_family_member_changes(c2b_schema):
         ) == evidence
 
 
-def test_postgres_user_restrict_is_enforced_by_participant(c2b_schema):
+def test_postgres_verified_participant_identity_graph_blocks_user_delete(c2b_schema):
     config, engine = c2b_schema
     command.upgrade(config, "head")
     with Session(engine, expire_on_commit=False) as db:
@@ -257,7 +257,7 @@ def test_postgres_user_restrict_is_enforced_by_participant(c2b_schema):
         with pytest.raises(IntegrityError) as error:
             delete_db.execute(text("DELETE FROM users WHERE id=:id"), {"id": user_id})
             delete_db.commit()
-        assert error.value.orig.sqlstate == "23001"
+        assert error.value.orig.sqlstate == "23503"
         delete_db.rollback()
 
     with Session(engine) as read_db:
@@ -313,7 +313,7 @@ def test_postgres_participant_user_fk_directly_restricts_delete(c2b_schema):
         with pytest.raises(IntegrityError) as error:
             delete_db.execute(text("DELETE FROM users WHERE id=:id"), {"id": user_id})
             delete_db.commit()
-        assert error.value.orig.sqlstate == "23001"
+        assert error.value.orig.sqlstate == "23503"
         assert error.value.orig.diag.constraint_name == constraint_name
         delete_db.rollback()
 

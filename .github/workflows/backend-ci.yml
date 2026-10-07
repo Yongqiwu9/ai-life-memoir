@@ -12,7 +12,7 @@ jobs:
         working-directory: apps/backend
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16.15
         env:
           POSTGRES_USER: ci_test_user
           POSTGRES_PASSWORD: ci_test_password
