@@ -12,6 +12,7 @@ from sqlalchemy import (
     Integer,
     LargeBinary,
     String,
+    UniqueConstraint,
     Uuid,
     event,
     func,
@@ -69,6 +70,7 @@ class PrivacyPolicyVersion(IdentityTimestamps, Base):
 class UserContact(IdentityTimestamps, Base):
     __tablename__ = "user_contacts"
     __table_args__ = (
+        UniqueConstraint("id", "user_id", name="uq_user_contacts_id_user"),
         CheckConstraint("kind IN ('email', 'phone')", name="ck_user_contact_kind"),
         CheckConstraint(
             "state IN ('pending', 'verified', 'revoked', 'legacy_unverified')",

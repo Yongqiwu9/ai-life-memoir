@@ -17,6 +17,7 @@ from app.models.identity_foundation import (  # noqa: F401
 )
 from app.models.interview import Interview  # noqa: F401
 from app.models.interview_message import InterviewMessage  # noqa: F401
+from app.models.interview_participant import InterviewParticipant  # noqa: F401
 from app.models.interview_session import InterviewSession  # noqa: F401
 from app.models.transcript import Transcript  # noqa: F401
 from app.models.transcript_segment import TranscriptSegment  # noqa: F401

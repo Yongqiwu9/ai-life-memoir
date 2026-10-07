@@ -105,9 +105,39 @@ class MembershipList(BaseModel):
 class IdentityVerificationChallengeCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    context_kind: Literal["invitation_acceptance"]
+    context_kind: Literal["invitation_acceptance", "participant_confirmation"]
     context_id: uuid.UUID
-    invitation_token: SecretStr = Field(repr=False, min_length=1, max_length=512)
+    invitation_token: SecretStr | None = Field(
+        default=None, repr=False, min_length=1, max_length=512
+    )
+    contact_kind: Literal["email", "phone"] | None = None
+    contact: SecretStr | None = Field(default=None, repr=False, max_length=320)
+
+    @model_validator(mode="after")
+    def validate_context_fields(self):
+        if self.context_kind == "invitation_acceptance":
+            if (
+                self.invitation_token is None
+                or self.contact_kind is not None
+                or self.contact is not None
+            ):
+                raise ValueError("Invalid invitation verification request")
+            return self
+        if self.invitation_token is not None or (self.contact_kind is None) != (
+            self.contact is None
+        ):
+            raise ValueError("Invalid participant verification request")
+        if self.contact is not None:
+            raw = self.contact.get_secret_value().strip()
+            try:
+                if self.contact_kind == "email":
+                    raw = str(TypeAdapter(EmailStr).validate_python(raw)).lower()
+                elif not re.fullmatch(r"\+[1-9][0-9]{7,14}", raw):
+                    raise ValueError()
+            except ValueError:
+                raise ValueError("Invalid contact format") from None
+            self.contact = SecretStr(raw)
+        return self
 
 
 class IdentityVerificationChallengeVerify(BaseModel):

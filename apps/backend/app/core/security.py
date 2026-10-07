@@ -123,13 +123,14 @@ def create_verification_proof(
     contact_id: str,
     expires_at: datetime,
     issued_at: datetime | None = None,
+    principal_kind: str = "account",
 ) -> str:
     if not settings.JWT_SECRET_KEY:
         raise RuntimeError("JWT_SECRET_KEY is not configured")
     now = issued_at or datetime.now(UTC)
     payload = {
         "sub": subject,
-        "principal_kind": "account",
+        "principal_kind": principal_kind,
         "auth_generation": auth_generation,
         "token_type": "verification_proof",
         "scope": ["identity:verify"],

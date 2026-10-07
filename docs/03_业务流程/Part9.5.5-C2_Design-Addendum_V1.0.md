@@ -5,7 +5,7 @@
 | Status | ACCEPTED DESIGN ADDENDUM |
 | Parent | Part 9.5.5-C Design Freeze V1.0 |
 | Scope | C2A + C2B implementation clarification |
-| Implementation | PARTIAL — C2A Completed / Sealed; C2B Next / Not Started; overall C2 not complete |
+| Implementation | PARTIAL — C2A Completed / Sealed; C2B Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending; overall C2 not complete |
 | Baseline | `0add93b755422afcf69c6029c4c72879405eb98d` |
 
 本 Addendum 补充但不推翻 Part 9.5.5-C Design Freeze。未在此处修改的设计继续以父级 Design Freeze 为准。
@@ -163,6 +163,13 @@ C2A revision 接 C1 head；C2B revision 接 C2A。
 - C2A implementation：`a33f6eb6160a2e0eb5276b0c08d9a5d9c2534cfd`（`feat: implement family collaboration foundation`）。
 - C2A migration：`b7e2c4d891a0`，down revision `c1a7d45e92b0`。
 - Remote validation：Backend CI run [`37492358055`](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37492358055)，completed / success。
-- Seal status：C2A Completed / Sealed；C2B Next / Not Started；Part 9.5.5-C Implementation In Progress。
+- Seal status：C2A Completed / Sealed；C2B Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending；Part 9.5.5-C Implementation In Progress。
+
+### C2B local implementation evidence
+
+- 工作区 migration：`d4f8a1c2b3e6`（down `b7e2c4d891a0`），单 head。
+- 已实现 InterviewParticipant、speaker-only role、eligibility/state 数据库约束、Owner/active Collaborator proposal、account/rights_only `participant_confirmation`、本人 confirm/inactive、最小 rights-scoped read 及持久化命令幂等。
+- Local Fast：173 passed / 40 deselected；PostgreSQL integration：40 passed / 173 deselected；C2B PostgreSQL：11 passed；Alembic current/check：PASS。
+- 状态：Implemented / Local Validation Passed / Pre-Commit Audit Pending；尚未提交、推送或执行远程 CI。Participant verified 仍不等于 Consent 或 Source authorization。
 
 本节只记录 C2A 实施证据，不修改本 Addendum 已接受的 B1 Participant domain、B2 context-bound verification 或 B3 durable idempotency semantics。

@@ -20,7 +20,7 @@ Implementation: Partial — C2A Completed / Sealed；FamilyInvitation / FamilyMe
 - 新增 Owner / active Collaborator authorization primitive 只用于邀请和 Membership 管理。Family、FamilyMember、Interview 及 Session / Message / Audio / Transcript 等既有内容 API 继续沿 Owner 链隔离。
 - 所有 C2A public mutation 要求 Idempotency-Key；业务变更与安全响应元数据同事务提交。response_body 只接受按 operation 注册的强类型安全 snapshot，未知字段和未声明嵌套对象默认拒绝；重放不持久化 OTP、邀请明文 token、proof 或 recipient PII，proof 重签保持原始签发与过期时间语义。
 - `FamilyMember` 只有 `family_id`、`name` 与基础主键/时间字段，没有与 User 的登录身份映射。
-- RevisionProposal、Participant/Consent 门禁、内容共享和 Speaker 权利流程尚未实现；因此 C2A 不是完整 Family Collaboration 上线。
+- C2B 已在工作区实现 Participant 身份确认基础；RevisionProposal、Consent 门禁、内容共享和来源级 Speaker 权利流程尚未实现，因此 C2A/C2B 仍不是完整 Family Collaboration 上线。
 
 ## Decision
 
@@ -74,7 +74,7 @@ C2A revision `b7e2c4d891a0` 已新增 CommandIdempotencyRecord、Invitation、Me
 - Implementation commit：`a33f6eb6160a2e0eb5276b0c08d9a5d9c2534cfd`。
 - Migration：`b7e2c4d891a0`，down revision `c1a7d45e92b0`。
 - Remote validation：Backend CI run [`37492358055`](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37492358055)，completed / success。
-- Seal status：C2A Completed / Sealed；C2B Next / Not Started。
+- Seal status：C2A Completed / Sealed；C2B Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending。
 - 已验证安全边界：转发的 Invitation token 被拒绝；Collaborator 未获得既有档案内容访问；Membership revoke 竞争线性化；幂等响应使用 operation-specific allowlist / default deny；request fingerprint 不保存原始 recipient/token/proof/OTP canonical input；Provider 不可用时 fail closed。
 
 历史数据不得通过 FamilyMember 姓名推断 User、Collaborator、Participant、Speaker 或 Consent。V1 不开放 User hard delete、Owner 转移或身份自动合并。

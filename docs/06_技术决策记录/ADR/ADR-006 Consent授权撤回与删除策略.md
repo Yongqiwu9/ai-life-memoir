@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Partial — C1 Policy / Identity Foundation Completed / Sealed；C2A 邀请专用 account-bound verification proof 和 FamilyMembership 基础已 Completed / Sealed；Participant verification 不等于 Consent，Consent / Withdrawal / Deletion / Restore / Sanitization 尚未实现。
+Implementation: Partial — C1/C2A Completed / Sealed；Part 9.5.5-C2B 为 Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending；Participant verification 不等于 Consent，Participant inactive 不等于 withdrawal，Consent / Withdrawal / Deletion / Restore / Sanitization 尚未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的 Consent、用途分支、撤回、历史恢复、净化、删除传播、备份恢复和 Policy 合同。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -17,7 +17,7 @@ Implementation: Partial — C1 Policy / Identity Foundation Completed / Sealed�
 - C1 新增 PrivacyPolicyVersion / UserContact / AuthChallenge 与 User capability / generation。Policy 草稿允许缺参，发布必须完整校验正整数 seconds、期限覆盖、告知及能力证据；已发布内容不可变，只有一个 active 版本，缺失/篡改/未验证时处理门禁拒绝开放。
 - rights-auth 是本人认证基础，不等于 Consent 生效或 Speaker / Source 身份已确认；默认生产 Provider 不可用。Policy-independent safety path 仅分类 withdrawal/deletion，不受 active Policy 缺失阻挡，但尚无这些业务 API 或 Pipeline，后续仍须核验本人及来源范围。
 
-- C2A 已新增 FamilyMembership，但仅用于邀请/成员管理；现有内容资源仍通过 `Family.owner_id` 沿 Interview / Session / Audio / Transcript 等关系校验 Owner。尚无 InterviewParticipant、SourceSpeakerBinding 或 Consent 模型/API。
+- C2A 已新增 FamilyMembership，但仅用于邀请/成员管理；现有内容资源仍通过 `Family.owner_id` 沿 Interview / Session / Audio / Transcript 等关系校验 Owner。C2B 工作区已新增 InterviewParticipant 本人身份确认，但尚无 SourceSpeakerBinding 或 Consent 模型/API。
 - `invitation_acceptance` verification proof 严格绑定 account、Contact、Invitation 和 auth_generation；它不表示 Speaker 身份、来源归属或任何 Consent，不能复用于未来授权接口。
 - `Interview.family_member_id` 指向回忆对象。`InterviewMessage.role=user` 只表示消息角色；`TranscriptSegment.speaker` 是可空字符串，均不能作为本人身份或授权证据。
 - AudioRecording、Transcript、TranscriptSegment 只有元数据模型/API。没有真实录音上传、对象存储、外部 STT、AI Pipeline、撤回处理或本人来源删除流程。

@@ -18,7 +18,7 @@ Part 9.6 计划从访谈来源内容提取结构化回忆，再用于人生回�
 - 客户端 Message 创建 Schema 限制 `role=user, source=text`；服务端存在 `create_transcript_message` 辅助函数，可从 Segment 写入 `source=audio_transcript` 的 Message。该函数不代表完整 STT Pipeline 已接通。
 - Message 是目标提取输入，可通过可空 `transcript_segment_id` 回链到 Segment、Transcript 和 Audio；文本 Message 没有音频分段来源。Segment 删除会将回链设为 NULL，来源删除如何影响未来 Candidate / Memory 尚未实现。
 - Message 和 Segment 的自动序号当前使用 `max(sequence)+1`，数据库没有对应复合序号唯一约束；并发情况下不能保证目标提取输入顺序稳定。
-- `FamilyMember` 表示回忆对象；Message 尚无真实讲述者关联，Segment 的 `speaker` 仅为字符串。C2A FamilyMembership 已实现；InterviewParticipant 和 Consent 尚未实现。
+- `FamilyMember` 表示回忆对象；Message 尚无真实讲述者关联，Segment 的 `speaker` 仅为字符串。C2A FamilyMembership 已实现并封板；C2B InterviewParticipant 身份基础已本地实现但尚未提交；Consent 与 SourceSpeakerBinding 尚未实现。
 - `services/ai-service/` 没有实际 AI Service 实现，外部 Provider 未接入。Memory 生成链路文档是 Target Design，不是当前功能交付。
 
 ## Proposed Decision

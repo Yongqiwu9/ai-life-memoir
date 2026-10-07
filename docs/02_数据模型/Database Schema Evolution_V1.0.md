@@ -1,7 +1,7 @@
 # Database Schema Evolution_V1.0
 
-> 下文 V1–V4 及数据库原则记录既有数据库基线。Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)；其 `IMPLEMENTATION NOT STARTED` 是归档时的历史状态。当前 Part C 为 Implementation In Progress，C1 与 C2A 均已 Completed / Sealed，C2B 为 Next / Not Started。
-> C1/C2A 已有增量迁移；Participant、Consent、来源及删除传播仍以 SSOT 为准且尚未实现。既有 CASCADE 声明不能代替冻结的生命周期政策。
+> 下文 V1–V4 及数据库原则记录既有数据库基线。Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)；其 `IMPLEMENTATION NOT STARTED` 是归档时的历史状态。当前 Part C 为 Implementation In Progress，C1 与 C2A 均已 Completed / Sealed，C2B 为 Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending。
+> C1/C2A 已有正式增量迁移；C2B 增量迁移仍在未提交工作区。Consent、来源及删除传播仍以 SSOT 为准且尚未实现。既有 CASCADE 声明不能代替冻结的生命周期政策。
 
 ## V1 基础模型
 
@@ -85,6 +85,16 @@ Implementation commit：`a33f6eb6160a2e0eb5276b0c08d9a5d9c2534cfd`；Backend CI 
 - 没有 Owner Membership backfill、历史 Invitation backfill、Participant backfill 或 Consent backfill。
 - PostgreSQL 已验证 CHECK、partial unique、token digest unique、Membership unique、JSONB/BYTEA/TIMESTAMPTZ、FK 行为和并发写入；`alembic check` 无漂移。
 - InterviewParticipant、Consent、Source/Provenance、Revision、Deletion、Sanitization、Memory 表均未创建。
+
+### C2B Interview Participant Identity Foundation（Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending）
+
+- 工作区 revision：`d4f8a1c2b3e6`，down revision：`b7e2c4d891a0`，单 head；未修改历史 migration。
+- `interview_participants`：稳定 `interview_scope_id`、可空 live Interview / FamilyMember 链接、speaker-only role、proposed/verified/inactive/disputed 状态、eligibility、本人 User/Contact/Challenge 证据和 version。
+- FK：Interview / FamilyMember 为 SET NULL；User 为 RESTRICT；`(verified_contact_id,user_id)` 复合 FK 指向新增的 `UNIQUE(user_contacts.id,user_id)`；`verification_ref` 按冻结设计不建 FK。`family_member_id ON DELETE SET NULL` 仅允许真实 FamilyMember 父记录删除触发的 A→NULL 清理；父记录仍存在时手工 A→NULL、A→B，以及创建后 NULL→A 均由 narrow trigger 拒绝。`interview_scope_id` 始终不可变。
+- 候选键：`UNIQUE(id,interview_scope_id)` 为后续 SourceSpeakerBinding 同 Interview 复合 FK 预留；既有 partial `UNIQUE(interview_scope_id,user_id) WHERE user_id IS NOT NULL` 保持不变。
+- PostgreSQL CHECK 强制状态/资格组合、verified 完整证据、proposed 未认领状态和正 version；数据库 trigger 保护稳定 scope 与验证证据。
+- `participant_confirmation` 同时支持 account 与 rights_only 本人核验；Participant verified 不授予 Family/Interview 内容访问，也不创建 Consent 或 Source 归属。
+- 本地验证：Fast `173 passed / 40 deselected`；PostgreSQL integration `40 passed / 173 deselected`；C2B PostgreSQL `11 passed`；Alembic 空表 downgrade/re-upgrade、数据存在 downgrade guard、current/check 通过。Audit Remediation #2 已完成，等待 Pre-Commit Re-Audit #2；尚未提交或执行远程 CI。
 
 -   UUID主键
 -   外键约束

@@ -71,6 +71,18 @@ class VerificationResultSnapshot(IdempotencyResultSnapshot):
     contact_id: uuid.UUID
 
 
+class ParticipantResultSnapshot(IdempotencyResultSnapshot):
+    id: uuid.UUID
+    roles: Literal["speaker"]
+    state: Literal["proposed", "verified", "inactive", "disputed"]
+    eligibility_state: Literal["unknown", "eligible", "ineligible"]
+    verified_at: datetime | None
+    adult_declaration_at: datetime | None
+    version: int
+    created_at: datetime
+    updated_at: datetime
+
+
 _ALLOWED_SNAPSHOTS: dict[str, tuple[type[IdempotencyResultSnapshot], ...]] = {
     "family_invitation.create": (InvitationResultSnapshot,),
     "family_invitation.approve": (InvitationResultSnapshot,),
@@ -88,6 +100,17 @@ _ALLOWED_SNAPSHOTS: dict[str, tuple[type[IdempotencyResultSnapshot], ...]] = {
         VerificationResultSnapshot,
         VerificationErrorSnapshot,
     ),
+    "identity_verification.participant_challenge": (
+        ChallengeAcceptedSnapshot,
+        VerificationErrorSnapshot,
+    ),
+    "identity_verification.participant_verify": (
+        VerificationResultSnapshot,
+        VerificationErrorSnapshot,
+    ),
+    "interview_participant.propose": (ParticipantResultSnapshot,),
+    "interview_participant.confirm": (ParticipantResultSnapshot,),
+    "interview_participant.inactivate": (ParticipantResultSnapshot,),
 }
 
 
@@ -121,6 +144,7 @@ def _provider_fingerprint(
         "idempotency:invitation-token:v1",
         "idempotency:verification-code:v1",
         "idempotency:verification-proof:v1",
+        "idempotency:participant-contact:v1",
     ],
     value: str,
 ) -> bytes:
@@ -157,6 +181,17 @@ def verification_proof_fingerprint(
         binding_id=invitation_id,
         domain="idempotency:verification-proof:v1",
         value=proof,
+    )
+
+
+def participant_contact_fingerprint(
+    provider: RightsAuthProvider, participant_id: uuid.UUID, value: str
+) -> bytes:
+    return _provider_fingerprint(
+        provider,
+        binding_id=participant_id,
+        domain="idempotency:participant-contact:v1",
+        value=value,
     )
 
 
@@ -238,6 +273,56 @@ def invitation_verify_request(
         "challenge_id": str(challenge_id),
         "verification_code_fingerprint_v1": _fingerprint_hex(code_fingerprint),
     }
+
+
+def participant_propose_request(
+    interview_id: uuid.UUID, family_member_id: uuid.UUID | None, roles: str
+) -> dict[str, object]:
+    return {
+        "interview_id": str(interview_id),
+        "family_member_id": str(family_member_id) if family_member_id else None,
+        "roles": roles,
+    }
+
+
+def participant_challenge_request(
+    participant_id: uuid.UUID, contact_fingerprint: bytes | None
+) -> dict[str, object]:
+    return {
+        "participant_id": str(participant_id),
+        "contact_fingerprint_v1": (
+            _fingerprint_hex(contact_fingerprint) if contact_fingerprint else None
+        ),
+    }
+
+
+def participant_verify_request(
+    challenge_id: uuid.UUID, code_fingerprint: bytes
+) -> dict[str, object]:
+    return {
+        "challenge_id": str(challenge_id),
+        "verification_code_fingerprint_v1": _fingerprint_hex(code_fingerprint),
+    }
+
+
+def participant_confirm_request(
+    participant_id: uuid.UUID,
+    expected_version: int,
+    proof_fingerprint: bytes,
+    adult_autonomous_decision: bool,
+) -> dict[str, object]:
+    return {
+        "participant_id": str(participant_id),
+        "expected_version": expected_version,
+        "verification_proof_fingerprint_v1": _fingerprint_hex(proof_fingerprint),
+        "adult_autonomous_decision": adult_autonomous_decision,
+    }
+
+
+def participant_inactivate_request(
+    participant_id: uuid.UUID, expected_version: int
+) -> dict[str, object]:
+    return {"participant_id": str(participant_id), "expected_version": expected_version}
 
 
 def begin(

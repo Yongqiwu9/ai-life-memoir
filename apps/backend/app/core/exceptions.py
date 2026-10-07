@@ -75,6 +75,7 @@ async def privacy_validation_exception_handler(request: Request, exc: RequestVal
     privacy_paths = (
         settings.API_V1_PREFIX + "/rights-auth/",
         settings.API_V1_PREFIX + "/identity-verifications/",
+        settings.API_V1_PREFIX + "/participants/",
     )
     if request.url.path.startswith(privacy_paths) or "/invitations" in request.url.path:
         # Pydantic's default `input` can disclose a raw channel or verification code.

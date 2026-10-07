@@ -4,7 +4,7 @@
 
 Accepted
 
-Implementation: Partial — C1 Identity Foundation Completed / Sealed；C2A account-bound invitation verification proof 与 Membership 基础已 Completed / Sealed；InterviewParticipant / `participant_confirmation` / Speaker 归属仍未实现，C2B Next / Not Started。
+Implementation: Partial — C1/C2A Completed / Sealed；C2B InterviewParticipant / `participant_confirmation` 已 Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending；SourceSpeakerBinding 与 Consent 仍未实现。
 
 本 ADR 摘要记录 Part 9.5.5-C 已冻结的统一 User 主体、InterviewParticipant、本人核验和来源讲述者边界。完整表结构、状态机、API 合同、迁移顺序与验收矩阵以 [Part 9.5.5-C Final Implementation Design Freeze](../../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 为唯一事实来源。Accepted 表示设计已冻结，不表示功能已经实现。
 
@@ -22,7 +22,8 @@ Implementation: Partial — C1 Identity Foundation Completed / Sealed；C2A acco
 - Message 的 `role=user` 表示消息角色，不能确定是哪位人类讲述。客户端文本输入仅允许 `user/text`；服务端可从 Segment 创建 `user/audio_transcript` 消息。
 - `TranscriptSegment.speaker` 是可空字符串，不是 User、Participant 或经确认的授权主体。
 - C2A 已有 FamilyMembership 和 account-bound `invitation_acceptance` 核验，但该证明只用于接受特定 Invitation，不能作为 Participant verified、Speaker 归属或 Consent。
-- 当前没有 InterviewParticipant、`participant_confirmation`、Speaker 本人资格投影、SourceSpeakerBinding、Consent 或多人来源 Memory 实现。
+- C2B 工作区已实现 InterviewParticipant、speaker-only role、eligibility/state 约束、`participant_confirmation`、account/rights_only 本人 confirm/inactive 与最小本人读取；尚未提交或远程验证。
+- 当前仍没有 SourceSpeakerBinding、Consent 或多人来源 Memory 实现；Participant verified 不能推导来源归属或授权。
 
 ## Decision
 
@@ -70,7 +71,7 @@ Family 访问、Participant 身份和 Speaker 本人权利分别校验。知道�
 
 ## Migration Impact
 
-设计冻结时本 ADR 仅归档设计。C1 已追加 revision `c1a7d45e92b0`（down `adf9c60d178d`），扩展 User 并新增 UserContact / AuthChallenge / PrivacyPolicyVersion；Participant / SourceSpeakerBinding / Provenance 仍待后续实现。
+设计冻结时本 ADR 仅归档设计。C1 revision `c1a7d45e92b0` 扩展 User 并新增 UserContact / AuthChallenge / PrivacyPolicyVersion；C2B 工作区 revision `d4f8a1c2b3e6`（down `b7e2c4d891a0`）新增 InterviewParticipant 及 UserContact 复合归属约束。SourceSpeakerBinding / Provenance 仍待后续实现。
 
 历史 User 仅回填为 account / generation=1；旧邮箱语义保持未验证，C1 不自动生成 Contact，不伪造 ciphertext 或 verified 证据。未验证渠道按 legacy_unverified 规则处理。不得把 Owner 回填为 Speaker，不得按 FamilyMember 姓名或 STT 标签创建 Participant / Speaker 归属。历史来源 fail-closed 门禁属于后续 Source / Consent 实施，C1 未改写既有来源访问行为。
 
@@ -98,6 +99,7 @@ Family 访问、Participant 身份和 Speaker 本人权利分别校验。知道�
 - [FamilyMember Schema](../../../apps/backend/app/schemas/family_member.py)、[Interview Schema](../../../apps/backend/app/schemas/interview.py)、[Message Schema](../../../apps/backend/app/schemas/interview_message.py)、[Segment Schema](../../../apps/backend/app/schemas/transcript_segment.py)
 - [Interview Service](../../../apps/backend/app/services/interview.py)、[Message Service](../../../apps/backend/app/services/interview_message.py)
 - [Interview API](../../../apps/backend/app/api/v1/interviews.py)、[FamilyMember API](../../../apps/backend/app/api/v1/family_members.py)
+- [InterviewParticipant Model](../../../apps/backend/app/models/interview_participant.py)、[Participant Service](../../../apps/backend/app/services/interview_participant.py)、[Participant API](../../../apps/backend/app/api/v1/interview_participants.py)
 
 ## Revision History
 
@@ -108,3 +110,4 @@ Family 访问、Participant 身份和 Speaker 本人权利分别校验。知道�
 | 2026-10-05 | V1.2 | C1 Identity Foundation Implemented / Validated；普通访问仍 Owner-only，生产验证能力未开放，Participant / Consent 尚未实现。 |
 | 2026-10-06 | V1.3 | C2A invitation-bound account verification 与 Membership 基础已本地验证；Participant verified / Speaker / Consent 仍未实现。 |
 | 2026-10-07 | V1.4 | C2A 已 Completed / Sealed；Participant verified、Speaker 归属与 Consent 仍未实现，C2B Next / Not Started。 |
+| 2026-10-07 | V1.5 | C2B InterviewParticipant 与本人 context-bound confirmation 已本地实现并通过 Fast/PostgreSQL 验证；Audit Remediation #2 完成并等待 Pre-Commit Re-Audit #2，SourceSpeakerBinding / Consent 未实现。 |

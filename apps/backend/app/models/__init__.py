@@ -3,5 +3,11 @@ from app.models.collaboration import (
     FamilyInvitation,
     FamilyMembership,
 )
+from app.models.interview_participant import InterviewParticipant
 
-__all__ = ["CommandIdempotencyRecord", "FamilyInvitation", "FamilyMembership"]
+__all__ = [
+    "CommandIdempotencyRecord",
+    "FamilyInvitation",
+    "FamilyMembership",
+    "InterviewParticipant",
+]

@@ -178,7 +178,7 @@ Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identi
 
 下一阶段：
 
-Part 9.5.5-C2B（Next / Not Started）。后续依据 Design Freeze SSOT 与 C2 Design Addendum 实施 InterviewParticipant / `participant_confirmation`；Part 9.6 保持 Planned。
+Part 9.5.5-C2B 已进入 Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending。Part 9.6 保持 Planned。
 
 ## 4. Part 9.5.5-C1 Policy + Identity Foundation 本地实施记录
 
@@ -277,4 +277,15 @@ python -m alembic check
 - Membership 只代表 Family collaboration relation，不等于 archive content access。既有 Family、FamilyMember、Interview、Session、Audio、Transcript、Segment、Message API 仍为 Owner-only。
 - 未实现：InterviewParticipant、`participant_confirmation`、ConsentGrant / ConsentEvent、Source / Provenance、RevisionProposal、Deletion Pipeline、Sanitization runtime、MemoryCandidate、Memory、Memoir。
 - 生产限制：encryption provider、verification/invitation delivery、key management/rotation、production rate limiting 仍未实现；相关入口默认 fail closed。
-- 下一阶段：C2B Next / Not Started；Part 9.6 Planned。
+- 下一阶段（C2A Seal 当时记录）：C2B Next / Not Started；该历史状态已由下方 C2B 本地实施记录取代。Part 9.6 Planned。
+
+## 6. Part 9.5.5-C2B Interview Participant Identity Foundation 本地实施记录（2026-10-07）
+
+- 状态：Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending；尚未暂存、提交、推送或执行远程 CI。
+- 新增 InterviewParticipant、speaker-only role、eligibility/state 数据库约束、稳定 Interview scope、UserContact 复合归属约束与危险 downgrade 保护。
+- 新增 Owner/active Collaborator proposal、account/rights_only `participant_confirmation`、本人 context-bound confirm、成年自主决定声明、本人 inactive 和最小本人读取。
+- Participant 身份关系不扩大 Family/Interview/Session/Audio/Transcript/Segment/Message 权限；verified 不产生 Consent、Source 归属、撤回或删除语义。
+- migration：`d4f8a1c2b3e6`，down revision `b7e2c4d891a0`，Alembic 单 head，current/check PASS。
+- Initial Pre-Commit Audit 的三个 Blocking Medium 已关闭：FamilyMember 真实删除可安全 SET NULL 且普通改绑仍拒绝；新增 `UNIQUE(id, interview_scope_id)`；补齐真实 PostgreSQL FK/CHECK/unique 与 Participant proof、rights-only、幂等安全测试。
+- Fast：173 passed / 40 deselected；PostgreSQL integration：40 passed / 173 deselected；C2B PostgreSQL：11 passed；Ruff/format PASS；Alembic 空表 downgrade/re-upgrade、数据存在 downgrade guard、current/check PASS。
+- Part 9.5.5-C 整体仍为 Implementation In Progress；Part 9.6 仍为 Planned。

@@ -1,8 +1,8 @@
 # AI人生回忆录平台 — 系统架构总览 V1.1
 
 > Part 9.5.5-C 的详细冻结设计见：[Family Collaboration / Participant / Consent Design Freeze V1.0](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md)。
-> 当前状态：9.5.5-B Completed / Sealed；9.5.5-C DESIGN FROZEN / IMPLEMENTATION IN PROGRESS；C1 Completed / Sealed；C2A Completed / Sealed；C2B Next / Not Started；9.6 Planned。阶段来源为 [README](../../README.md) 和 [路线图](../05_开发阶段记录/Part开发路线图_V2.0.md)。
-> 下文保留 Part 9.5 / 9.5.5-A 架构快照，包括当时的阶段、ADR 状态及未决项；已在 C 冻结的权限、身份、Consent、来源、修订和删除决策以该 SSOT 及更新后的 ADR 为准。ADR-004/005/006 已 Accepted；C2A 已实现 FamilyMembership / FamilyInvitation 基础，但 InterviewParticipant、Consent、Deletion Pipeline、Sanitization 尚未实现。
+> 当前状态：9.5.5-B Completed / Sealed；9.5.5-C DESIGN FROZEN / IMPLEMENTATION IN PROGRESS；C1/C2A Completed / Sealed；C2B Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending；9.6 Planned。阶段来源为 [README](../../README.md) 和 [路线图](../05_开发阶段记录/Part开发路线图_V2.0.md)。
+> 下文保留 Part 9.5 / 9.5.5-A 架构快照，包括当时的阶段、ADR 状态及未决项；已在 C 冻结的权限、身份、Consent、来源、修订和删除决策以该 SSOT 及更新后的 ADR 为准。ADR-004/005/006 已 Accepted；C2A 已实现并封板 FamilyMembership / FamilyInvitation 基础，C2B 已在工作区实现 InterviewParticipant 身份基础并通过本地验证；Consent、Deletion Pipeline、Sanitization 尚未实现。
 
 ## 1. 平台目标
 
@@ -103,7 +103,7 @@ AI 输出的是候选内容，须人工确认后成为 Memory；来源追踪必�
 | 9.3 | Family + FamilyMember | 数据模型/API 完成；当前 Owner-only |
 | 9.4 | Interview / InterviewSession / InterviewMessage | 数据模型/API 完成；目标状态机 Proposed |
 | 9.5 | AudioRecording / Transcript / TranscriptSegment | 元数据模型/API 完成；真实上传/STT 未实现 |
-| 9.5.5 | Memory 前置基础设施/架构决策 | C1 Completed / Sealed；C2A Completed / Sealed；C2B Next / Not Started |
+| 9.5.5 | Memory 前置基础设施/架构决策 | C1/C2A Completed / Sealed；C2B Implemented / Audit Remediation Completed / Pre-Commit Re-Audit #2 Pending |
 | 9.6 | Memory Extraction | Planned；模型、提取及确认流程尚未实现 |
 
 当前数据模型已形成：
@@ -134,7 +134,7 @@ User
 | [ADR-002 User账号删除策略](<../06_技术决策记录/ADR/ADR-002 User账号删除策略.md>) | Proposed | 账号处置、Owner 转移和保留规则未定；记录现有 User→Family CASCADE 风险 |
 | [ADR-003 Family档案删除策略](<../06_技术决策记录/ADR/ADR-003 Family档案删除策略.md>) | Accepted | Owner 可删除整个 Family Archive，包括协作者贡献；不能否决 Speaker 本人有效撤回/删除 |
 | [ADR-004 Family协作权限模型](<../06_技术决策记录/ADR/ADR-004 Family协作权限模型.md>) | Accepted；C2A partial implementation | Invitation / Membership / generation /协作管理门禁已实现；Revision 与内容权限门禁未实现 |
-| [ADR-005 Interview参与者与讲述者模型](<../06_技术决策记录/ADR/ADR-005 Interview参与者与讲述者模型.md>) | Accepted；C1/C2A foundation only | 统一 User/Contact/核验基础已有；InterviewParticipant / Speaker 归属仍待 C2B |
+| [ADR-005 Interview参与者与讲述者模型](<../06_技术决策记录/ADR/ADR-005 Interview参与者与讲述者模型.md>) | Accepted；C2B identity relation locally implemented | InterviewParticipant / 本人确认已本地实现；SourceSpeakerBinding 与 Consent 仍待后续阶段 |
 | [ADR-006 Consent授权撤回与删除策略](<../06_技术决策记录/ADR/ADR-006 Consent授权撤回与删除策略.md>) | Accepted；foundation only | Policy、身份核验与 context proof 基础已有；Consent / Withdrawal / Deletion 尚未实现 |
 | [ADR-007 Interview-Session状态机](<../06_技术决策记录/ADR/ADR-007 Interview-Session状态机.md>) | Proposed | 当前代码与目标状态枚举冲突；目标转换和历史迁移未冻结 |
 | [ADR-008 MemoryCandidate确认流程](<../06_技术决策记录/ADR/ADR-008 MemoryCandidate确认流程.md>) | Proposed | 候选→人工审阅→Memory 的目标链；确认权和版本策略未定 |
