@@ -174,11 +174,11 @@ Part 9.5.5-C1，依据 Design Freeze SSOT 开始实施。
 
 当前周期：
 
-Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identity Foundation — Completed / Sealed。C2A Family Collaboration Foundation — Completed / Sealed。Part 9.5.5-B — Completed / Sealed，其 Local validation: PASS、Remote CI: VERIFIED / PASS 作为历史验收记录保留。
+Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identity Foundation、C2A Family Collaboration Foundation、C2B Interview Participant Identity Foundation — Completed / Sealed。Part 9.5.5-B — Completed / Sealed，其 Local validation: PASS、Remote CI: VERIFIED / PASS 作为历史验收记录保留。
 
 下一阶段：
 
-Part 9.5.5-C2B implementation commit 已发布，当前为 Remote CI Remediation #1 Pending，尚未封板。Part 9.6 保持 Planned。
+Part 9.5.5-C3 Artifact Registry + Provenance — Next / Planned，尚未开始。Part 9.6 保持 Planned。
 
 ## 4. Part 9.5.5-C1 Policy + Identity Foundation 本地实施记录
 
@@ -281,7 +281,7 @@ python -m alembic check
 
 ## 6. Part 9.5.5-C2B Interview Participant Identity Foundation 实施与 Remediation 记录（2026-10-07）
 
-- 状态：implementation commit `1038313cd57f6a76f5c6c27213912284e5af38fa` 已发布；Remote CI Remediation #1 已完成本地验证，等待独立 remediation commit 与远程 CI，C2B 尚未封板。
+- 历史状态（已由下方 Final Documentation Seal 取代）：implementation commit `1038313cd57f6a76f5c6c27213912284e5af38fa` 已发布；当时 Remote CI Remediation #1 已完成本地验证，等待独立 remediation commit 与远程 CI，C2B 尚未封板。
 - 新增 InterviewParticipant、speaker-only role、eligibility/state 数据库约束、稳定 Interview scope、UserContact 复合归属约束与危险 downgrade 保护。
 - 新增 Owner/active Collaborator proposal、account/rights_only `participant_confirmation`、本人 context-bound confirm、成年自主决定声明、本人 inactive 和最小本人读取。
 - Participant 身份关系不扩大 Family/Interview/Session/Audio/Transcript/Segment/Message 权限；verified 不产生 Consent、Source 归属、撤回或删除语义。
@@ -291,3 +291,19 @@ python -m alembic check
 - PostgreSQL 验收基线：PostgreSQL 16.x，当前本地集成测试与 GitHub Actions 均使用 16.15；其他 major 版本不作为权威验收证据，major 升级必须另行完成兼容性验证。
 - Remote CI Remediation #1：修正两个真实 `DELETE User` 测试的预期 SQLSTATE 为 PostgreSQL 16.15 实际返回的 `23503`；direct Participant FK 测试继续校验动态解析的约束名。16.15 本地结果：目标测试 3 passed、C2B PostgreSQL 11 passed、Fast 173 passed / 40 deselected、PostgreSQL integration 40 passed / 173 deselected、Ruff/format PASS、Alembic heads/fresh upgrade/current/check 及 post-integration current/check PASS。未修改 runtime 或 migration `d4f8a1c2b3e6`。
 - Part 9.5.5-C 整体仍为 Implementation In Progress；Part 9.6 仍为 Planned。
+
+### Part 9.5.5-C2B Final Documentation Seal（2026-10-07）
+
+- Part：9.5.5-C2B Interview Participant Identity Foundation。
+- Status：Completed / Sealed；Part 9.5.5-C 整体仍为 Design Frozen / Implementation In Progress。
+- Implementation commit：`1038313cd57f6a76f5c6c27213912284e5af38fa`。
+- Remediation commit：`fbb79b6a8af06b3d50e1d4923eb56169128efcde`。
+- Migration：`d4f8a1c2b3e6`；down revision：`b7e2c4d891a0`。
+- Remote CI：Backend CI；Run ID [`37627066699`](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37627066699)；commit `fbb79b6a8af06b3d50e1d4923eb56169128efcde`；master；completed / success；PostgreSQL 16.15。
+- Validation：targeted remediation 3 passed；C2B PostgreSQL 11 passed；Fast 173 passed / 40 deselected；完整 PostgreSQL integration 40 passed / 173 deselected；Ruff PASS；Format PASS；Alembic heads / fresh upgrade / current / check / post-integration current/check PASS；最终 head `d4f8a1c2b3e6`。
+- Implemented scope：InterviewParticipant；speaker-only V1 role；participant state / eligibility constraints；稳定 `interview_scope_id`；Owner / active Collaborator participant proposal；`participant_confirmation` context；context-bound identity verification；account / rights_only 本人最小 Participant access；self confirm；adult declaration；self inactive；durable idempotency reuse；verified `UserContact` ownership binding；FK / CHECK / unique / immutable scope protections；dangerous downgrade protection。
+- Security / privacy boundary：Participant verified 不等于 Consent；Participant relationship 不等于 Family archive content access；FamilyMembership 不等于 archive content access。既有 Family、FamilyMember、Interview、Session、Audio、Transcript、Segment、Message 内容 API 继续保持 Owner-only，除已明确新增的 Participant 最小本人 rights path 外。
+- Not implemented：ConsentGrant、ConsentEvent、SourceArtifact、Provenance、SourceSpeakerBinding、RevisionProposal、Deletion Pipeline、Privacy Ledger、Outbox、Sanitization runtime、MemoryCandidate、Memory、Memoir。
+- Production limits：production encryption provider、verification / invitation delivery、key management / rotation、production distributed rate limiting 均未实现；相关入口默认 fail closed，C2B sealed 不代表 production-ready。
+- Remediation history：首次 C2B implementation remote CI 在 PostgreSQL 16 上因 SQLSTATE assertion 失败；最终确认 PostgreSQL 16.15 实际 SQLSTATE 为 `23503`，remediation commit 的 exact Backend CI 已成功闭环。本地 PostgreSQL 18.6 曾观察到不同行为，因此项目冻结 PostgreSQL 16.x baseline、当前验证版本 16.15；不声明支持 PostgreSQL 18，major upgrade 必须单独完成 compatibility validation。
+- Next：C3 Artifact Registry + Provenance — Next / Planned，尚未开始；Part 9.6 — Planned。
