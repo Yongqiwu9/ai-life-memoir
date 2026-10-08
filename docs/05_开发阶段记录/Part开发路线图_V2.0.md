@@ -9,7 +9,7 @@
 | 9.3 | Family + FamilyMember | 数据模型/API 完成 | 家庭与档案人物 CRUD、当前 Owner-only isolation |
 | 9.4 | Interview | 数据模型/API 完成 | Interview / InterviewSession / InterviewMessage、当前所有权查询链；状态机仍待决策与落地 |
 | 9.5 | Audio/STT 数据基础设施 | 数据模型/API 完成 | AudioRecording / Transcript / TranscriptSegment 元数据、Message source/segment 扩展 |
-| 9.5.5 | Memory 前置基础设施/架构决策 | C Design Frozen；Implementation In Progress | B Completed / Sealed；C1/C2A/C2B Completed / Sealed；C3 Next / Planned |
+| 9.5.5 | Memory 前置基础设施/架构决策 | C Design Frozen；Implementation In Progress | B、C1/C2A/C2B Completed / Sealed；C3.0 合同 Completed / Audited / Published，Final Seal 待封板提交 exact CI；C3 实施 NOT STARTED；C3.1 Next / Planned |
 | 9.6 | Memory Extraction | Planned（规划中） | MemoryCandidate / Memory、提取与人工确认流程，尚未实现 |
 | 9.7 | AI Agent | 规划中 | 访谈追问、assistant 消息生成 |
 | 9.8 | Memoir Generation | 规划中 | Memory → Memoir 组装与编辑 |
@@ -24,7 +24,9 @@ Part 9.5.5-B 保留现有 SQLite 快速测试，增加标记为 `integration` �
 
 2026-10-05 Part 9.5.5-B 最终验收完成：专用 PostgreSQL 18.6 测试库空 public schema 成功迁移至唯一 head `adf9c60d178d`，current/check 及集成测试后的 current/check 均通过。Ruff/format 通过；SQLite fast tests：94 passed / 0 failed / 0 skipped / 2 deselected；PostgreSQL integration tests：2 passed / 0 failed / 0 skipped / 94 deselected。Local validation: PASS；Remote CI: VERIFIED / PASS。Implementation commit: `07d1f51699b9fbcdaa09b2652be23d3349948921`；[Backend CI run 37283732708](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37283732708)，master，completed / success。
 
-Current Part: Part 9.5.5-C — Design Frozen / Implementation In Progress。详细设计以 [Part 9.5.5-C Final Implementation Design Freeze](<../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>) 为 SSOT。C1 Policy + Identity Foundation、C2A Family Collaboration Foundation、C2B Interview Participant Identity Foundation 均为 Completed / Sealed，Local PASS / Remote CI PASS；C3 Artifact Registry + Provenance — Next / Planned。Part 9.6 — Planned。
+Current Part: Part 9.5.5-C — Design Frozen / Implementation In Progress。详细设计以 [Part 9.5.5-C Final Implementation Design Freeze](<../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>) 为 SSOT。C1 Policy + Identity Foundation、C2A Family Collaboration Foundation、C2B Interview Participant Identity Foundation 均为 Completed / Sealed，Local PASS / Remote CI PASS。C3.0 [Implementation Contract Addendum](../03_业务流程/Part9.5.5-C3_Implementation-Contract-Addendum_V1.0.md) 已冻结、审计并发布；C3 整体实施 NOT STARTED。C3.1 Registry Schema / Models — Next / Planned / NOT STARTED。Part 9.6 — Planned / NOT STARTED。
+
+C3.0 evidence：Addendum commit `345f852d36f94752ddea99fba1f889d9d632ded0`；[Backend CI run 37762742776](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37762742776)，push，exact SHA 匹配，completed / success；Final Contract Re-Audit PASS，BM-01～04 CLOSED。该运行只验证 pre-C3 Backend 基线。C3.0 Final Seal 在本次文档封板提交自身的 exact Backend CI 成功后生效，目前未取得该未来提交的 CI 结果；C3.1 须等待该条件满足。C3 runtime / migrations 尚未实现，C3 PostgreSQL 专项功能测试尚未执行。
 
 ### Part 9.5.5-C 实施子阶段
 
@@ -33,7 +35,9 @@ Current Part: Part 9.5.5-C — Design Frozen / Implementation In Progress。详�
 | C1 | Policy + Identity Foundation | Completed / Sealed |
 | C2A | FamilyMembership + Invitation + Durable Idempotency | Completed / Sealed |
 | C2B | InterviewParticipant + participant_confirmation | Completed / Sealed |
-| C3 | Artifact Registry + Provenance | Next / Planned |
+| C3 | Artifact Registry + Provenance | Implementation NOT STARTED |
+| C3.0 | Implementation Contract | Completed / Audited / Published；Final Seal 待文档封板提交 exact CI 成功 |
+| C3.1 | Registry Schema / Models | Next / Planned / NOT STARTED；待 C3.0 Final Seal 生效 |
 | C4 | Consent + Source Binding + Access Gate | Planned |
 | C5 | RevisionProposal | Planned |
 | C6 | Deletion + Ledger + Outbox | Planned |
@@ -63,4 +67,4 @@ C2B evidence：implementation commit `1038313cd57f6a76f5c6c27213912284e5af38fa`�
 4. 每个 Part 完成必须通过 pytest / ruff / alembic check / PostgreSQL smoke。
 5. 每个 Part 独立 commit，保留历史审计轨迹。
 
-Part 9.5.5-C Design Freeze 文档保留设计封板时的历史快照。C1 已实现并封板 Policy / Identity Foundation。C2A 已实现并封板 FamilyMembership、FamilyInvitation、持久化命令幂等、邀请身份核验和协作管理 API；Membership 不授予既有档案内容访问权。C2B 已实现并封板 InterviewParticipant、`participant_confirmation`、本人确认/停用和最小本人读取；Participant verified 不等于 Consent，Participant relationship 不授予档案内容访问权，既有内容 API 继续保持 Owner-only。Consent、来源、修订、删除和净化业务仍未实现。生产加密/投递/密钥管理/限流能力未接入时，验证入口保持关闭；生产 retention 值尚未冻结。Part 9.5.5-C 整体仍为 Implementation In Progress；C3 Next / Planned；Part 9.6 Planned。
+Part 9.5.5-C Design Freeze 文档保留设计封板时的历史快照。C1 已实现并封板 Policy / Identity Foundation。C2A 已实现并封板 FamilyMembership、FamilyInvitation、持久化命令幂等、邀请身份核验和协作管理 API；Membership 不授予既有档案内容访问权。C2B 已实现并封板 InterviewParticipant、`participant_confirmation`、本人确认/停用和最小本人读取；Participant verified 不等于 Consent，Participant relationship 不授予档案内容访问权，既有内容 API 继续保持 Owner-only。Consent、来源、修订、删除和净化业务仍未实现。生产加密/投递/密钥管理/限流能力未接入时，验证入口保持关闭；生产 retention 值尚未冻结。Part 9.5.5-C 整体仍为 Implementation In Progress；C3.0 合同 Completed / Audited / Published，Final Seal 待文档封板提交 exact CI 成功；C3 实施 NOT STARTED；C3.1 Next / Planned / NOT STARTED；C4 Consent + Access Gate 后续实施；Part 9.6 Planned / NOT STARTED。

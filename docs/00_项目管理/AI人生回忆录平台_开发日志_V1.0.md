@@ -178,7 +178,7 @@ Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identi
 
 下一阶段：
 
-Part 9.5.5-C3 Artifact Registry + Provenance — Next / Planned，尚未开始。Part 9.6 保持 Planned。
+Part 9.5.5-C3.0 Implementation Contract — Completed / Audited / Published；Final Seal 待本次文档封板提交自身的 exact Backend CI 成功。C3 实际实施 NOT STARTED；下一阶段 C3.1 Registry Schema / Models — Next / Planned / NOT STARTED，须等待 C3.0 Final Seal 生效。Part 9.6 保持 Planned / NOT STARTED。
 
 ## 4. Part 9.5.5-C1 Policy + Identity Foundation 本地实施记录
 
@@ -307,3 +307,54 @@ python -m alembic check
 - Production limits：production encryption provider、verification / invitation delivery、key management / rotation、production distributed rate limiting 均未实现；相关入口默认 fail closed，C2B sealed 不代表 production-ready。
 - Remediation history：首次 C2B implementation remote CI 在 PostgreSQL 16 上因 SQLSTATE assertion 失败；最终确认 PostgreSQL 16.15 实际 SQLSTATE 为 `23503`，remediation commit 的 exact Backend CI 已成功闭环。本地 PostgreSQL 18.6 曾观察到不同行为，因此项目冻结 PostgreSQL 16.x baseline、当前验证版本 16.15；不声明支持 PostgreSQL 18，major upgrade 必须单独完成 compatibility validation。
 - Next：C3 Artifact Registry + Provenance — Next / Planned，尚未开始；Part 9.6 — Planned。
+
+## 7. Part 9.5.5-C3.0 Final Documentation Seal（2026-10-08）
+
+### A. Contract evidence / Seal condition
+
+- Contract：Completed / Audited / Published；[Implementation Contract Addendum](../03_业务流程/Part9.5.5-C3_Implementation-Contract-Addendum_V1.0.md)。
+- Addendum commit：`345f852d36f94752ddea99fba1f889d9d632ded0`。
+- Backend CI：[Run 37762742776](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37762742776)；trigger push；exact SHA matched YES；completed / success。
+- Final Seal 条件：本次文档封板提交自身的 exact-commit Backend CI 成功后才生效；当前处于 Seal Preparation，未取得未来封板提交的 CI 结果。上面的运行只证明 Addendum commit，不是封板提交证据。
+- 成功的 Backend CI 只验证当前 pre-C3 Backend 基线，不证明 C3 功能已实现。
+
+### B. Audit evidence
+
+- Final Contract Re-Audit：PASS。
+- BM-01：Sequence parent-row lock protocol CLOSED。
+- BM-02：Live Artifact consistency / deletion tombstone retention CLOSED。
+- BM-03：Contribution / Artifact state domains separated CLOSED。
+- BM-04：Immutable provenance / controlled projection updates reconciled CLOSED。
+- Critical / High / Blocking Medium：0 / 0 / 0。
+
+### C. Frozen product scope
+
+- Friend Option A：Owner / active Collaborator 为特定 Interview 发起参与提议；复用 User + InterviewParticipant，不要求 FamilyMembership。
+- 朋友必须本人完成身份确认及自己的 SourceSpeakerBinding 确认；不自动获得 Family Archive 访问权。
+- 仅被提及的第三人属于内容语义，不进行自动身份推断；人物提取属于 Part 9.6 后续独立设计。
+
+### D. Frozen technical scope — implementation requirements only
+
+- SourceArtifact、SourceSpeakerBinding、ArtifactContribution、DerivedSource。
+- 内容与 provenance 原子注册；PostgreSQL advisory transaction lock 与 DAG guard。
+- 正向及 deferred reverse consistency；按生命周期区分删除状态例外。
+- Message / Segment 序号并发合同；历史确定性 backfill。
+- C3-A / C3-B 属于一次 cutover 的迁移合同，不允许部分迁移独立生产 rollout。
+- 以上是冻结的实施要求，不是已经完成的实现。
+
+### E. Current limitations
+
+- C3 runtime：NOT IMPLEMENTED。
+- C3 migrations：NOT IMPLEMENTED。
+- C3 PostgreSQL-specific functional tests：NOT EXECUTED。
+- Consent / Access Gate：NOT IMPLEMENTED，属于 C4。
+- Production invitation delivery：NOT IMPLEMENTED。
+- Memory person extraction：NOT IMPLEMENTED，属于 Part 9.6。
+- 后续授权处理之前，C3 不得创建 available Artifact。
+- PostgreSQL baseline：16.x；当前已验证版本 16.15。
+
+### F. Next phase
+
+- C3.1 Registry Schema / Models — Next / Planned / NOT STARTED；仅在 C3.0 Final Seal 生效且文档封板提交 exact CI 成功后开始。
+- C3 整体实施 NOT STARTED；Part 9.5.5-C 仍为 Design Frozen / Implementation In Progress；C1/C2A/C2B Completed / Sealed；Part 9.6 Planned / NOT STARTED。
+- 保留 C2B sealed boundary；不修改其 runtime、状态机、确认语义、migration 或 tests。

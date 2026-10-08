@@ -7,8 +7,8 @@
 | Part | 状态与交付边界 |
 | --- | --- |
 | 9.1–9.5 | 基础 Backend / 数据模型与 API 阶段完成：认证、Family/FamilyMember、Interview/Session/Message、Audio/Transcript/Segment 元数据 |
-| 9.5.5 | Memory 前置基础设施/架构决策阶段；9.5.5-B — Completed / Sealed；9.5.5-C — Design Frozen / Implementation In Progress；C1/C2A/C2B — Completed / Sealed；C3 — Next / Planned |
-| 9.6 | Memory Extraction — Planned；MemoryCandidate、Memory、提取及人工确认流程尚未实现 |
+| 9.5.5 | Memory 前置基础设施/架构决策阶段；B — Completed / Sealed；C — Design Frozen / Implementation In Progress；C1/C2A/C2B — Completed / Sealed；C3.0 合同 Completed / Audited / Published，Final Seal 待文档封板提交的 exact Backend CI 成功；C3 实施 NOT STARTED，C3.1 Next / Planned |
+| 9.6 | Memory Extraction — Planned / NOT STARTED；MemoryCandidate、Memory、提取及人工确认流程尚未实现 |
 
 Part 9.5 完成不代表 Audio upload、Object Storage、STT Provider 或 AI pipeline 已完成。C2A 已实现邀请、Membership 与协作管理权限基础；C2B 已完成 Participant 身份关系、本人确认及最小本人权利入口，并在 PostgreSQL 16.15 上通过 remediation commit 对应的 Backend CI。既有 Family 内容、FamilyMember、Interview、Session、Audio、Transcript、Segment、Message API 仍为 Owner-only。Consent、来源追踪、修订、删除与净化尚未实现。
 
@@ -22,7 +22,9 @@ Part 9.5.5-B 保留 SQLite 快速测试，并为 PostgreSQL 引入独立的 `TES
 
 Part 9.5.5-B — Completed。2026-10-05 在专用 `ai_life_memoir_test`（PostgreSQL 18.6）完成空 public schema → Alembic 单 head `adf9c60d178d`、current/check 及测试后的 current/check。Ruff 和格式检查通过；SQLite fast tests：94 passed / 0 failed / 0 skipped / 2 deselected；PostgreSQL integration tests：2 passed / 0 failed / 0 skipped / 94 deselected。Local PostgreSQL Validation: PASS；Remote GitHub Actions Validation: PASS；Remote CI execution verified: YES。Implementation commit: `07d1f51699b9fbcdaa09b2652be23d3349948921`；[Backend CI run 37283732708](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37283732708)，completed / success。
 
-Current Part: Part 9.5.5-C — Design Frozen / Implementation In Progress。详细设计见 [Part 9.5.5-C Final Implementation Design Freeze](<docs/03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>)。C1：Policy + Identity Foundation — Completed / Sealed；C2A：Family Collaboration Foundation — Completed / Sealed；C2B：Interview Participant Identity Foundation — Completed / Sealed / Remote CI Passed；C3：Artifact Registry + Provenance — Next / Planned。Part 9.6 — Planned，尚未开始。冻结文档的 Implementation Not Started 是归档时的历史快照。
+Current Part: Part 9.5.5-C — Design Frozen / Implementation In Progress。详细设计见 [Part 9.5.5-C Final Implementation Design Freeze](<docs/03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md>)。C1：Policy + Identity Foundation — Completed / Sealed；C2A：Family Collaboration Foundation — Completed / Sealed；C2B：Interview Participant Identity Foundation — Completed / Sealed / Remote CI Passed。C3.0 [Implementation Contract Addendum](docs/03_业务流程/Part9.5.5-C3_Implementation-Contract-Addendum_V1.0.md) — Completed / Audited / Published；C3 实际实施 NOT STARTED。下一步 C3.1 Registry Schema / Models — Next / Planned / NOT STARTED，只在 C3.0 Final Seal 生效后开始。Part 9.6 — Planned / NOT STARTED。父级冻结文档的 Implementation Not Started 是归档时的历史快照。
+
+C3.0 合同证据：Addendum commit `345f852d36f94752ddea99fba1f889d9d632ded0`，对应 [Backend CI run 37762742776](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37762742776)，push，exact SHA 匹配，completed / success。Final Contract Re-Audit PASS，BM-01～04 CLOSED，Critical / High / Blocking Medium = 0 / 0 / 0。此 CI 仅验证当前 pre-C3 Backend 基线，不代表 C3 功能已实现；Final Seal 必须等待本次文档封板提交自身的 exact-commit Backend CI 成功，不能沿用 Addendum CI。C3 runtime、migrations 及 C3 专项 PostgreSQL 功能测试仍未实现或执行；C4 Consent / Access Gate 后续实施。
 
 C1 仅新增 PrivacyPolicyVersion、UserContact、AuthChallenge，扩展现有 User 的 principal_kind/auth_generation，并提供受限的 rights-auth 验证入口。普通账号访问仍按 Owner-only 校验。Policy 期限必须显式使用正整数 seconds，没有生产默认值；未发布完整 Policy 或未验证能力时，新处理门禁拒绝开放，未来撤回/删除安全路径不依赖 active Policy（这些业务流程尚未实现）。
 
