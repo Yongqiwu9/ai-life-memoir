@@ -178,7 +178,7 @@ Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identi
 
 下一阶段：
 
-Part 9.5.5-C3.0 Implementation Contract — Completed / Audited / Published；Final Seal 待本次文档封板提交自身的 exact Backend CI 成功。C3 实际实施 NOT STARTED；下一阶段 C3.1 Registry Schema / Models — Next / Planned / NOT STARTED，须等待 C3.0 Final Seal 生效。Part 9.6 保持 Planned / NOT STARTED。
+当前实施 Part 9.5.5-C3.1 SourceArtifact ORM 原型已写入；Implementation Audit = PASS WITH FINDINGS；PostgreSQL 16.15 本地验证通过；Precise Staging 已完成，Staged Audit 文档一致性修正后复核中。C3 整体 Implementation In Progress；C3.0 已由封板提交 exact CI 成功闭环为 Completed / Sealed。仓库 seal、commit、push 与 remote CI 尚未完成。下一开发阶段 C3.2 Content Artifact Integration — Next / NOT STARTED；须先完成 C3.1 staged audit、提交与 seal。Part 9.6 保持 Planned / NOT STARTED。
 
 ## 4. Part 9.5.5-C1 Policy + Identity Foundation 本地实施记录
 
@@ -358,3 +358,44 @@ python -m alembic check
 - C3.1 Registry Schema / Models — Next / Planned / NOT STARTED；仅在 C3.0 Final Seal 生效且文档封板提交 exact CI 成功后开始。
 - C3 整体实施 NOT STARTED；Part 9.5.5-C 仍为 Design Frozen / Implementation In Progress；C1/C2A/C2B Completed / Sealed；Part 9.6 Planned / NOT STARTED。
 - 保留 C2B sealed boundary；不修改其 runtime、状态机、确认语义、migration 或 tests。
+
+## 8. Part 9.5.5-C3.1 SourceArtifact ORM Foundation（2026-10-08）
+
+- 起始 HEAD / origin/master：`5f09d6c7e4c57672a85cca548cda150bc3c39c30`；master；不暂存、不提交、不推送。
+- C3.0 封板闭环证据：[Backend CI 37765330926](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37765330926)，封板提交 exact SHA 匹配，completed / success；上一节 Seal Preparation 的条件现已满足。
+- 状态：SourceArtifact ORM 原型已写入 / 验证未完成；不声明 C3.1 Completed。C3 整体 Implementation In Progress。
+- 新建 `app/models/source_artifact.py`、`tests/test_source_artifact.py`、`tests/integration/test_source_artifact.py`、test-only `tests/integration/_source_artifact_probe.py`。
+- 模型字段覆盖 UUID identity、live FK、稳定 scope、kind/entity、operator、state、显式 generation、nullable digest/locator/Policy 及 timezone-aware timestamps。state 与 generation 无隐式默认值，调用者必须显式指定。
+- 具名 CHECK：四种 C3 kind、五种结构状态、generation > 0、四种 kind 要求非空 entity/interview scope、locator IS NULL。三项 UNIQUE：kind/entity、id/family scope、id/interview scope；live FK SET NULL，operator/Policy RESTRICT；scope/state、family scope/generation 和 FK 索引。
+- locator 使用 JSON/JSONB none_as_null=True，只接受 SQL NULL；JSON null、任意对象/文本等均拒绝。不套用 Contribution locator 格式，无自动 digest provider 或未经合同冻结的摘要长度规则。
+- 模型保持 dormant：不修改 models_import.py、models/__init__.py 或 runtime startup；不新增 C3-A/C3-B migration，Alembic head 仍为 `d4f8a1c2b3e6`。不部署 partial C3。
+- SQLite 与 PostgreSQL 原型均通过子进程导入模型，父 pytest metadata 保持无 source_artifacts，不依赖执行顺序。PostgreSQL probe 使用安全 test loader，先确认实际 test DB 和 server_version_num=160015，再创建唯一临时 schema；基线迁移、原型 DDL及清理均限定该 schema，前后 baseline Alembic check 不作弱化。
+- 实际验证：Ruff PASS；format PASS（128 files）；新增 SQLite 原型 7 passed / 0 failed / 0 skipped；完整 Fast 180 passed / 0 failed / 0 skipped / 48 deselected；Alembic heads：`d4f8a1c2b3e6 (head)`。
+- PostgreSQL 前置检查：共用 loader 的目标为 `ai_life_memoir_test`，实际 server_version_num=180006（18.6），不符合 16.15。已停止数据库写入验证；未执行本轮 upgrade/current/check 或 integration tests，未创建 prototype schema。PostgreSQL 原型与完整 baseline 回归均待安全配置指向 16.15 后验证；不把本次连接成功记为 integration PASS。
+- 未读取或输出 .env.test 原文、完整 TEST_DATABASE_URL 或密码；loader 按项目规则内部加载。未连接开发/生产库，未修改开发或测试数据库 schema/data。
+- 限制：未实施 runtime Registry 注册、content artifact_id、原子内容注册、历史 backfill、正向/反向 guards、scope immutability trigger、状态转换 guard、DAG、Speaker Binding、Contribution、Consent / Access Gate。模型 CHECK 不等于这些最终 PostgreSQL guards。
+- 下一步：补齐 PostgreSQL 16.15 验证，再做 C3.1 Implementation Audit；后续 C3.2 Content Artifact Integration。Part 9.6 Planned。
+- 非阻塞环境提示：Python launcher real-location 提示；Starlette TestClient/httpx 弃用提示。完整 fast 在允许本地 socket 的环境中通过；沙箱内首轮停在 TestClient，已中断，未用该次运行作为成功证据。
+
+
+## 9. Part 9.5.5-C3.1 PostgreSQL Prototype Remediation（2026-10-09）
+
+- 当前状态：Implementation Written / Local Validation PASS / Implementation Audit Pending；尚未封板。C3.0 保持 Completed / Sealed；C3 整体 Implementation In Progress；Part 9.6 Planned / NOT STARTED。
+- 安全门禁：共用 loader，TEST_MIGRATION_MODE=1；配置与实际连接为 127.0.0.1:55432 / ai_life_memoir_c3_test；server_version_num=160015。不使用开发 DATABASE_URL，不输出凭据；原型实验仅使用本次创建的唯一临时 schema 并清理该 schema。
+- 首次真实 16.15 回归：基线 fresh upgrade/current/check PASS；SourceArtifact 8 setup errors；完整 PostgreSQL 40 passed / 8 errors / 180 deselected；SQLite fast 180 passed / 48 deselected。失败不计为通过。
+- H-01：pg_constraint / pg_get_constraintdef 实测 family/interview/session live FK 均为 ON DELETE SET NULL，与模型一致。父链与 Artifact 已 flush，删除 Family 复现 SQLSTATE 23503 / source_artifacts_interview_id_fkey；移除该事务中所有前置拒绝操作后仍复现，savepoint 回滚后事务 active，排除前置失败污染。相同数据逐项删除 Session、Interview、Family 时三个 SET NULL 均通过且稳定 scope 不变，问题归于多路径 cascade 的引用动作执行顺序。
+- 最小修复仅调整测试：用显式标注的 test-only erased 结构 fixture 逐项证明 live FK SET NULL，保留各阶段剩余 FK 与稳定 scope 断言、非法 FK/RESTRICT/rollback 验证；未改模型或约束。该 fixture 不实现 C3 创建/状态转换或 C6 删除授权。单条 Family 多路径 cascade 的 PostgreSQL 16.15 机械限制未被改写为已修复，后续合法删除流程需单独处理。
+- 合同解释：最终 live-state Artifact 的普通 hard DELETE/cascade 孤儿必须由后续反向 guards 拒绝；终态结构测试不证明最终删除 pipeline、合法授权或生产删除功能。C3.1 不实施这些 guards 或 C6。
+- M-01：Alembic Config 在构造时绑定 stdout，redirect_stdout 单独使用不能捕获 command.check 的 Config.print_stdout。改为显式 Config(stdout=io.StringIO())，异常继续传播；两个父测试 fixture 均增加 stdout 恰为单行 JSON 的协议断言并解析 JSON，不接受失败子进程。
+- 修复后验证：定向 FK 1 passed / 7 deselected；SourceArtifact PostgreSQL 模块 8 passed；完整 PostgreSQL integration 48 passed / 180 deselected；SQLite fast 180 passed / 48 deselected（含 SourceArtifact 7 passed）；均为 0 failed / 0 errors / 0 skipped。Ruff PASS；format PASS（128 files）。
+- Alembic heads/current/check 及原型 schema 内前后 check PASS；基线唯一 head 仍为 d4f8a1c2b3e6，无 schema drift。C3-A/C3-B 未创建、未生产部署。
+- 本轮仅修复三个既有 C3.1 测试文件，同步 README、路线图、本日志；SourceArtifact 保持 dormant，无生产 metadata 注册，C2B、C3.0 Addendum、CI workflow 未改动。未连接开发/生产库；16 个历史删除、untracked ad、ignored .env.test 保留，暂存区为空；未 stage/commit/push。
+- Next：C3.1 Implementation Audit；审计及仓库流程完成前不封板、不启动 C3.2。C3.1 远程 CI 尚未验证，既有 C3.0 CI 不作为本轮功能验证证据。非阻塞提示：Starlette TestClient/httpx 弃用警告。
+
+### C3.1 Final Implementation Audit（2026-10-09）
+
+- Implementation Audit：PASS WITH FINDINGS；Critical 0、High 0、Blocking Medium 0。
+- PostgreSQL 16.15：verified，server_version_num = 160015；Targeted PG 8 passed；Full PG integration 48 passed；SQLite fast 180 passed；Ruff / Format / Alembic：PASS。
+- DF-01：Deferred Medium，Family multi-path DELETE limitation；Owner：C6 / later C3 guards。L-01：Low，Starlette/httpx warning；Owner：Backend dependency maintenance。
+- Precise Staging：seven expected files staged；Staged Audit：documentation consistency finding under correction；Repository seal pending。
+- Commit / Push / Remote CI：not completed at time of entry。Next：Staged Audit recheck。
