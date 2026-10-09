@@ -9,7 +9,7 @@
 | 9.3 | Family + FamilyMember | 数据模型/API 完成 | 家庭与档案人物 CRUD、当前 Owner-only isolation |
 | 9.4 | Interview | 数据模型/API 完成 | Interview / InterviewSession / InterviewMessage、当前所有权查询链；状态机仍待决策与落地 |
 | 9.5 | Audio/STT 数据基础设施 | 数据模型/API 完成 | AudioRecording / Transcript / TranscriptSegment 元数据、Message source/segment 扩展 |
-| 9.5.5 | Memory 前置基础设施/架构决策 | C Design Frozen；Implementation In Progress | B、C1/C2A/C2B、C3.0 Completed / Sealed；C3.1 Implementation Audit = PASS WITH FINDINGS，本地 PostgreSQL 16.15 与回归验证 PASS，Precise Staging / Staged Audit 正在完成；C3.2 Next |
+| 9.5.5 | Memory 前置基础设施/架构决策 | C Design Frozen；Implementation In Progress | B、C1/C2A/C2B、C3.0 Completed / Sealed；C3.1 Implementation Audit = PASS WITH FINDINGS，本地 PostgreSQL 16.15 与回归验证 PASS，Implementation Completed（dormant scope），commit / push / exact remote CI PASS；Final Documentation Seal pending；C3.2 Next / NOT STARTED |
 | 9.6 | Memory Extraction | Planned（规划中） | MemoryCandidate / Memory、提取与人工确认流程，尚未实现 |
 | 9.7 | AI Agent | 规划中 | 访谈追问、assistant 消息生成 |
 | 9.8 | Memoir Generation | 规划中 | Memory → Memoir 组装与编辑 |
@@ -24,11 +24,17 @@ Part 9.5.5-B 保留现有 SQLite 快速测试，增加标记为 `integration` �
 
 2026-10-05 Part 9.5.5-B 最终验收完成：专用 PostgreSQL 18.6 测试库空 public schema 成功迁移至唯一 head `adf9c60d178d`，current/check 及集成测试后的 current/check 均通过。Ruff/format 通过；SQLite fast tests：94 passed / 0 failed / 0 skipped / 2 deselected；PostgreSQL integration tests：2 passed / 0 failed / 0 skipped / 94 deselected。Local validation: PASS；Remote CI: VERIFIED / PASS。Implementation commit: `07d1f51699b9fbcdaa09b2652be23d3349948921`；[Backend CI run 37283732708](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37283732708)，master，completed / success。
 
-Current Part: Part 9.5.5-C3.1 SourceArtifact Registry Schema / Models — Implementation Audit = PASS WITH FINDINGS；本地 PostgreSQL 16.15 与回归验证 PASS；Precise Staging / Staged Audit 正在完成。C3.1 commit、push、remote CI 与 final seal 未完成。C 与 C3 整体 Implementation In Progress。设计以 [父级 Design Freeze](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 与 [C3 Addendum](../03_业务流程/Part9.5.5-C3_Implementation-Contract-Addendum_V1.0.md) 为准。C1/C2A/C2B、C3.0 Completed / Sealed；C3.2 Content Artifact Integration — Next；Part 9.6 Planned / NOT STARTED。
+Current Part: Part 9.5.5-C3.1 SourceArtifact Registry Schema / Models — Implementation Audit = PASS WITH FINDINGS；本地 PostgreSQL 16.15 与回归验证 PASS；Staged Audit / Exact Commit Audit / Push / Remote Backend CI 均 PASS；Implementation Completed（dormant scope）。Final Documentation Seal Preparation in progress，独立封板提交及其自身 exact-SHA CI 未完成。C 与 C3 整体 Implementation In Progress。设计以 [父级 Design Freeze](../03_业务流程/Part9.5.5-C_Family-Collaboration-Participant-Consent_Design-Freeze_V1.0.md) 与 [C3 Addendum](../03_业务流程/Part9.5.5-C3_Implementation-Contract-Addendum_V1.0.md) 为准。C1/C2A/C2B、C3.0 Completed / Sealed；C3.2 Content Artifact Integration — Next；Part 9.6 Planned / NOT STARTED。
 
 C3.0 evidence：Addendum commit `345f852d36f94752ddea99fba1f889d9d632ded0` / [CI 37762742776](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37762742776)，及封板 commit `5f09d6c7e4c57672a85cca548cda150bc3c39c30` / [exact CI 37765330926](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37765330926) 均 completed / success；Final Contract Re-Audit PASS，BM-01～04 CLOSED，C3.0 已封板。这些运行验证 pre-C3 基线，不证明 C3.1 功能。
 
-C3.1：SourceArtifact 模块未加入生产 metadata，未新增 migration。2026-10-09 PostgreSQL 16.15 本地验证通过：原型 8 passed；完整 integration 48 passed / 180 deselected；SQLite fast 180 passed / 48 deselected（含原型 7 passed）；均为 0 failed / 0 errors / 0 skipped。Ruff/format 与 Alembic heads/current/check PASS，单 head `d4f8a1c2b3e6`。Implementation Audit = PASS WITH FINDINGS；Precise Staging 已完成，Staged Audit 正在进行文档修正后的最终复核；尚未 commit、push 或远程 CI 验证。C3-A/C3-B 未部署；无 runtime Registry、live content artifact_id、最终 PostgreSQL guards 或 Consent / Access Gate；部分 C3 不得独立生产发布。
+C3.1：SourceArtifact 模块未加入生产 metadata，未新增 migration。2026-10-09 PostgreSQL 16.15 本地验证通过：原型 8 passed；完整 integration 48 passed / 180 deselected；SQLite fast 180 passed / 48 deselected（含原型 7 passed）；均为 0 failed / 0 errors / 0 skipped。Ruff/format 与 Alembic heads/current/check PASS，单 head `d4f8a1c2b3e6`。Implementation Audit = PASS WITH FINDINGS；Staged Audit / Exact Commit Audit / Push / Remote Backend CI 均 PASS；独立文档封板提交及其自身 CI 尚未完成。C3-A/C3-B 未创建、未部署；无 runtime Registry、live content artifact_id、最终 PostgreSQL guards 或 Consent / Access Gate；部分 C3 不得独立生产发布。
+
+C3.1 implementation commit：`aa711f9b2b18ad522226b1d99afac47ea0a0dc3e`；[Backend CI run 37939418187](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37939418187)，workflow `.github/workflows/backend-ci.yml`，event push，branch master，head SHA 与 implementation commit 精确匹配，completed / success。远程 SQLite 180 passed / 48 deselected，PostgreSQL integration 48 passed / 180 deselected，均 0 failed / 0 skipped；PostgreSQL 16.15；Ruff、format（128 files）、Alembic heads / fresh upgrade / current / check / post-integration current/check PASS，单 head `d4f8a1c2b3e6`。
+
+C3.1 仅在批准的 dormant SourceArtifact ORM foundation 范围内 Implementation Completed，不代表生产部署或完整 C3 完成。Production metadata registration、runtime Registry、content artifact_id integration、historical backfill、DerivedSource DAG、SourceSpeakerBinding、ArtifactContribution、final PostgreSQL source guards、Consent / Access Gate 和 production deletion pipeline 均 NOT IMPLEMENTED；C3-A/C3-B 均 NOT CREATED。C2B、C3.0 保持 Completed / Sealed，既有 Owner-only 内容 API 权限不变。DF-01：Deferred Medium，单语句 Family multi-path DELETE 可触发 SQLSTATE 23503，归属 C6 deletion flow / later C3 guards；L-01：Low，Starlette/httpx 弃用警告，归属 Backend dependency maintenance。
+
+Final Documentation Seal：Preparation in progress。独立文档封板 commit 及其自身 exact-SHA Backend CI 尚未完成；仅在该提交推送且其 exact-SHA CI completed / success 后最终封板才生效。当前不声明 C3.1 Sealed，不预填未来 seal SHA 或 CI Run ID。C3.2 Content Artifact Integration — Next / NOT STARTED；Part 9.6 — Planned / NOT STARTED。
 
 C3.1 FK 验证仅证明测试用终态 fixture 中逐项 Session / Interview / Family 删除的 SET NULL 与稳定 scope 保留；不授权普通 live-state 删除。PostgreSQL 16.15 的单条 Family 多路径 cascade 已复现 SQLSTATE 23503，此机械限制仍需在后续合法删除流程设计中处理；本阶段未实施该流程或最终反向保护。
 
@@ -41,7 +47,7 @@ C3.1 FK 验证仅证明测试用终态 fixture 中逐项 Session / Interview / F
 | C2B | InterviewParticipant + participant_confirmation | Completed / Sealed |
 | C3 | Artifact Registry + Provenance | Implementation In Progress |
 | C3.0 | Implementation Contract | Completed / Sealed |
-| C3.1 | Registry Schema / Models | Implementation Audit = PASS WITH FINDINGS；本地验证 PASS；Precise Staging 已完成；Staged Audit 文档修正后复核中 |
+| C3.1 | Registry Schema / Models | Implementation Audit = PASS WITH FINDINGS；Implementation Completed（dormant scope）；本地验证 / Staged Audit / Exact Commit Audit / Push / Remote Backend CI PASS；Final Documentation Seal pending separate commit and exact-SHA CI |
 | C3.2 | Content Artifact Integration | Next / NOT STARTED |
 | C4 | Consent + Source Binding + Access Gate | Planned |
 | C5 | RevisionProposal | Planned |
@@ -72,4 +78,4 @@ C2B evidence：implementation commit `1038313cd57f6a76f5c6c27213912284e5af38fa`�
 4. 每个 Part 完成必须通过 pytest / ruff / alembic check / PostgreSQL smoke。
 5. 每个 Part 独立 commit，保留历史审计轨迹。
 
-Part 9.5.5-C Design Freeze 文档保留设计封板时的历史快照。C1 已实现并封板 Policy / Identity Foundation。C2A 已实现并封板 FamilyMembership、FamilyInvitation、持久化命令幂等、邀请身份核验和协作管理 API；Membership 不授予既有档案内容访问权。C2B 已实现并封板 InterviewParticipant、`participant_confirmation`、本人确认/停用和最小本人读取；Participant verified 不等于 Consent，Participant relationship 不授予档案内容访问权，既有内容 API 继续保持 Owner-only。Consent、来源、修订、删除和净化业务仍未实现。生产加密/投递/密钥管理/限流能力未接入时，验证入口保持关闭；生产 retention 值尚未冻结。Part 9.5.5-C 与 C3 整体 Implementation In Progress；C3.0 Completed / Sealed；C3.1 Implementation Audit = PASS WITH FINDINGS，本地 PostgreSQL 16.15 与回归验证 PASS，Precise Staging 已完成、Staged Audit 文档修正后复核中；C3.2 Next；C4 Consent + Access Gate 后续实施；Part 9.6 Planned / NOT STARTED。
+Part 9.5.5-C Design Freeze 文档保留设计封板时的历史快照。C1 已实现并封板 Policy / Identity Foundation。C2A 已实现并封板 FamilyMembership、FamilyInvitation、持久化命令幂等、邀请身份核验和协作管理 API；Membership 不授予既有档案内容访问权。C2B 已实现并封板 InterviewParticipant、`participant_confirmation`、本人确认/停用和最小本人读取；Participant verified 不等于 Consent，Participant relationship 不授予档案内容访问权，既有内容 API 继续保持 Owner-only。Consent、来源、修订、删除和净化业务仍未实现。生产加密/投递/密钥管理/限流能力未接入时，验证入口保持关闭；生产 retention 值尚未冻结。Part 9.5.5-C 与 C3 整体 Implementation In Progress；C3.0 Completed / Sealed；C3.1 Implementation Audit = PASS WITH FINDINGS，本地 PostgreSQL 16.15 与回归验证 PASS，Implementation Completed（dormant scope），commit / push / exact remote CI PASS；Final Documentation Seal pending；C3.2 Next / NOT STARTED；C4 Consent + Access Gate 后续实施；Part 9.6 Planned / NOT STARTED。

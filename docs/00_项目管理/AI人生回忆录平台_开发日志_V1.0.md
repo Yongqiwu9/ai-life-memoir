@@ -178,7 +178,9 @@ Part 9.5.5-C — Design Frozen / Implementation In Progress。C1 Policy + Identi
 
 下一阶段：
 
-当前实施 Part 9.5.5-C3.1 SourceArtifact ORM 原型已写入；Implementation Audit = PASS WITH FINDINGS；PostgreSQL 16.15 本地验证通过；Precise Staging 已完成，Staged Audit 文档一致性修正后复核中。C3 整体 Implementation In Progress；C3.0 已由封板提交 exact CI 成功闭环为 Completed / Sealed。仓库 seal、commit、push 与 remote CI 尚未完成。下一开发阶段 C3.2 Content Artifact Integration — Next / NOT STARTED；须先完成 C3.1 staged audit、提交与 seal。Part 9.6 保持 Planned / NOT STARTED。
+当前 Part 9.5.5-C3.1 SourceArtifact ORM Foundation — Implementation Completed within approved dormant scope；Implementation Audit = PASS WITH FINDINGS；本地 PostgreSQL 16.15 与回归验证 PASS；Staged Audit / Exact Commit Audit / Push / Remote Backend CI PASS。C3.1 implementation commit：`aa711f9b2b18ad522226b1d99afac47ea0a0dc3e`；[Backend CI run 37939418187](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37939418187)，workflow `.github/workflows/backend-ci.yml`，event push，branch master，head SHA 与 implementation commit 精确匹配，completed / success。远程 SQLite 180 passed / 48 deselected，PostgreSQL integration 48 passed / 180 deselected，均 0 failed / 0 skipped；PostgreSQL 16.15；Ruff、format（128 files）、Alembic heads / fresh upgrade / current / check / post-integration current/check PASS，单 head `d4f8a1c2b3e6`。 C3 整体 Implementation In Progress；C3.0、C2B 保持 Completed / Sealed。Final Documentation Seal：Preparation in progress。独立文档封板 commit 及其自身 exact-SHA Backend CI 尚未完成；仅在该提交推送且其 exact-SHA CI completed / success 后最终封板才生效。当前不声明 C3.1 Sealed，不预填未来 seal SHA 或 CI Run ID。C3.2 Content Artifact Integration — Next / NOT STARTED；Part 9.6 — Planned / NOT STARTED。
+
+C3.1 仅在批准的 dormant SourceArtifact ORM foundation 范围内 Implementation Completed，不代表生产部署或完整 C3 完成。Production metadata registration、runtime Registry、content artifact_id integration、historical backfill、DerivedSource DAG、SourceSpeakerBinding、ArtifactContribution、final PostgreSQL source guards、Consent / Access Gate 和 production deletion pipeline 均 NOT IMPLEMENTED；C3-A/C3-B 均 NOT CREATED。C2B、C3.0 保持 Completed / Sealed，既有 Owner-only 内容 API 权限不变。DF-01：Deferred Medium，单语句 Family multi-path DELETE 可触发 SQLSTATE 23503，归属 C6 deletion flow / later C3 guards；L-01：Low，Starlette/httpx 弃用警告，归属 Backend dependency maintenance。
 
 ## 4. Part 9.5.5-C1 Policy + Identity Foundation 本地实施记录
 
@@ -399,3 +401,16 @@ python -m alembic check
 - DF-01：Deferred Medium，Family multi-path DELETE limitation；Owner：C6 / later C3 guards。L-01：Low，Starlette/httpx warning；Owner：Backend dependency maintenance。
 - Precise Staging：seven expected files staged；Staged Audit：documentation consistency finding under correction；Repository seal pending。
 - Commit / Push / Remote CI：not completed at time of entry。Next：Staged Audit recheck。
+
+## 10. Part 9.5.5-C3.1 Implementation Commit + Remote CI Closure（2026-10-09）
+
+- Implementation：Completed within approved dormant ORM foundation scope；Implementation Audit：PASS WITH FINDINGS；Staged Audit：PASS；Exact Commit Audit：PASS。
+- Implementation commit：`aa711f9b2b18ad522226b1d99afac47ea0a0dc3e`；message：`feat(backend): add dormant C3.1 SourceArtifact foundation`；parent：`5f09d6c7e4c57672a85cca548cda150bc3c39c30`。
+- Commit contents：7 files / 4 Added / 3 Modified / 0 Deleted。一次普通 push 成功，实际 origin/master 与 implementation SHA 匹配。
+- Backend CI：[Run 37939418187](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/37939418187)；workflow：`.github/workflows/backend-ci.yml`；event：push；branch：master；head SHA：`aa711f9b2b18ad522226b1d99afac47ea0a0dc3e`；status：completed；conclusion：success。
+- Local validation：SourceArtifact PostgreSQL 8 passed；完整 PostgreSQL integration 48 passed / 180 deselected；SQLite fast 180 passed / 48 deselected；0 failed / 0 errors / 0 skipped；PostgreSQL 16.15；Ruff / format / Alembic PASS。
+- Remote CI validation：PostgreSQL 16.15；PostgreSQL integration 48 passed / 180 deselected；SQLite fast 180 passed / 48 deselected；0 failed / 0 skipped；Ruff PASS；format PASS（128 files）；Alembic single heads / fresh upgrade / current / check / post-integration current/check PASS；单 head `d4f8a1c2b3e6`。
+- Audit：Critical 0、High 0、Blocking Medium 0。
+- C3.1 仅在批准的 dormant SourceArtifact ORM foundation 范围内 Implementation Completed，不代表生产部署或完整 C3 完成。Production metadata registration、runtime Registry、content artifact_id integration、historical backfill、DerivedSource DAG、SourceSpeakerBinding、ArtifactContribution、final PostgreSQL source guards、Consent / Access Gate 和 production deletion pipeline 均 NOT IMPLEMENTED；C3-A/C3-B 均 NOT CREATED。C2B、C3.0 保持 Completed / Sealed，既有 Owner-only 内容 API 权限不变。DF-01：Deferred Medium，单语句 Family multi-path DELETE 可触发 SQLSTATE 23503，归属 C6 deletion flow / later C3 guards；L-01：Low，Starlette/httpx 弃用警告，归属 Backend dependency maintenance。
+- Final Documentation Seal：Preparation in progress。独立文档封板 commit 及其自身 exact-SHA Backend CI 尚未完成；仅在该提交推送且其 exact-SHA CI completed / success 后最终封板才生效。当前不声明 C3.1 Sealed，不预填未来 seal SHA 或 CI Run ID。C3.2 Content Artifact Integration — Next / NOT STARTED；Part 9.6 — Planned / NOT STARTED。
+- 本节更新当前状态；前述实施、环境阻塞、remediation 和审计记录保留为历史证据。本次为文档封板准备，不执行 seal commit、push、tag 或 C3.2 实施。
