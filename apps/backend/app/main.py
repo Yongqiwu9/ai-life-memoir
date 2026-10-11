@@ -11,6 +11,8 @@ from app.api.v1 import (
     identity_verifications,
     interview_participants,
     interviews,
+    memoirs,
+    memories,
     rights_auth,
     sessions,
     transcripts,
@@ -36,6 +38,8 @@ app = FastAPI(
 
 register_exception_handlers(app)
 
+app.include_router(memories.router, prefix=settings.API_V1_PREFIX)
+app.include_router(memoirs.router, prefix=settings.API_V1_PREFIX)
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(audios.router, prefix=settings.API_V1_PREFIX)
 app.include_router(collaboration.router, prefix=settings.API_V1_PREFIX)

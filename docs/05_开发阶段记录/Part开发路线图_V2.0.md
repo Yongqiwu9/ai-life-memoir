@@ -79,3 +79,66 @@ C2B evidence：implementation commit `1038313cd57f6a76f5c6c27213912284e5af38fa`�
 5. 每个 Part 独立 commit，保留历史审计轨迹。
 
 Part 9.5.5-C Design Freeze 文档保留设计封板时的历史快照。C1 已实现并封板 Policy / Identity Foundation。C2A 已实现并封板 FamilyMembership、FamilyInvitation、持久化命令幂等、邀请身份核验和协作管理 API；Membership 不授予既有档案内容访问权。C2B 已实现并封板 InterviewParticipant、`participant_confirmation`、本人确认/停用和最小本人读取；Participant verified 不等于 Consent，Participant relationship 不授予档案内容访问权，既有内容 API 继续保持 Owner-only。Consent、来源、修订、删除和净化业务仍未实现。生产加密/投递/密钥管理/限流能力未接入时，验证入口保持关闭；生产 retention 值尚未冻结。Part 9.5.5-C 与 C3 整体 Implementation In Progress；C3.0 Completed / Sealed；C3.1 Implementation Audit = PASS WITH FINDINGS，本地 PostgreSQL 16.15 与回归验证 PASS，Implementation Completed（dormant scope），commit / push / exact remote CI PASS；Final Documentation Seal pending；C3.2 Next / NOT STARTED；C4 Consent + Access Gate 后续实施；Part 9.6 Planned / NOT STARTED。
+
+
+## Memory + Memoir MVP Vertical Slice 1（2026-10-11）
+
+> 历史实施与验证记录保留如下；当前结论以本节末“最新核验状态同步”为准。
+
+本节更新当前业务开发主线；前述 C3/BM-01 历史记录与已有编辑保留。当前阶段：Memory + Memoir Slice 1 代码完成 / SQLite 验证通过 / PostgreSQL 验证待执行。C3 不因此完成或启用。
+
+- 已实现：Owner-only 人工结构化 Memory 创建、读取、分页列表、更新；每条 Memory 固定关联一个同一 FamilyMember 的原始 InterviewMessage。保留时间原话、地点、情感，不改写 Message / Segment。
+- 已实现：同一 FamilyMember 的选定 Memory 按请求顺序确定性组装 Memoir draft；保存 MemoirSection 标题/正文快照、position 与 memory_id；可读取草稿及有序章节。Memory 后续更新不会覆盖已有章节。
+- API：POST/GET /api/v1/family-members/{member_id}/memories；GET/PATCH /api/v1/memories/{id}；POST /api/v1/family-members/{member_id}/memoirs；GET /api/v1/memoirs/{id}；GET /api/v1/memoirs/{id}/sections。复用 JWT 与既有 Owner-only 权限，不开放协作者内容权限。
+- 迁移源码：e8c2a9b47106 -> down_revision d4f8a1c2b3e6；新增 memories / memoirs / memoir_sections。静态解析确认唯一 head e8c2a9b47106；未执行 upgrade/downgrade/current/check，未连接真实 PostgreSQL。
+- 本轮实际测试：新增及既有认证/家庭/访谈/消息/音频/转写/健康 API 回归 97 passed；最终新增模块复测 11 passed；Ruff check 与 format --check（14 个相关 Python 文件）PASS；1 条既有 Starlette/httpx 弃用警告。不是全仓测试或 PostgreSQL 验收。
+- 测试隔离：每用例独立内存 SQLite、FK 开启，结束后释放；执行进程禁用 dotenv 读取与第三方 pytest 自动插件，拦截所有非内存 SQLite Engine.connect。沙箱内 Windows TestClient socketpair 初始化停滞，诊断进程已退出，两个停滞进程已中断；经执行审批在沙箱外运行相同数据库门禁测试通过。未读取 .env.test，未使用历史数据库。
+- 验证分类：SQLite PASS；真实 PostgreSQL NOT RUN / PENDING；真实数据库清理 N/A（未创建资源）；无本任务遗留数据库资源。未操作 Docker、BM-01、Git staging/commit/push。
+- 已覆盖：来源追踪、原文保持不变、跨用户/家庭/人物关联拒绝、非法/不存在 ID、认证、统一 404、422/INVALID_SOURCE、分页、章节顺序与快照、Memory/Memoir 写入失败 rollback、来源外键保护。
+- 待执行集成验证：在未来专项授权的唯一可丢弃 PostgreSQL 数据库验证迁移/ORM 一致性、FK/CHECK/UNIQUE、事务、删除冲突及并发行为；本任务没有新增 PostgreSQL 用例，不把 SQLite 当作真实 PostgreSQL 证据。
+- 限制：仅人工 Memory 和确定性草稿；无 MemoryCandidate/正式审批/版本历史、AI Provider、RAG、writer 编辑、支付或自动 STT。每条 Memory 一个来源；source association 不可更新；章节顺序由创建请求指定，尚无创建后重排 API。
+- 限制：引用采用 RESTRICT 保留证据链，已有家庭/人物/访谈删除在存在新引用时可能报外键错误；本任务未改写既有删除 API，应后续补合法删除流程与冲突响应。同人物约束由 Service 实施，尚无跨表 PostgreSQL guard。C3 provenance、C4 Consent/Access Gate 与 C6 删除传播未接入，不宣称生产就绪或本人授权已满足。
+- Next MVP：补充 Memory 审查/版本与合法删除冲突契约，再独立验收 PostgreSQL。下一 AI Agent milestone（Part 9.7）：独立 AI Service 接口及访谈追问，输出仅写 assistant/ai_generated Message；须先满足来源/Consent/Provider 门禁，不直接写正式 Memory。本 slice 不表示 Part 9.6 AI Extraction 或 Part 9.7 已上线。
+
+
+
+**最新核验状态同步（2026-10-11，依据项目 Owner 提供的独立复审结果）**
+
+- Memory + Memoir MVP Slice 1：Implementation completed；代码实现与安全复审在限定范围内完成。Independent Code Security Gate：PASS within reviewed code scope；该结论不代表 HTTP、PostgreSQL 或生产验收通过。
+- Finding decisions：MM-01 CLOSED — code / SQLite scope；MM-01-R01 CLOSED — code / SQLite scope；MM-02 CLOSED — code / offline scope。MM-01-R01 删除入口采用 Owner-scoped Interview 查询，现有他人 ID 与不存在 ID 使用等价的 404 正文；保留 MM-01 引用冲突 409、rollback 与 RESTRICT 保护。
+- 最新独立证据：18 passed / 0 failed / 0 skipped / 16 deselected；Independent probes：3 passed。两组证据分别记录，不相加为唯一测试用例数；本次文档同步没有运行测试。
+- HTTP API Gate：BLOCKED / NOT RUN。原因：当前沙箱条件阻止所选 ASGI 测试路径的获批执行。历史实施测试与 collect-only 记录保留，不替代当前 HTTP API Gate。
+- PostgreSQL migration/integration：NOT RUN；路线图 PostgreSQL integration：PENDING。Concurrency：NOT VERIFIED on real PostgreSQL；SQLite / mock 结果不作为真实 PostgreSQL 验证。
+- Remaining findings：MM-03 OPEN — Low — bounded N+1 queries；MM-04 OPEN — Low — test dependency override restoration。两项均未在本轮实现或关闭。
+- 当前阶段：Memory + Memoir Slice 1 code implementation and security review completed at limited scope；Git development snapshot：PREPARATION IN PROGRESS；HTTP API validation：BLOCKED。
+- Release classification：DEVELOPMENT SNAPSHOT ONLY；NOT PRODUCTION READY。下一主线里程碑：AI Interview Agent MVP；本次不启动后续开发。
+- BM-01 remains OPEN and separate；不改变任何无关 C3 milestone 状态或历史结论。Git development snapshot 尚未 staging、commit 或发布，本次文档同步不授权这些操作。
+
+## MM-01 / MM-02 Targeted Remediation（2026-10-11）
+
+> 历史实施与验证记录保留如下；当前结论以本节末“最新核验状态同步”为准。
+
+本节更新 Slice 1 当前状态：定向修复已实现 / 离线 SQLite Service 验证通过 / 独立复审待执行；不自批准封板，不启动下一 Slice。前述记录保留为历史。
+
+- 基线：master，HEAD fb5c384dca15bef16b9ee350d04081ac2f8ceb04；编辑前索引为空，已记录九个拟修改文件 SHA-256。仅修改授权的六个 Service/CRUD 文件、test_memory_memoir.py 及本日志/路线图。
+- MM-01：Interview / FamilyMember 删除先完成 Owner 授权，再检查受保护 Memory/Memoir 引用；冲突返回 409 / RESOURCE_IN_USE / 通用脱敏消息。删除 CRUD 只 flush，由 Service commit；flush/commit 失败均 rollback。PostgreSQL 仅识别 SQLSTATE 23503 + 指定保护 FK 名 + 目标表；SQLite 仅识别 FK 错误码/固定错误文本并复核保护引用。其他 IntegrityError 保持原异常，不泛化为 409。未新增 Session/Message 删除接口，未更改 RESTRICT。
+- MM-02：Memory/Memoir 改为经 FamilyMember -> Family.owner_id 过滤的查询；GET/PATCH Memory、GET Memoir/sections 的他人及不存在 ID 返回一致资源类型的 NOT_FOUND 正文。正文查询仅命中 Owner 范围；原始来源与跨人物校验保留。
+- 实际执行：沙箱内新增离线 Service/CRUD 测试 16 passed / 14 deselected，1 条既有 Starlette/httpx 警告。每例独立内存 SQLite，实测 foreign_keys=ON；dotenv 读取及其他数据库连接被进程门禁禁止，无 TestClient 实例运行。
+- 证据分类：SQLite 真实 FK flush 失败及 rollback/data preservation PASS；PostgreSQL SQLSTATE/constraint-name/table-name 分类与 flush/commit 失败仅为模拟验证。覆盖他人/缺失 404 完整 JSON、正常 Owner 读取、跨家庭/人物源拒绝、正常无引用删除、草稿排序/快照/分页及无关 IntegrityError 不误转 409。
+- NOT RUN / BLOCKED：40 个 API 用例完成安全 collect-only（含 3 个新增定向 API 用例及既有回归），未执行 TestClient；当前任务禁止绕过沙箱限制，沿用已知 Windows socketpair 阻塞条件，不申请沙箱外运行。真实 PostgreSQL、迁移、并发及生产验收均 NOT RUN / PENDING；无真实资源创建或清理，cleanup N/A。
+- MM-03 / MM-04：仍为 Low / 待处理；本任务未提供具体发现正文，不推断内容、不宣称已修复。
+- 已知边界：Family DELETE 不在本轮授权内；既有空引用但含 Interview 的 FamilyMember ORM 删除可能发生其他完整性错误，未将其误映射为引用冲突；完整删除/Consent/版本历史仍待后续专项任务。上述两项修复尚待独立复审及 HTTP/真实 PostgreSQL 验证。
+- 下一计划里程碑仍为独立 AI Interview/Agent：AI Service 访谈追问、assistant/ai_generated Message；依赖来源/Consent/Provider 门禁。本轮不开始该里程碑，不调用模型。
+- Git 安全：未 stage/commit/push/reset/clean；既有 16 个删除、ad、BM-01 文件、其他 Slice 文件和既有文档编辑保留；未读取 .env.test 或 secrets，未连接 PostgreSQL、执行迁移或操作 Docker。
+
+**最新核验状态同步（2026-10-11，依据项目 Owner 提供的独立复审结果）**
+
+- Memory + Memoir MVP Slice 1：Implementation completed；代码实现与安全复审在限定范围内完成。Independent Code Security Gate：PASS within reviewed code scope；该结论不代表 HTTP、PostgreSQL 或生产验收通过。
+- Finding decisions：MM-01 CLOSED — code / SQLite scope；MM-01-R01 CLOSED — code / SQLite scope；MM-02 CLOSED — code / offline scope。MM-01-R01 删除入口采用 Owner-scoped Interview 查询，现有他人 ID 与不存在 ID 使用等价的 404 正文；保留 MM-01 引用冲突 409、rollback 与 RESTRICT 保护。
+- 最新独立证据：18 passed / 0 failed / 0 skipped / 16 deselected；Independent probes：3 passed。两组证据分别记录，不相加为唯一测试用例数；本次文档同步没有运行测试。
+- HTTP API Gate：BLOCKED / NOT RUN。原因：当前沙箱条件阻止所选 ASGI 测试路径的获批执行。历史实施测试与 collect-only 记录保留，不替代当前 HTTP API Gate。
+- PostgreSQL migration/integration：NOT RUN；路线图 PostgreSQL integration：PENDING。Concurrency：NOT VERIFIED on real PostgreSQL；SQLite / mock 结果不作为真实 PostgreSQL 验证。
+- Remaining findings：MM-03 OPEN — Low — bounded N+1 queries；MM-04 OPEN — Low — test dependency override restoration。两项均未在本轮实现或关闭。
+- 当前阶段：Memory + Memoir Slice 1 code implementation and security review completed at limited scope；Git development snapshot：PREPARATION IN PROGRESS；HTTP API validation：BLOCKED。
+- Release classification：DEVELOPMENT SNAPSHOT ONLY；NOT PRODUCTION READY。下一主线里程碑：AI Interview Agent MVP；本次不启动后续开发。
+- BM-01 remains OPEN and separate；不改变任何无关 C3 milestone 状态或历史结论。Git development snapshot 尚未 staging、commit 或发布，本次文档同步不授权这些操作。

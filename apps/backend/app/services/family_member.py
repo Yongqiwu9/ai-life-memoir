@@ -7,6 +7,7 @@ from app.crud import family as family_crud
 from app.crud import family_member as family_member_crud
 from app.models.family_member import FamilyMember
 from app.schemas.family_member import FamilyMemberCreate, FamilyMemberUpdate
+from app.services.interview import _delete_with_reference_guard
 
 
 def _require_owned_family(db: Session, *, user_id: uuid.UUID, family_id: uuid.UUID) -> None:
@@ -109,4 +110,13 @@ def delete_family_member(
         family_id=family_id,
         member_id=member_id,
     )
-    family_member_crud.delete_family_member(db, member=member)
+    _delete_with_reference_guard(
+        db,
+        has_references=lambda: family_member_crud.has_protected_references(db, member_id=member_id),
+        delete=lambda: family_member_crud.delete_family_member(db, member=member),
+        constraint_names={
+            "memories_family_member_id_fkey",
+            "memoirs_family_member_id_fkey",
+            "memories_source_message_id_fkey",
+        },
+    )

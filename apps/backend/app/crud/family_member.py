@@ -1,9 +1,12 @@
 import uuid
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
+from app.models.family import Family
 from app.models.family_member import FamilyMember
+from app.models.memoir import Memoir
+from app.models.memory import Memory
 
 
 def create_family_member(db: Session, *, family_id: uuid.UUID, name: str) -> FamilyMember:
@@ -64,4 +67,32 @@ def update_family_member(db: Session, *, member: FamilyMember, name: str) -> Fam
 
 def delete_family_member(db: Session, *, member: FamilyMember) -> None:
     db.delete(member)
-    db.commit()
+    db.flush()
+
+
+def get_owned_memory(db: Session, *, owner_id: uuid.UUID, memory_id: uuid.UUID) -> Memory | None:
+    return db.scalar(
+        select(Memory)
+        .join(FamilyMember, Memory.family_member_id == FamilyMember.id)
+        .join(Family, FamilyMember.family_id == Family.id)
+        .where(Memory.id == memory_id, Family.owner_id == owner_id)
+    )
+
+
+def get_owned_memoir(db: Session, *, owner_id: uuid.UUID, memoir_id: uuid.UUID) -> Memoir | None:
+    return db.scalar(
+        select(Memoir)
+        .join(FamilyMember, Memoir.family_member_id == FamilyMember.id)
+        .join(Family, FamilyMember.family_id == Family.id)
+        .where(Memoir.id == memoir_id, Family.owner_id == owner_id)
+        .options(selectinload(Memoir.sections))
+    )
+
+
+def has_protected_references(db: Session, *, member_id: uuid.UUID) -> bool:
+    return (
+        db.scalar(select(Memory.id).where(Memory.family_member_id == member_id).limit(1))
+        is not None
+        or db.scalar(select(Memoir.id).where(Memoir.family_member_id == member_id).limit(1))
+        is not None
+    )
