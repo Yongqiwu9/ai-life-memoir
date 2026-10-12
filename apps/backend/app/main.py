@@ -9,6 +9,7 @@ from app.api.v1 import (
     families,
     family_members,
     identity_verifications,
+    interview_agent,
     interview_participants,
     interviews,
     memoirs,
@@ -46,6 +47,7 @@ app.include_router(collaboration.router, prefix=settings.API_V1_PREFIX)
 app.include_router(families.router, prefix=settings.API_V1_PREFIX)
 app.include_router(family_members.router, prefix=settings.API_V1_PREFIX)
 app.include_router(interviews.router, prefix=settings.API_V1_PREFIX)
+app.include_router(interview_agent.router, prefix=settings.API_V1_PREFIX)
 app.include_router(interview_participants.router, prefix=settings.API_V1_PREFIX)
 app.include_router(identity_verifications.router, prefix=settings.API_V1_PREFIX)
 app.include_router(sessions.router, prefix=settings.API_V1_PREFIX)

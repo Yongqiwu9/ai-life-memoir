@@ -57,3 +57,27 @@ C2B 已实现 `InterviewParticipant`、speaker-only V1 role、稳定 `interview_
 - [ADR 目录](docs/06_技术决策记录/ADR/)
 
 代码和文档工作遵循 [Root AGENTS.md](AGENTS.md) 与 [Backend AGENTS.md](apps/backend/AGENTS.md)。templates/ 是代码母版，不参与运行时 import。
+
+
+## Part 9.6-A Provider Extension — 当前状态（2026-10-12）
+
+- **Status：Implementation Completed**
+- **Independent Review：PASS**
+- **Scope：Offline Provider Extension**
+- **Limitations：**
+  - HTTP/ASGI NOT VERIFIED
+  - PostgreSQL NOT VERIFIED
+  - Real AI Provider NOT IMPLEMENTED
+- **Release：DEVELOPMENT SNAPSHOT ONLY**
+- **下一阶段：Part 9.6-B Candidate + Revision + Human Review**
+
+依据项目 Owner 确认的实施完成与独立审查 PASS 状态同步；本轮不复跑测试或审查，不增加 HTTP、PostgreSQL 或真实 Provider 验证结论。详细范围与历史记录见 [Provider Extension Contract V1.0](docs/04_AI设计/Part9.6-A_Provider-Extension_Implementation-Contract_V1.0.md)。本次只同步文档，未执行 Git 写操作。
+
+## Part 9.6-A Provider Extension 合同草案归档（2026-10-12）
+
+> 以下保留合同起草与归档时的历史状态；其中 Draft / Pending / NOT STARTED 已由上方当前状态取代。
+
+- 完整合同草案见：[Scope Freeze + Implementation Contract V1.0](docs/04_AI设计/Part9.6-A_Provider-Extension_Implementation-Contract_V1.0.md)，作为本子阶段详细草案的唯一来源。
+- Product Scope：**CONFIRMED**；Contract：**DRAFT — PENDING INDEPENDENT REVIEW**；Implementation：**NOT STARTED**。归档不构成实施批准。
+- 近期步骤：独立合同审查与批准 → 另行授权的离线 Provider Extension 实施；9.6-B 仍为 Candidate + Revision + Human Review，9.6-C 仍为获批后的真实 Provider 接入。
+- 本次只归档文档；未运行测试、操作数据库或执行 Git 暂存、提交、推送。既有 9.6-A 实现及其验证边界保持原有记录。

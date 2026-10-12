@@ -1,6 +1,18 @@
 import uuid
 
+import pytest
+from sqlalchemy import func, select, update
+
+from app.core.exceptions import AppException
+from app.models.audio_recording import AudioRecording
+from app.models.interview_message import InterviewMessage
+from app.models.interview_session import InterviewSession
+from app.models.transcript import Transcript
+from app.models.transcript_segment import TranscriptSegment
 from app.services import interview_message as message_service
+from tests.test_interview_agent import records as synthetic_records
+
+records = synthetic_records
 
 
 def _register_and_login(client, email: str, password: str = "strong-password-1"):
@@ -97,3 +109,88 @@ def test_text_message_does_not_require_segment(client) -> None:
     assert response.json()["role"] == "user"
     assert response.json()["source"] == "text"
     assert response.json()["transcript_segment_id"] is None
+
+
+def _offline_segment(db, session):
+    audio = AudioRecording(session_id=session.id)
+    db.add(audio)
+    db.flush()
+    transcript = Transcript(audio_recording_id=audio.id)
+    db.add(transcript)
+    db.flush()
+    segment = TranscriptSegment(
+        transcript_id=transcript.id, sequence=1, text="仅用于离线测试的合成转写"
+    )
+    db.add(segment)
+    db.commit()
+    return segment
+
+
+def test_offline_segment_copy_preserves_source_link_and_original(records):
+    db, users, sessions = records
+    segment = _offline_segment(db, sessions[0])
+    message = message_service.create_transcript_message(
+        db, user_id=users[0].id, session_id=sessions[0].id, segment_id=segment.id
+    )
+    assert message.role == "user" and message.source == "audio_transcript"
+    assert message.content == segment.text
+    assert message.transcript_segment_id == segment.id
+    assert message.sequence == 1
+    assert db.get(TranscriptSegment, segment.id).text == "仅用于离线测试的合成转写"
+
+
+def test_offline_completed_session_blocks_copy_before_source_read(records, monkeypatch):
+    db, users, sessions = records
+    segment = _offline_segment(db, sessions[0])
+    sessions[0].status = "completed"
+    db.commit()
+
+    def forbidden_read(*args, **kwargs):
+        raise AssertionError("Completed session must reject before source body read")
+
+    monkeypatch.setattr(message_service.segment_service, "get_segment_for_session", forbidden_read)
+    with pytest.raises(AppException) as caught:
+        message_service.create_transcript_message(
+            db, user_id=users[0].id, session_id=sessions[0].id, segment_id=segment.id
+        )
+    assert caught.value.code == "SESSION_NOT_ACTIVE" and caught.value.status_code == 409
+    assert db.scalar(select(func.count()).select_from(InterviewMessage)) == 0
+    assert db.get(TranscriptSegment, segment.id).text == "仅用于离线测试的合成转写"
+
+
+def test_offline_stale_active_session_cannot_copy_segment(records):
+    db, users, sessions = records
+    segment = _offline_segment(db, sessions[0])
+    stale = sessions[0]
+    db.execute(
+        update(InterviewSession)
+        .where(InterviewSession.id == stale.id)
+        .values(status="completed")
+        .execution_options(synchronize_session=False)
+    )
+    db.commit()
+    assert stale.status == "active"
+    with pytest.raises(AppException) as caught:
+        message_service.create_transcript_message(
+            db, user_id=users[0].id, session_id=stale.id, segment_id=segment.id
+        )
+    assert caught.value.code == "SESSION_NOT_ACTIVE"
+    assert db.get(InterviewSession, stale.id).status == "completed"
+    assert db.scalar(select(func.count()).select_from(InterviewMessage)) == 0
+
+
+def test_offline_copy_cannot_cross_session_or_owner(records):
+    db, users, sessions = records
+    other_segment = _offline_segment(db, sessions[1])
+    owner_segment = _offline_segment(db, sessions[3])
+    for session_id, segment_id in (
+        (sessions[0].id, other_segment.id),
+        (sessions[0].id, owner_segment.id),
+        (sessions[3].id, owner_segment.id),
+    ):
+        with pytest.raises(AppException) as caught:
+            message_service.create_transcript_message(
+                db, user_id=users[0].id, session_id=session_id, segment_id=segment_id
+            )
+        assert caught.value.code == "NOT_FOUND" and caught.value.status_code == 404
+    assert db.scalar(select(func.count()).select_from(InterviewMessage)) == 0

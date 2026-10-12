@@ -1,5 +1,7 @@
 # AI人生回忆录平台_开发日志_V1.0
 
+> 最新主线状态（2026-10-12）：Part 9.6-A Provider Extension Implementation Completed / Independent Review PASS（源码审查及本轮无数据库验证范围）。本轮完成 Documentation Sync；下一门禁为 Git Commit Readiness Review，下一功能阶段为 9.6-B Candidate + Revision。HTTP/ASGI NOT RUN；真实 PostgreSQL NOT VERIFIED；DEVELOPMENT SNAPSHOT ONLY。详细状态见文末最新记录，前文保留历史阶段记录。
+
 ## 1. 项目简介
 
 AI人生回忆录平台用于长期采集个人经历，通过家庭关系、访谈、录音、语音识别、AI分析，最终生成结构化人生回忆录。
@@ -477,3 +479,97 @@ python -m alembic check
 - 当前阶段：Memory + Memoir Slice 1 code implementation and security review completed at limited scope；Git development snapshot：PREPARATION IN PROGRESS；HTTP API validation：BLOCKED。
 - Release classification：DEVELOPMENT SNAPSHOT ONLY；NOT PRODUCTION READY。下一主线里程碑：AI Interview Agent MVP；本次不启动后续开发。
 - BM-01 remains OPEN and separate；不改变任何无关 C3 milestone 状态或历史结论。Git development snapshot 尚未 staging、commit 或发布，本次文档同步不授权这些操作。
+
+## Part 9.6-A — AI Interview Agent MVP Mock（2026-10-11，最新阶段状态）
+
+> 本节为新的开发阶段状态记录；此前 Memory + Memoir Slice 1、Part 9.5.5-C3、BM-01 的历史记录和既有编辑不作覆盖。原路线图关于“9.6 Extraction / 9.7 Agent”的描述保留为当时的规划；实际交付编号现按项目 Owner 决定采用 9.6-A（Mock Agent）、9.6-B（Candidate + Review）、9.6-C（获准后的真实 Provider 接入）。
+
+- **当前阶段 / 周期**：Part 9.6-A Mock Agent — implementation completed；independent static code review `PASS WITH FINDINGS`；M01 remediation `PASS — eligible for closure`，由 Owner 批准 **CLOSED（仅静态代码审查范围）**；最终 HTTP、真实 PostgreSQL 与生产验证未完成。下一主线为 9.6-B 设计与最小实施范围审批。
+- **仓库基线**：`master`，HEAD `8421f1d725ec6b7e98c6f1a54a52f78d4fdee085`（Memory + Memoir Slice 1 已推送的开发快照）。Part 9.6-A 的 19 个实现文件及后续两文件 M01 修复尚未获得 Git staging、commit 或 push 授权；不把本地实现描述为已经提交或远端 CI 通过。
+- **实施范围**：14 个新增文件、5 个既有文件局部修改，共 19 个（Backend Agent Router/Schema/Service/Client/CRUD/Model、测试、Alembic revision `f3a96b10d207`，以及独立 AI Service 的契约、确定性 Mock 和测试）。无需 LangGraph；无运行中的跨服务传输，也无真实 LLM 接入。
+- **功能**：`GET /api/v1/sessions/{session_id}/agent-state`；`POST /api/v1/sessions/{session_id}/agent-turns`（`start / answer / skip / end`，UUID `Idempotency-Key`、`expected_version`，`answer` 需要 `answer_message_id`）。Agent 状态 `idle → awaiting_answer → ended`；一次提出一个简短问题，根据规则和关键词追问、跳过、题库耗尽自动结束。Mock 仅证明固定规则分支，不代表真实自然语言理解。
+- **原文、权限与事务**：原始 `user/text` 或已保存的原始来源 Message 不改写；Assistant 问题由服务端以 `assistant / ai_generated` 保存。新查询执行 JWT 和 `Family.owner_id` 范围过滤；他人与不存在资源使用非泄漏的完整 404。Assistant Message、AgentState、AgentTurn 在同一事务完成；失败只回滚派生写入，不删除既存答案。重放重新核查权限及处理许可；幂等请求指纹不含老人答案正文。
+- **消息序号与迁移**：用户、转写及 Agent 消息通过共享 Session 级写入协调分配 `sequence`；ORM 与 Alembic 新增 `UNIQUE(session_id, sequence)`。新迁移 `f3a96b10d207` 的父版本为 `e8c2a9b47106`；迁移源码会检查历史重复序号并明确失败，不自动重编号。仅完成源码和静态检查，**未执行真实 PostgreSQL 迁移、并发/行锁验证或 `alembic current/check`**。
+- **Consent / 来源安全边界**：生产默认 `503 / POLICY_UNAVAILABLE`，不使用客户端 `consent=true` 代替有效授权；许可拒绝时 AI Client 零调用，来源内容在权限/许可判定前不加载。逐来源真实 Consent/讲述者授权与外部 Provider 条件仍未实现；仅允许合成数据和注入式 Mock 权限进行离线验证。Family Owner 权限不等于讲述者处理许可。
+- **审计**：19 文件独立代码审计 `PASS WITH FINDINGS`，未发现明确 Critical/High；`9.6A-M01`（删除 Assistant 问题导致 `ON DELETE SET NULL` 后幂等重放返回不完整成功结果）经两文件定向修复，并由独立只读复审确认 **CLOSED — STATIC CODE REVIEW SCOPE ONLY**。重放现在针对原本预期输出却已缺失的 Turn 返回 `409 / IDEMPOTENCY_RESULT_UNAVAILABLE`，合法无输出的 end/题库耗尽不受影响。`9.6A-L01`（`idle → end`、新键 `ended → end` 可继续生成 Turn/版本）的 Low 语义问题保持 **OPEN**，未作暗中行为变更。
+- **测试证据分级**：Codex A 首次实施报告：Backend 离线 42 passed / 2 deselected、Memory/Memoir 定向 Service 回归 18 passed、AI Service Mock 10 passed；这些分组单独记录，缺原始执行日志，独立审计未复现。M01 修复后，Codex A 报告专用隔离命令 `python -I -B ".../apps/backend/tests/test_interview_agent.py"`，退出码 0，`51 passed in 2.90s`（38 个原 Service 用例 + 13 个 M01 参数化新增用例）；Codex B 已静态核查测试断言、文件哈希与修复范围，但 **未独立运行测试，也未取得原始终端输出**。所有上述 passed 数字属于实施者报告结果，不得写成独立复现或全仓验证。
+- **当前 NOT RUN / NOT VERIFIED**：HTTP/ASGI 请求路径 NOT RUN；真实 PostgreSQL upgrade/current/check、外键、事务及集成 NOT RUN；PostgreSQL `READ COMMITTED` 并发、行锁及幂等竞争 NOT VERIFIED；真实 Consent、真实 AI Provider、STT、RAG、Candidate 审核和生产部署 NOT IMPLEMENTED。`MM-03`、`MM-04` 和 `BM-01` 保持原有未关闭状态；不改 C3 各阶段原结论。
+- **下一阶段**：Part 9.6-B — Memory Candidate + immutable Revision + human review。拟从有真实来源引用的原始 Message 提取候选，保留推断/不确定性与证据、允许人工纠正和审核；批准后才原子创建正式 Memory。A/B 合成 Mock 范围与未来 C 的真实 Consent/Provider 范围须分开审批，不能提前生产处理真实人生经历。
+- **发布分类**：`DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY`。本记录是本地状态同步，不表示新的 Git commit、push、CI、真实数据库迁移或生产审批已完成。
+
+
+## Part 9.6-A Provider Extension — 合同草案归档（2026-10-12）
+
+> 本节为合同起草时的历史记录；其待审查 / 未实施状态已由下方最新独立审查状态取代。合同正文保留起草与工程澄清记录，不作为最新交付状态。
+
+- **归档文档**：[Scope Freeze + Implementation Contract V1.0](../04_AI设计/Part9.6-A_Provider-Extension_Implementation-Contract_V1.0.md)，为本子阶段详细草案的唯一来源；其他项目文档仅保留摘要和引用。
+- **状态**：Product Scope CONFIRMED；Engineering Contract COMPLETE DRAFT — PENDING REVIEW / APPROVAL；Status **DRAFT — PENDING INDEPENDENT REVIEW**；Implementation **NOT STARTED**。21 文件实施白名单、字段、约束、拟用 migration revision 与 API 等工程设计待独立审查和批准；本次未生成或执行迁移。
+- **基线**：HEAD `8421f1d725ec6b7e98c6f1a54a52f78d4fdee085`，另依赖现有未提交的 9.6-A 工作区实现；实施前须核验相关文件 SHA-256。
+- **本次范围**：新建完整合同草案，向 README、路线图和本日志追加摘要与链接。未修改代码、配置、测试或 workflow，未运行测试，未操作数据库 / Docker，未暂存、提交或推送；既有工作区内容保留。
+- **下一步**：独立合同审查并取得实施批准；9.6-B 继续为 Candidate + Revision + Human Review，9.6-C 继续为获批后的真实 Provider 接入。既有 9.6-A 静态审查结论、开放发现及 NOT RUN / NOT VERIFIED 项目沿用前节记录。
+
+## Part 9.6-A Provider Extension — Independent Review PASS + Documentation Sync（2026-10-12，最新阶段状态）
+
+依据项目 Owner 提供的《Part 9.6-A Provider Extension Independent Review Report》结论同步。本轮核对合同及相关实现的状态表述，未重新执行独立审查或测试；不新增测试数量、迁移成功或远端 CI 证据。
+
+| 项目 | 当前状态 |
+| --- | --- |
+| Implementation | Completed（Provider Extension 源码及离线增量范围） |
+| Contract Compliance | PASS |
+| Independent Code Review | PASS（源码审查及本轮无数据库验证范围） |
+| Critical / High / Medium / Low Finding | 0 / 0 / 0 / 0（仅本次 Provider Extension 独立审查范围） |
+| 修复要求 | 无 |
+| Documentation Sync | Completed（本日志与路线图） |
+| Git Commit Readiness Review / Staged Audit | PENDING / NOT RUN |
+| Git staging / Commit / Push | 未授权；本轮未执行 |
+
+- **交付闭环**：9.6-A Mock Agent → M01 修复 → Provider Extension Contract → Provider Extension Implementation → Independent Review PASS。原 Mock / M01 审查及合同草案记录保留为历史，不将本次 PASS 扩展为全仓安全结论或生产验收。
+- **Provider 架构**：`interview-agent.v2` Request/Result 合同、AIProvider 接口、显式 Registry 与 Mock Provider 已形成可替换的离线边界。DeepSeek / GPT / 本地模型 / LangGraph 适配及 Backend→AI Service 实际跨服务传输仍待后续独立实施；不把接口扩展写成真实 Provider 已接入。
+- **事务与幂等**：准备上下文并预留 Turn / commit → 数据库事务及锁之外的同步 Provider 边界 → 重新校验后发布结果 / commit。同一 Idempotency-Key 绑定请求指纹；pending 重放不再次调用，completed 重放复核权限、许可与输出可用性；failed / discarded 为终态，无自动重试或 orphan pending 自动恢复。上述源码合同不构成外部 Provider exactly-once 调用保证或真实 PostgreSQL 并发证明。
+- **v2 访谈语义**：AgentState 为 `idle / listening / paused / ended`；start 进入 listening，保存原始文字不触发 Provider，只有显式 request_question 请求问题，成功后仍为 listening。pause 后仍可保存文字，resume 不补发问题；end 将 AgentState 置 ended 并原子完成 Session，不结束 Interview。Session completed 后三个 Message 写入入口拒绝新增。`awaiting_answer` 仅属 legacy v1；Session completed 与 Turn execution_status 不混作 AgentState。
+- **迁移源码**：Provider Extension revision `a196e4c72b08`，parent `f3a96b10d207`；原 Mock migration 与前置实现属于后续提交范围核对对象。本轮没有执行迁移，也没有将 21 文件实施白名单直接当作 Git 提交白名单。
+- **权限与历史发现**：既有内容 API 保持 Owner-only；ProcessingDecision 默认关闭，Mock 许可只用于合成离线验证。Operator / Owner 不替代 Speaker / Consenter；真实 Consent、C3 Provenance / Access Gate / 删除传播未因此完成。历史 `9.6A-L01`、`MM-03`、`MM-04` 及 C3/BM-01 保持原有范围与状态，不由本次零发现结论自动关闭。
+
+| 未完成或未验证项目 | 保留状态 |
+| --- | --- |
+| HTTP/ASGI 完整请求链 | NOT RUN |
+| PostgreSQL Migration / Integration | NOT VERIFIED；本轮未执行 |
+| PostgreSQL 并发 / 行锁 | NOT VERIFIED |
+| Real Provider | NOT IMPLEMENTED（后续 9.6-C） |
+| Consent 真实流程 | NOT IMPLEMENTED |
+| 生产部署 | NOT STARTED |
+| 真实数据库清理 | N/A（本轮未创建资源） |
+
+**发布分类**：DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY。真实数据库验证仍须遵循 Backend AGENTS 的独立 Manager / 受限 Runner、唯一可丢弃数据库及专项授权规则；Mock 或源码审查 PASS 不授权真实 provisioning。
+
+**近期门禁**：Documentation Sync → Git Commit Readiness Review → 获授权的精确暂存与 Staged Audit → Commit Authorization → Push Authorization。提交评审须核对原 9.6-A 前置修改、M01 和 Provider Extension 文件、迁移链及文档，排除无关 C3/BM-01、历史模板删除与 `ad`；本轮不执行暂存审计、commit 或 push。
+
+**下一功能阶段**：Part 9.6-B — Candidate + immutable Revision + Human Review，待最小实施范围审批；9.6-C 保留为获批后的真实 Provider 接入。本轮只同步两份文档，保留所有既有工作区改动，未修改 runtime、迁移、测试、配置或 workflow，未运行应用/测试、操作 PostgreSQL / Docker 或写入 Git 索引。
+
+## Part 9.6-A Provider Extension Completed（2026-10-12）
+
+依据项目 Owner 确认的 Implementation Completed 与 Independent Review PASS 同步；前述 Mock、M01、合同草案及上一轮两份文档同步记录均保留为历史。本轮仅同步四份指定文档，未复跑实施测试或独立审查，不新增测试数量或验证证据。
+
+**完成范围：Offline Provider Extension**
+
+- Provider Contract v2
+- Offline Mock Provider
+- Agent transaction separation：预留并提交 → 事务与锁外调用 → 重新校验并发布
+- Pause/Resume/End lifecycle：pause 后可保存文字，resume 不补发，end 完成 Session
+- Message lifecycle protection：Session 完成后拒绝三个 Message 写入入口新增消息
+
+**Independent Review：PASS**
+
+**限制：**
+
+- HTTP/ASGI NOT VERIFIED（完整请求链沿用 NOT RUN 记录）
+- PostgreSQL NOT VERIFIED（迁移、集成及并发仍未验证）
+- Real Provider NOT IMPLEMENTED
+
+**历史发现：**9.6A-L01 保留为 v1 duplicate end semantics issue，继续独立跟踪，不因本次 PASS 关闭；当前 v2 对新 key 重复 end 返回冲突，同 key 幂等重放保留。MM-03、MM-04 与 C3/BM-01 的历史范围和状态保持原记录。
+
+**下一阶段：Part 9.6-B Candidate + Revision + Human Review**
+
+**发布分类：DEVELOPMENT SNAPSHOT ONLY**
+
+**本轮文档同步：**README、开发日志、路线图与合同首页/历史状态说明已同步。Git：no add / no commit / no push，未执行 reset / restore / clean；Database：no operation；Docker：no operation；未执行 migration，未读取 .env 或 secret，未修改业务代码。完成后停止，不进入 Git Commit。

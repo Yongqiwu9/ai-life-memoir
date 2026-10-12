@@ -1,3 +1,19 @@
+import uuid
+
+import pytest
+from sqlalchemy import func, select, update
+
+from app.core.exceptions import AppException
+from app.models.interview_agent import InterviewAgentState
+from app.models.interview_message import InterviewMessage
+from app.models.interview_session import InterviewSession
+from app.schemas.interview_message import InterviewMessageCreate
+from app.services import interview_message as message_service
+from tests.test_interview_agent import records as synthetic_records
+
+records = synthetic_records
+
+
 def _register_and_login(client, email: str, password: str = "strong-password-1"):
     register_response = client.post(
         "/api/v1/auth/register",
@@ -130,3 +146,102 @@ def test_reject_empty_content(client) -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_offline_text_saved_without_agent_preserves_sequence(records):
+    db, users, sessions = records
+    first = message_service.create_message(
+        db,
+        user_id=users[0].id,
+        session_id=sessions[0].id,
+        data=InterviewMessageCreate(content="合成原文一"),
+    )
+    second = message_service.create_message(
+        db,
+        user_id=users[0].id,
+        session_id=sessions[0].id,
+        data=InterviewMessageCreate(content="合成原文二"),
+    )
+    assert (first.sequence, second.sequence) == (1, 2)
+    assert first.content == "合成原文一"
+    assert db.get(InterviewAgentState, sessions[0].id) is None
+
+
+def test_offline_paused_agent_still_allows_original_text(records):
+    db, users, sessions = records
+    state = InterviewAgentState(
+        session_id=sessions[0].id,
+        status="paused",
+        version=2,
+        generation_epoch=1,
+        policy_version="synthetic-offline-policy",
+    )
+    db.add(state)
+    db.commit()
+    message = message_service.create_message(
+        db,
+        user_id=users[0].id,
+        session_id=sessions[0].id,
+        data=InterviewMessageCreate(content="暂停 AI 后继续合成讲述"),
+    )
+    assert message.role == "user" and message.source == "text"
+    assert sessions[0].status == "active"
+    assert (state.status, state.version, state.generation_epoch) == ("paused", 2, 1)
+
+
+@pytest.mark.parametrize("status", ["completed", "closed", "unknown"])
+def test_offline_non_active_session_rejects_original_text(records, status):
+    db, users, sessions = records
+    sessions[0].status = status
+    db.commit()
+    with pytest.raises(AppException) as caught:
+        message_service.create_message(
+            db,
+            user_id=users[0].id,
+            session_id=sessions[0].id,
+            data=InterviewMessageCreate(content="合成禁止新增资料"),
+        )
+    assert caught.value.code == "SESSION_NOT_ACTIVE"
+    assert caught.value.status_code == 409
+    assert not db.in_transaction()
+    assert db.scalar(select(func.count()).select_from(InterviewMessage)) == 0
+    assert db.get(InterviewSession, sessions[0].id).status == status
+
+
+def test_offline_lock_refresh_rejects_stale_active_session(records):
+    db, users, sessions = records
+    stale = sessions[0]
+    db.execute(
+        update(InterviewSession)
+        .where(InterviewSession.id == stale.id)
+        .values(status="completed")
+        .execution_options(synchronize_session=False)
+    )
+    db.commit()
+    assert stale.status == "active"
+    with pytest.raises(AppException) as caught:
+        message_service.create_message(
+            db,
+            user_id=users[0].id,
+            session_id=stale.id,
+            data=InterviewMessageCreate(content="缓存 active 不构成写许可"),
+        )
+    assert caught.value.code == "SESSION_NOT_ACTIVE"
+    assert db.get(InterviewSession, stale.id).status == "completed"
+    assert db.scalar(select(func.count()).select_from(InterviewMessage)) == 0
+
+
+def test_offline_other_owner_and_missing_session_remain_404(records):
+    db, users, sessions = records
+    sessions[3].status = "completed"
+    db.commit()
+    for session_id in (sessions[3].id, uuid.uuid4()):
+        with pytest.raises(AppException) as caught:
+            message_service.create_message(
+                db,
+                user_id=users[0].id,
+                session_id=session_id,
+                data=InterviewMessageCreate(content="合成跨所有者请求"),
+            )
+        assert caught.value.code == "NOT_FOUND" and caught.value.status_code == 404
+    assert db.scalar(select(func.count()).select_from(InterviewMessage)) == 0
