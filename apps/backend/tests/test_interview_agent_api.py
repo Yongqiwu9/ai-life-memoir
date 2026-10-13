@@ -389,7 +389,7 @@ def test_http_default_gate_and_auth(client):
     from tests.test_interview_message import _register_and_login, _setup_session
 
     assert client.get(f"/api/v1/sessions/{uuid.uuid4()}/agent-state").status_code == 401
-    headers = _register_and_login(client, "synthetic-owner@example.invalid")
+    headers = _register_and_login(client, "synthetic-owner@example.com")
     session = _setup_session(client, headers)
     ai_client = Mock()
     overrides = dict(client.app.dependency_overrides)
@@ -427,9 +427,9 @@ def test_http_complete_404_and_turn_response(client, db_session):
     from app.services.ai_interview_client import get_interview_client, get_processing_decision
     from tests.test_interview_message import _register_and_login, _setup_session
 
-    owner_headers = _register_and_login(client, "synthetic-http-owner@example.invalid")
+    owner_headers = _register_and_login(client, "synthetic-http-owner@example.com")
     session = _setup_session(client, owner_headers)
-    headers = _register_and_login(client, "synthetic-http-stranger@example.invalid")
+    headers = _register_and_login(client, "synthetic-http-stranger@example.com")
     responses = [
         client.post(
             f"/api/v1/sessions/{session_id}/agent-turns",

@@ -47,20 +47,25 @@ def db_session():
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
-    Base.metadata.create_all(engine)
-    session_factory = sessionmaker(
-        bind=engine,
-        autoflush=False,
-        autocommit=False,
-        expire_on_commit=False,
-    )
-    session = session_factory()
+    session = None
     try:
+        Base.metadata.create_all(engine)
+        session_factory = sessionmaker(
+            bind=engine,
+            autoflush=False,
+            autocommit=False,
+            expire_on_commit=False,
+        )
+        session = session_factory()
         yield session
     finally:
-        session.close()
-        Base.metadata.drop_all(engine)
-        engine.dispose()
+        try:
+            if session is not None:
+                session.close()
+        finally:
+            # Each case owns an in-memory database; closing its connection releases it.
+            # Dropping cyclic FK tables is unnecessary and unsupported by SQLite.
+            engine.dispose()
 
 
 @pytest.fixture()
