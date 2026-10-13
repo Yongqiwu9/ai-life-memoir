@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import NotFoundException
 from app.crud import family as family_crud
 from app.crud import family_member as family_member_crud
+from app.crud import memory_workflow as workflow_crud
 from app.models.family_member import FamilyMember
 from app.schemas.family_member import FamilyMemberCreate, FamilyMemberUpdate
 from app.services.interview import _delete_with_reference_guard
@@ -112,11 +113,18 @@ def delete_family_member(
     )
     _delete_with_reference_guard(
         db,
-        has_references=lambda: family_member_crud.has_protected_references(db, member_id=member_id),
-        delete=lambda: family_member_crud.delete_family_member(db, member=member),
+        has_references=lambda: (
+            family_member_crud.has_protected_references(db, member_id=member_id)
+            or workflow_crud.has_workflow_references(db, scope_kind="member", scope_id=member_id)
+        ),
+        delete=lambda: family_member_crud.delete_family_member(db, member=member, owner_id=user_id),
         constraint_names={
             "memories_family_member_id_fkey",
             "memoirs_family_member_id_fkey",
             "memories_source_message_id_fkey",
         },
+        reauthorize=lambda: _get_member_in_family(
+            db, user_id=user_id, family_id=family_id, member_id=member_id
+        ),
+        not_found_message="Family member not found",
     )

@@ -4,9 +4,11 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundException
 from app.crud import family as family_crud
+from app.crud import memory_workflow as workflow_crud
 from app.models.family import Family
 from app.models.user import User
 from app.schemas.family import FamilyCreate, FamilyUpdate
+from app.services.interview import _delete_with_reference_guard
 
 
 def _get_owned_family(db: Session, *, user_id: uuid.UUID, family_id: uuid.UUID) -> Family:
@@ -52,4 +54,17 @@ def update_family(
 
 def delete_family(db: Session, *, user_id: uuid.UUID, family_id: uuid.UUID) -> None:
     family = _get_owned_family(db, user_id=user_id, family_id=family_id)
-    family_crud.delete_family(db, family=family)
+    _delete_with_reference_guard(
+        db,
+        has_references=lambda: workflow_crud.has_workflow_references(
+            db, scope_kind="family", scope_id=family_id
+        ),
+        delete=lambda: family_crud.delete_family(db, family=family, owner_id=user_id),
+        constraint_names={
+            "memories_family_member_id_fkey",
+            "memoirs_family_member_id_fkey",
+            "memories_source_message_id_fkey",
+        },
+        reauthorize=lambda: _get_owned_family(db, user_id=user_id, family_id=family_id),
+        not_found_message="Family not found",
+    )

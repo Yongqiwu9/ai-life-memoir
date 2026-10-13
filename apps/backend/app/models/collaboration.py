@@ -72,6 +72,8 @@ class CommandIdempotencyRecord(Base):
     operation: Mapped[str] = mapped_column(String(100), nullable=False)
     idempotency_key: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
     request_digest: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    fingerprint_scheme: Mapped[str | None] = mapped_column(String(64))
+    fingerprint_key_id: Mapped[str | None] = mapped_column(String(100))
     state: Mapped[str] = mapped_column(String(32), default="processing", nullable=False)
     resource_kind: Mapped[str | None] = mapped_column(String(64))
     resource_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
@@ -222,7 +224,14 @@ def _protect_membership_identity(_mapper, _connection, target):
 @event.listens_for(CommandIdempotencyRecord, "before_update")
 def _protect_idempotency_identity(_mapper, _connection, target):
     state = inspect(target)
-    immutable = ("actor_user_id", "operation", "idempotency_key", "request_digest")
+    immutable = (
+        "actor_user_id",
+        "operation",
+        "idempotency_key",
+        "request_digest",
+        "fingerprint_scheme",
+        "fingerprint_key_id",
+    )
     if any(state.attrs[name].history.has_changes() for name in immutable):
         raise ValueError("Idempotency command identity is immutable")
     old_states = state.attrs.state.history.deleted

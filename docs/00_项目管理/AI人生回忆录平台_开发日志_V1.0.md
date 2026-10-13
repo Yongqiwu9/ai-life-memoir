@@ -1,6 +1,42 @@
 # AI人生回忆录平台_开发日志_V1.0
 
-> 最新主线状态（2026-10-12）：Part 9.6-A Provider Extension Implementation Completed / Independent Review PASS（源码审查及本轮无数据库验证范围）。本轮完成 Documentation Sync；下一门禁为 Git Commit Readiness Review，下一功能阶段为 9.6-B Candidate + Revision。HTTP/ASGI NOT RUN；真实 PostgreSQL NOT VERIFIED；DEVELOPMENT SNAPSHOT ONLY。详细状态见文末最新记录，前文保留历史阶段记录。
+## 2026-10-14 — B CI定向复审通过（最新）
+
+- 「9.6-A Review」仅对CI-IR-01～04定向只读复审，结论PASS；四项CLOSED — STATIC，6文件初末hash匹配。未运行脚本/DB/CI，不将模拟阶段/退出证据当成真实权限或清理成功。
+- 实施者验证43项纯mock合同/故障注入检查、script Ruff/format、workflow YAML/接线均PASS；本机激活在资源前拒绝，未做本机Docker/PG操作。42个业务实施文件未变化。
+- 新job实际Linux/PostgreSQL/Remote CI仍NOT RUN，B-PC-01继续OPEN直至exact-commit backend+B双job通过；E-01、旧v3 UNKNOWN保持。
+- 未暂存、提交、推送。下一步对原50路径与新增workflow/专项脚本/CI合同的53路径候选union重新做定向Pre-Commit Audit，不直接复用旧50路径结论；README/路线图/日志仍有须排除的既有C3 hunks。
+
+## 2026-10-14 — B CI 初审后定向修复
+
+- 独立实现初审FAIL：CI-IR-01～03 Blocking Medium；CI-IR-04 Low。修复在既有六文件批准范围内，未改业务/测试/migration/AGENTS/BM-01，也未执行本机真实Docker/PG。
+- 从Popen启动尝试前即禁止清理，持续保留原对象，cleanup检查所有已启动进程结局；未确认退出/EOF/group时保留。
+- 权限准备连接的SQL异常统一进入不确定结果保留；阶段使用共享单调截止，将剩余预算传入native wait/connect/server SQL timeout，过期拒绝后续操作。
+- post-check失败保留已通过test_result，单独记录post_check_result；overall仍失败。
+- 43项纯mock合同/故障注入检查PASS；待独立定向再审，不先关闭finding。真实Linux/PG/Remote CI未运行，B-PC-01与E-01仍OPEN；未暂存、提交或推送。
+
+## 2026-10-14 — B-PC-01 专项CI接线实施
+
+- 用户批准独立合同审查及通过后的六文件实施；「9.6-A Review」合同审查PASS WITH FINDINGS。三项澄清：SQLSTATE缺失不补造、post-check使用受限Runner、数据库操作前核验专属job/service/端口/集群。
+- 实施限workflow、单一专项CI脚本及本合同/README/路线图/日志。原integration精确排除B文件；独立16.15 job负责分配、迁移、受限Runner的28项（含5并发）、post-check、退出核验及精确清理；只上传脱敏manifest/summary/JUnit。
+- 32项纯mock合同检查PASS；脚本Ruff/format PASS；workflow YAML与接线断言PASS；本机--ci-manager预检拒绝，未触发Docker/PG。以上不替代新job实际SQL权限、清理与GitHub验收。
+- 状态：IMPLEMENTED LOCALLY / IMPLEMENTATION REVIEW PENDING / REMOTE CI NOT RUN；B-PC-01 REMEDIATION IMPLEMENTED但仍OPEN，E-01保持。业务源码、现有测试门禁和迁移未改，未扩建通用BM-01平台。
+- 暂存区保持为空；未commit/push。详细设计和门禁只保存于[CI接线合同](../05_开发阶段记录/Part9.6-B_PostgreSQL-CI-Wiring_Implementation-Contract_V1.0.md)。独立实现复审通过后重新核对提交union和三份混合文档的精确hunks，不因旧50路径已审计就自动认可新增CI内容。
+
+## 2026-10-14 — 9.6-B 验证闭环状态（最新）
+
+- 已批准的42文件离线实施写入工作区，未提交；B-IR-01～04 经「9.6-A Review」独立复核 CLOSED。
+- 独立复核：**PASS WITH FINDINGS**；详细记录见 [闭环独立复核报告](../05_开发阶段记录/Part9.6-B_Validation-Closure_Independent-Review_2026-10-14.md)。
+- HTTP/ASGI：现有合成用例 **15 passed / 3.67s**，每例独立内存SQLite；不证明生产JWT、真实Consent或真实Provider流程。
+- PostgreSQL16.15：现有专项 **28 passed / 2.68s**，fresh upgrade与前后current/check通过；含5个真实双连接用例。
+- Legacy/downgrade：**18个脚本验收场景**通过，不是18个pytest用例；原ID、正文、FK和时间保留，新增authority不补造；空库/纯Legacy可安全回退，测试的不安全回退被拒绝且schema/row快照不变。
+- 本次成功及失败隔离run的临时库与角色均已核验清理，原HBA恢复；旧v3仍UNKNOWN，与本次资源分开。
+- **E-01 Medium（证据限制，非已确认业务缺陷）**：57项不能由测试数量相加推断全部完成。B32既有Memory两提案竞争、B33 ordinal并发、B52预检后新增引用的指定真实PG场景仍未验证；真实Legacy孤儿、版本化Section等回退分支未单独覆盖。
+- 真实Provider、完整生产Consent/C3/C5/C6、备份与第三方清除仍未实现/验证；不关闭BM-01，不标Production Ready或整个9.6-B Sealed。
+- 下一门禁：**Git Commit Review 的只读 Pre-Commit Audit**；精确白名单与差异审计后仍需用户分别批准暂存、提交、推送。暂存区为空，16个历史删除/AGENTS/C3/BM-01/ad/.env.test均不得意外纳入。
+
+
+> 最新主线状态（2026-10-12）：9.6-A Provider Extension 已本地提交 master @ `6c12e96e4f83ada7cb7c7dd60fec4283269f8700`，本次未核验 push/远端 CI。9.6-B Candidate + Immutable Revision + Human Review 完整草案已归档，产品决定 CONFIRMED，正式独立合同审查 PASS WITH FINDINGS，工程条款已修订 PENDING TARGETED RE-REVIEW，IMPLEMENTATION NOT STARTED / NOT AUTHORIZED；下一门禁为定向再审及实施批准。HTTP/ASGI NOT RUN、PostgreSQL NOT VERIFIED，DEVELOPMENT SNAPSHOT ONLY。前文保留历史阶段记录。
 
 ## 1. 项目简介
 
@@ -573,3 +609,32 @@ python -m alembic check
 **发布分类：DEVELOPMENT SNAPSHOT ONLY**
 
 **本轮文档同步：**README、开发日志、路线图与合同首页/历史状态说明已同步。Git：no add / no commit / no push，未执行 reset / restore / clean；Database：no operation；Docker：no operation；未执行 migration，未读取 .env 或 secret，未修改业务代码。完成后停止，不进入 Git Commit。
+
+
+## Part 9.6-B — 完善设计草案并归档（2026-10-12）
+
+**任务：Documentation Only。** 用户授权完善审批、API、迁移与验收合同并纳入项目；未授权代码实施、测试执行或 Git 写操作。
+
+- **当前基线**：实际本地 master HEAD `6c12e96e4f83ada7cb7c7dd60fec4283269f8700`，message `feat(interview): add provider extension for interview agent`。本次未进行远端查询或推送；之前的 Git 待提交记录保留为历史。
+- **详细 SSOT**：[Part 9.6-B Candidate + Immutable Revision + Human Review Contract V1.0](../04_AI设计/Part9.6-B_Candidate-Revision-Human-Review_Implementation-Contract_V1.0.md)。
+- **产品范围**：单条原始文字显式提取；新批次保留旧候选；统一不可变人工/AI Revision；Owner 批准精确版本；新 Memoir 绑定精确 Memory Revision/proof；历史数据 Legacy，未知本人授权 fail closed。
+- **工程完善**：单一 RevisionProposal 的 offline_memory.v1 profile、表字段与精确 FK、审批/CAS、相关用途 generation、三阶段批次和迟到结果、敏感 HMAC/key 轮换、安全控制路径、旧 API 切换、迁移与 downgrade guard、48 项验收以及 36 个拟实施源码文件。该拟范围不是已批准实现或暂存白名单。
+- **同步范围**：新建合同；README、路线图、本日志、ADR-008、Memory 生成链路文档保留摘要/引用；不把全部表结构复制到其他文档。ADR-008 保持 Proposed。
+- **状态**：产品决定 CONFIRMED；工程合同 REFINED DRAFT — PENDING INDEPENDENT CONTRACT REVIEW；9.6-B IMPLEMENTATION NOT STARTED / NOT AUTHORIZED；9.6-C FUTURE / NOT STARTED。
+- **证据分类**：本次仅源码/文档核对及归档一致性复核；未运行任何实施测试、HTTP/ASGI、PostgreSQL、迁移或真实 Provider。源代码审查、合成结果与生产验收不互相替代；未新增测试数量、CI 成功或清理完成结论。
+- **安全范围**：未修改 runtime、migration、tests、workflow、配置、AGENTS、C3/BM-01；保留16项历史模板删除、ad untracked 与 .env.test ignored；不读 secret；未 add/commit/push/reset/restore/clean。
+- **下一步**：独立合同审查后由用户批准离线实施；不因本次归档自动启动 9.6-B。
+
+## Part 9.6-B — 独立合同审查后的最小文档修订（2026-10-12）
+
+用户提供正式独立报告：PASS WITH FINDINGS，Critical0 / High0 / Medium2 / Low1。审查旧合同 hash `1C2BB83312240154FED858C7D1F1FB2A13DBCCC5255DFAEAC5CDCCA11FA9302A`；实际本地基线仍master @ `6c12e96e4f83ada7cb7c7dd60fec4283269f8700`，暂存区空。此前归档记录的36文件/48验收为原审查范围。
+
+**本次只修订文档，P01–P11不变。**
+
+- B-CR-01：真实代码表明HTTP mapper没有请求Session可回滚；旧ORM Parent DELETE可能先置NULL。合同§10.3明确3个Service持有事务、3个CRUD只改delete为参数化单目标Core DELETE＋flush、新workflow CRUD只提供scope metadata EXISTS、准确PG manifest与SQLite回滚后引用核验、DEBUG安全边界。拟实施文件增6，**42=20新增＋22修改**；没有实际修改这6个源码。
+- B-CR-02：撤销五秒实际调用上界声明，仅验收Stub主动TimeoutError的安全分类；实际deadline/中断在后续真实Provider设计，不新添假配置。
+- B-CR-03：已有目标及Proposal按API表要求版本，新建批次/manual Candidate/Memoir例外；旧禁用POST/PATCH不新增头/版本要求。
+- 审查补充建议：同key恢复查询仅返回pending/原终态/unknown；暂缺记录不能成为自动重执行依据。验收新增B49–B57，共**57项未来场景**。
+- 同步README、路线图、本日志、ADR-008、Memory链路摘要；详细SSOT仍为 [9.6-B合同](../04_AI设计/Part9.6-B_Candidate-Revision-Human-Review_Implementation-Contract_V1.0.md)。ADR-008继续Proposed。
+- 当前状态：**REVISED DRAFT — PENDING TARGETED RE-REVIEW；IMPLEMENTATION NOT STARTED / NOT AUTHORIZED**。不能把合同修订当成运行时漏洞已修复，也不能自动关闭正式报告finding或批准42文件实施。
+- 未运行测试/应用/HTTP/PG，不生成或执行migration、不使用DB/Docker，不读.env/secret、不写Git。保留全部既有未提交内容、16历史模板删除、ad、C3/BM-01和AGENTS。

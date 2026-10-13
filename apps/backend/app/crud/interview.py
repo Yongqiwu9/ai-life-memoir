@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.models.family import Family
@@ -63,9 +63,22 @@ def update_interview(db: Session, *, interview: Interview, values: dict[str, str
     return interview
 
 
-def delete_interview(db: Session, *, interview: Interview) -> None:
-    db.delete(interview)
+def delete_interview(db: Session, *, interview: Interview, owner_id: uuid.UUID) -> bool:
+    current_scope = (
+        select(FamilyMember.id)
+        .join(Family, FamilyMember.family_id == Family.id)
+        .where(FamilyMember.id == interview.family_member_id, Family.owner_id == owner_id)
+    )
+    result = db.execute(
+        delete(Interview)
+        .where(
+            Interview.id == interview.id,
+            Interview.family_member_id.in_(current_scope),
+        )
+        .execution_options(synchronize_session=False)
+    )
     db.flush()
+    return result.rowcount == 1
 
 
 def has_protected_references(db: Session, *, interview_id: uuid.UUID) -> bool:

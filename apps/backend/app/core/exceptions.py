@@ -121,6 +121,10 @@ def _is_agent_request(request: Request | None) -> bool:
 
 
 async def app_exception_handler(_: Request, exc: AppException) -> JSONResponse:
+    if _is_memory_request(_):
+        from app.core.memory_http import memory_exception_response
+
+        return memory_exception_response(exc)
     if _is_agent_request(_):
         return agent_exception_response(exc)
     return JSONResponse(
@@ -137,6 +141,10 @@ async def app_exception_handler(_: Request, exc: AppException) -> JSONResponse:
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    if _is_memory_request(request):
+        from app.core.memory_http import memory_exception_response
+
+        return memory_exception_response(exc)
     if _is_agent_request(request):
         return agent_exception_response(exc)
     logger.exception("Unhandled exception: %s %s", request.method, request.url.path, exc_info=exc)
@@ -161,6 +169,10 @@ def register_exception_handlers(app: FastAPI) -> None:
 async def privacy_validation_exception_handler(request: Request, exc: RequestValidationError):
     from app.core.config import settings
 
+    if _is_memory_request(request):
+        from app.core.memory_http import memory_exception_response
+
+        return memory_exception_response(exc)
     if is_interview_agent_path(request.url.path, settings.API_V1_PREFIX):
         return agent_exception_response(exc)
     privacy_paths = (
@@ -172,3 +184,12 @@ async def privacy_validation_exception_handler(request: Request, exc: RequestVal
         # Pydantic's default `input` can disclose a raw channel or verification code.
         return JSONResponse(status_code=422, content={"detail": "Invalid rights-auth request"})
     return await request_validation_exception_handler(request, exc)
+
+
+def _is_memory_request(request: Request | None) -> bool:
+    if request is None:
+        return False
+    from app.core.config import settings
+    from app.core.memory_http import is_memory_path
+
+    return is_memory_path(request.url.path, request.method, settings.API_V1_PREFIX)

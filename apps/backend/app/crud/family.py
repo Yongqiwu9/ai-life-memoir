@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.models.family import Family
@@ -48,6 +48,11 @@ def update_family(db: Session, *, family: Family, name: str) -> Family:
     return family
 
 
-def delete_family(db: Session, *, family: Family) -> None:
-    db.delete(family)
-    db.commit()
+def delete_family(db: Session, *, family: Family, owner_id: uuid.UUID) -> bool:
+    result = db.execute(
+        delete(Family)
+        .where(Family.id == family.id, Family.owner_id == owner_id)
+        .execution_options(synchronize_session=False)
+    )
+    db.flush()
+    return result.rowcount == 1

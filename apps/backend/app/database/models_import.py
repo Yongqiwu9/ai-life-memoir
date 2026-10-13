@@ -22,6 +22,12 @@ from app.models.interview_participant import InterviewParticipant  # noqa: F401
 from app.models.interview_session import InterviewSession  # noqa: F401
 from app.models.memoir import Memoir, MemoirSection  # noqa: F401
 from app.models.memory import Memory  # noqa: F401
+from app.models.memory_workflow import (  # noqa: F401
+    ContentRevision,
+    ExtractionBatch,
+    MemoryCandidate,
+    RevisionProposal,
+)
 from app.models.transcript import Transcript  # noqa: F401
 from app.models.transcript_segment import TranscriptSegment  # noqa: F401
 from app.models.user import User  # noqa: F401

@@ -1,6 +1,12 @@
 # AI人生回忆录平台 — Part 开发路线图 V2.0
 
-> 最新主线状态（2026-10-12）：9.6-A Provider Extension Implementation Completed / Independent Review PASS（源码审查及本轮无数据库验证范围）。Documentation Sync 已完成；下一门禁为 Git Commit Readiness Review，下一功能阶段为 9.6-B Candidate + Revision + Human Review。HTTP/ASGI NOT VERIFIED（NOT RUN），真实 PostgreSQL NOT VERIFIED，Real AI Provider NOT IMPLEMENTED，DEVELOPMENT SNAPSHOT ONLY；文末最新状态优先于早期规划与合同草案归档。
+> 最新B CI结论（2026-10-14）：六文件专项接线已实施，独立定向源码复审PASS，CI-IR-01～04 CLOSED — STATIC；43项mock、script Ruff/format、YAML检查PASS。真实Linux/PG/remote双job未运行，B-PC-01和E-01保持OPEN。下一门禁是53路径候选union的定向Pre-Commit Audit与三份混合文档hunk核验，然后由用户分别批准暂存/提交/推送。旧待再审条目为历史记录，不表示当前源码阻塞仍未修复。
+
+> B CI修复最新状态（2026-10-14）：独立实现初审FAIL，CI-IR-01～04已作六文件范围内定向修复；43项纯mock检查含启动后IO/通信/超时/残留group、权限准备不确定、共享阶段预算及post-check结果独立记录。待独立定向再审；新job真实Linux/PostgreSQL/Remote CI仍未运行。后文32项及“实现复审待完成”保留首次实施历史，不能替代本次再审结论。
+
+> B CI 最新接线状态（2026-10-14）：六文件实施已获用户批准并写入工作区；原入口精确排除B文件，新增独立PostgreSQL16.15 job及专项Manager/Runner脚本。独立合同审查PASS WITH FINDINGS；32项mock合同检查、脚本Ruff/format、YAML接线检查通过，本机激活被预检拒绝，无Docker/PG操作。独立实现复审待完成，新job实际Linux/PG/remote CI尚未运行，B-PC-01保持OPEN；E-01、B32/B33/B52等覆盖缺口不被新job自动关闭。下一步：独立实现复审→重新Pre-Commit Audit→分别批准暂存/提交/推送→exact-commit双job验收。详细SSOT见[CI接线合同](Part9.6-B_PostgreSQL-CI-Wiring_Implementation-Contract_V1.0.md)。
+
+> 最新主线状态（2026-10-14）：HEAD 仍为 `6c12e96e4f83ada7cb7c7dd60fec4283269f8700`。9.6-B 的 42 文件离线实施已获授权并写入工作区，独立实现复核 PASS WITH FINDINGS，B-IR-01～04 CLOSED。合成 HTTP 15 项、PG16.15 28 项、Legacy/downgrade 18 个脚本场景在各自范围通过，清理核验通过；57 项逐项验收未全部完成，B32/B33/B52 指定 PG 并发证据仍缺。下一步为文档同步后的只读 Pre-Commit Audit；未暂存、未提交、未推送、未封板。9.6-A 的专项 HTTP/PG 未验证边界不被 B 的结果代替；Real Provider、真实 Consent/C6 仍未实现。下方历史阶段记录不代表最新主线状态。
 
 ## Part 9 — Backend Core
 
@@ -223,3 +229,22 @@ Part 9.5.5-C Design Freeze 文档保留设计封板时的历史快照。C1 已�
 **下一阶段：Part 9.6-B Candidate + Revision + Human Review。**
 
 本轮仅修改四份指定文档，保留混合 diff 与原换行格式；未修改业务代码、运行测试、读取 .env / secret、操作数据库 / Docker、执行 migration 或执行任何 Git 写操作。完成后停止，不进入 Git Commit。
+
+
+## Part 9.6-B — 完整设计草案归档（2026-10-12，最新阶段状态）
+
+- 详细 SSOT：[Candidate + Immutable Revision + Human Review — Contract V1.0](../04_AI设计/Part9.6-B_Candidate-Revision-Human-Review_Implementation-Contract_V1.0.md)。
+- 产品决定已确认：Owner 显式选择单条 user/text Message 提取零至多个 Candidate；重跑新批次；人工和 AI 整理采用不可变 Revision＋明确 Owner 审批；新 Memoir 绑定具体批准版本，旧数据保持 Legacy。
+- 完善工程草案：四个 workflow 业务表、精确 FK/审批关联、三阶段提取、用途继承、HMAC 指纹、旧 API 切换、迁移与 57 项验收；42 个 Python 拟实施文件（20 新增＋22 修改），不构成本轮写入或 Git 白名单。
+- 状态：**REVISED DRAFT — PENDING TARGETED RE-REVIEW**；**IMPLEMENTATION NOT STARTED / NOT AUTHORIZED**；ADR-008 保持 Proposed。离线 Memory 审批 profile 是对 C3/C5 未接线的显式补充，不新建第二审批权威。
+- 基线：9.6-A 本地 commit `6c12e96e4f83ada7cb7c7dd60fec4283269f8700`；上方 Git 待提交状态属于历史。本次不推定远端已同步/CI 通过。
+- 下一顺序：修订定向再审 → 用户实施批准 → 合成离线实施/验收 → 文档同步 → 另获 Git 授权。HTTP 与专项隔离 PostgreSQL 验证分轨记录；真实数据处理默认关闭，C3/BM-01、C4/C6 状态保持。
+- 本次只归档及同步文档；未生成 migration、运行测试/应用、操作 DB/Docker 或写 Git。
+
+## Part 9.6-B — 正式合同审查后最小修订（2026-10-12）
+
+独立合同审查 PASS WITH FINDINGS；已在 [详细合同](../04_AI设计/Part9.6-B_Candidate-Revision-Human-Review_Implementation-Contract_V1.0.md)补齐 B-CR-01/02/03：旧DELETE引用/回滚兼容、仅分类的TimeoutError证据、已有目标版本与新建例外，并明确同key提交不确定后的只读状态查询。
+
+当前拟实施白名单**42个（20新增＋22修改）**，增补3个Service与3个CRUD的窄删除路径；**57项未来验收**。此前36/48为原审查基线，不能作为修订后的范围授权。
+
+状态：**REVISED DRAFT — PENDING TARGETED RE-REVIEW；IMPLEMENTATION NOT STARTED / NOT AUTHORIZED**。Next：定向再审 → 用户批准完整修订范围 → 合成离线实施与明确授权的验证。HTTP/ASGI、真实PG、DB/Docker和Git仍分别授权；不改变C3/BM-01或生产retention决定。

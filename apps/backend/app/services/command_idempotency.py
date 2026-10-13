@@ -409,3 +409,252 @@ def complete(
     record.response_status = response_status
     record.response_body = snapshot.model_dump(mode="json")
     record.completed_at = datetime.now(UTC)
+
+
+# B operations deliberately do not use C2's failed_retryable reset branch.
+MEMORY_OPERATIONS = frozenset(
+    {
+        "memory.extract",
+        "memory.extraction.cancel",
+        "memory.candidate.manual",
+        "memory.candidate.revise",
+        "memory.revise",
+        "memory.proposal.submit",
+        "memory.proposal.approve",
+        "memory.proposal.reject",
+        "memory.proposal.withdraw",
+        "memory.memoir.create",
+    }
+)
+_MEMORY_SNAPSHOT_FIELDS = frozenset(
+    {
+        "id",
+        "batch_id",
+        "candidate_id",
+        "candidate_ids",
+        "revision_id",
+        "proposal_id",
+        "memory_id",
+        "memory_revision_id",
+        "approval_proposal_id",
+        "memoir_id",
+        "section_ids",
+        "state",
+        "version",
+        "target_version",
+        "candidate_count",
+        "failure_code",
+        "discard_reason",
+        "record_origin",
+        "origin",
+        "command_id",
+        "outcome",
+        "operation",
+        "idempotency_key",
+        "proposal_version",
+    }
+)
+
+
+def _memory_snapshot(values: Mapping[str, object]) -> dict[str, object]:
+    if not set(values).issubset(_MEMORY_SNAPSHOT_FIELDS):
+        raise ValueError("Sensitive or unknown memory snapshot field")
+    id_fields = {
+        "id",
+        "batch_id",
+        "candidate_id",
+        "revision_id",
+        "proposal_id",
+        "memory_id",
+        "memory_revision_id",
+        "approval_proposal_id",
+        "memoir_id",
+        "command_id",
+        "idempotency_key",
+    }
+    integers = {"version", "target_version", "proposal_version", "candidate_count"}
+    enums = {
+        "state": {
+            "pending",
+            "processing",
+            "completed",
+            "failed",
+            "discarded",
+            "cancelled",
+            "draft",
+            "submitted",
+            "approved",
+            "rejected",
+            "withdrawn",
+            "stale",
+            "purged",
+        },
+        "failure_code": {
+            "AI_PROVIDER_TIMEOUT",
+            "AI_INVALID_RESPONSE",
+            "AI_UNAVAILABLE",
+            "MEMORY_PROCESSING_UNAVAILABLE",
+            "PERSISTENCE_FAILED",
+        },
+        "discard_reason": {"source_or_permission_changed", "source_changed", "cancelled_by_owner"},
+        "record_origin": {"legacy", "versioned"},
+        "origin": {"manual", "extraction"},
+        "outcome": {"unknown"},
+        "operation": MEMORY_OPERATIONS,
+    }
+
+    def identifier(value):
+        if isinstance(value, uuid.UUID):
+            return
+        if type(value) is not str:
+            raise ValueError("Invalid metadata identifier")
+        uuid.UUID(value)
+
+    for field, value in values.items():
+        if value is None and field not in {"state", "version", "operation", "outcome"}:
+            continue
+        if field in id_fields:
+            identifier(value)
+        elif field in integers:
+            if type(value) is not int or value < 0 or field == "candidate_count" and value > 20:
+                raise ValueError("Invalid metadata count")
+        elif field in {"candidate_ids", "section_ids"}:
+            if not isinstance(value, (list, tuple)):
+                raise ValueError("Invalid metadata ID array")
+            for item in value:
+                identifier(item)
+        elif field in enums and type(value) is str and value in enums[field]:
+            continue
+        else:
+            raise ValueError("Invalid memory metadata snapshot")
+    return json.loads(canonical_request_bytes(values))
+
+
+def begin_memory(
+    db: Session,
+    *,
+    actor_user_id: uuid.UUID,
+    operation: str,
+    idempotency_key: uuid.UUID,
+    target_scope: Mapping[str, object],
+    expected_versions: Mapping[str, object],
+    payload: Mapping[str, object] | None = None,
+    integrity=None,
+) -> tuple[CommandIdempotencyRecord, bool]:
+    """Owner scope is checked by the caller before historical-key fingerprinting."""
+    if operation not in MEMORY_OPERATIONS:
+        raise ValueError("Unregistered memory operation")
+    existing = crud.find_idempotency(
+        db,
+        actor_user_id=actor_user_id,
+        operation=operation,
+        idempotency_key=idempotency_key,
+        lock=True,
+    )
+    if existing is not None:
+        valid_control = (
+            payload is None
+            and existing.fingerprint_scheme == "control-sha256.v1"
+            and existing.fingerprint_key_id is None
+        )
+        valid_sensitive = (
+            payload is not None
+            and existing.fingerprint_scheme == "memory-command.v1"
+            and type(existing.fingerprint_key_id) is str
+            and bool(existing.fingerprint_key_id)
+        )
+        if not (valid_control or valid_sensitive):
+            raise AppException(
+                "Integrity unavailable", code="MEMORY_INTEGRITY_UNAVAILABLE", status_code=503
+            )
+    if payload is None:
+        from app.services.memory_integrity import MemoryIntegrity
+
+        # Body-free fingerprinting has no key dependency, including after key loss.
+        fingerprint = MemoryIntegrity().fingerprint(
+            actor_user_id=actor_user_id,
+            operation=operation,
+            idempotency_key=idempotency_key,
+            target_scope=dict(target_scope),
+            expected_versions=dict(expected_versions),
+            scheme=existing.fingerprint_scheme if existing else None,
+            key_id=existing.fingerprint_key_id if existing else None,
+        )
+        digest, scheme, key_id = fingerprint.digest, fingerprint.scheme, fingerprint.key_id
+    else:
+        if integrity is None:
+            raise AppException(
+                "Integrity unavailable", code="MEMORY_INTEGRITY_UNAVAILABLE", status_code=503
+            )
+        fingerprint = integrity.fingerprint(
+            actor_user_id=actor_user_id,
+            operation=operation,
+            idempotency_key=idempotency_key,
+            target_scope=dict(target_scope),
+            expected_versions=dict(expected_versions),
+            payload=dict(payload),
+            scheme=existing.fingerprint_scheme if existing else None,
+            key_id=existing.fingerprint_key_id if existing else None,
+        )
+        digest, scheme, key_id = fingerprint.digest, fingerprint.scheme, fingerprint.key_id
+    if existing is not None:
+        if not hmac.compare_digest(existing.request_digest, digest):
+            raise AppException("Command conflicts", code="IDEMPOTENCY_CONFLICT", status_code=409)
+        return existing, True
+    record = CommandIdempotencyRecord(
+        actor_user_id=actor_user_id,
+        operation=operation,
+        idempotency_key=idempotency_key,
+        request_digest=digest,
+        fingerprint_scheme=scheme,
+        fingerprint_key_id=key_id,
+        state="processing",
+    )
+    # Keep the record in the caller's outer transaction. Releasing a first SQLite
+    # SAVEPOINT can otherwise commit it before the business operation is published.
+    # A concurrent unique loser is rolled back safely by the Service; a later
+    # explicit replay resolves the persisted winner using its historical key.
+    db.add(record)
+    db.flush()
+    return record, False
+
+
+def complete_memory(
+    record: CommandIdempotencyRecord,
+    *,
+    resource_kind: str,
+    resource_id: uuid.UUID,
+    response_status: int,
+    snapshot: Mapping[str, object],
+) -> None:
+    if record.operation not in MEMORY_OPERATIONS:
+        raise ValueError("Unregistered memory operation")
+    record.resource_kind = resource_kind
+    record.resource_id = resource_id
+    record.response_body = _memory_snapshot(snapshot)
+    record.response_status = response_status
+    record.state = "completed"
+    record.completed_at = datetime.now(UTC)
+
+
+def replay_memory(record: CommandIdempotencyRecord) -> tuple[dict[str, object], int]:
+    if record.operation not in MEMORY_OPERATIONS:
+        raise ValueError("Unregistered memory operation")
+    if record.resource_kind is None or record.resource_id is None:
+        raise AppException(
+            "Command outcome unknown", code="COMMAND_OUTCOME_UNKNOWN", status_code=503
+        )
+    if record.state == "completed":
+        if record.response_body is None or record.response_status is None:
+            raise AppException(
+                "Command outcome unknown", code="COMMAND_OUTCOME_UNKNOWN", status_code=503
+            )
+        snapshot = _memory_snapshot(record.response_body)
+        # Original failures keep their status; successful creates replay as 200.
+        status = record.response_status
+        return snapshot, 200 if 200 <= status < 300 else status
+    if record.state != "processing":
+        raise AppException(
+            "Command outcome unknown", code="COMMAND_OUTCOME_UNKNOWN", status_code=503
+        )
+    return {"command_id": str(record.id), "state": "processing"}, 202

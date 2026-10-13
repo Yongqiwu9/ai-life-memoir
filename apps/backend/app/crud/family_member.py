@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.family import Family
@@ -65,9 +65,17 @@ def update_family_member(db: Session, *, member: FamilyMember, name: str) -> Fam
     return member
 
 
-def delete_family_member(db: Session, *, member: FamilyMember) -> None:
-    db.delete(member)
+def delete_family_member(db: Session, *, member: FamilyMember, owner_id: uuid.UUID) -> bool:
+    current_scope = select(Family.id).where(
+        Family.id == member.family_id, Family.owner_id == owner_id
+    )
+    result = db.execute(
+        delete(FamilyMember)
+        .where(FamilyMember.id == member.id, FamilyMember.family_id.in_(current_scope))
+        .execution_options(synchronize_session=False)
+    )
     db.flush()
+    return result.rowcount == 1
 
 
 def get_owned_memory(db: Session, *, owner_id: uuid.UUID, memory_id: uuid.UUID) -> Memory | None:
