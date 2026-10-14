@@ -1,5 +1,7 @@
 # Part 9.6-B — PostgreSQL 16.15 现有容器专项复用验证合同 V1.0
 
+> 2026-10-14 最新补验：已获授权并通过独立源码复审后，以同一隔离/清理合同执行扩展后的 **35 项（原28＋新增7），含11项必须执行竞争测试**；35 passed / 3.69s，0 skipped。run `074c4869-3c51-4e91-8b10-c33ec4922db7`，实际SQL 16.15 / 160015，fresh upgrade及前后current/check通过；唯一临时库、两角色、相关会话已不存在，HBA原始哈希恢复，历史元数据不变。本合同下方28项及旧run是首轮历史范围，不代表本次仅收集未执行；完整补验、清理证据与SUP-IR-01后续关闭见[补充验收记录](Part9.6-B_Supplemental-Validation_Report_2026-10-14.md)。未扩大为C4/C6、真实Provider、生产验证或通用BM-01授权。
+
 > 2026-10-14 补充：用户已另行授权合成Legacy升级/downgrade专项，并执行18个固定脚本场景通过（非18个pytest用例）；最终current/check通过，精确资源清理核验通过。run UUID：32c3f830-df9a-4686-a6c5-31ebda71f986。证据目录：C:/Users/Administrator/AppData/Local/Temp/memoir-pg-legacy-892f1daa80584aa4a0d63784204f6548。独立实现复核PASS WITH FINDINGS；B32/B33/B52并发及未单独覆盖的回退分支保持验证缺口。此补充不改通用BM-01门禁，不宣称全57项完成。
 
 ## 1. 状态与授权

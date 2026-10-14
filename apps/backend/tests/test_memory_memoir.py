@@ -33,6 +33,7 @@ from app.schemas.memory_workflow import (
     ProposalApprove,
     ProposalSubmit,
     RevisionCreate,
+    RevisionCreated,
     RevisionPayload,
 )
 from app.services import memoir as memoir_service
@@ -633,3 +634,255 @@ def test_legacy_parent_deletion_preserves_memory_and_source(records, target):
     for row in (r.family, r.member, r.interview, r.session, r.message, r.legacy):
         assert r.db.get(type(row), row.id) is not None
     assert r.db.scalar(select(Memory.content).where(Memory.id == r.legacy.id)) == "  合成 legacy\n"
+
+
+def _supp_transcript_source(r):
+    from app.models.audio_recording import AudioRecording
+    from app.models.transcript import Transcript
+    from app.models.transcript_segment import TranscriptSegment
+
+    audio = AudioRecording(session_id=r.session.id, status="completed")
+    r.db.add(audio)
+    r.db.flush()
+    transcript = Transcript(audio_recording_id=audio.id, status="completed", text=r.message.content)
+    r.db.add(transcript)
+    r.db.flush()
+    segment = TranscriptSegment(transcript_id=transcript.id, sequence=1, text=r.message.content)
+    r.db.add(segment)
+    r.db.flush()
+    r.message.source = "audio_transcript"
+    r.message.transcript_segment_id = segment.id
+    r.db.commit()
+    return segment
+
+
+def test_supp_b26_transcript_manual_revision_preserves_upstream_dependency(records):
+    r = records
+    segment = _supp_transcript_source(r)
+    result = approved(r)
+    revision = r.db.get(ContentRevision, result["memory_revision_id"])
+    assert revision.derivation_profile == "transcript_derived"
+    assert set(revision.required_purposes) == {"recording", "transcription"}
+    assert revision.source_scope_id == r.message.id
+    assert r.db.get(InterviewMessage, r.message.id).transcript_segment_id == segment.id
+    assert segment.text == r.message.content
+    draft, _ = review.create_memory_revision(
+        r.db,
+        r.owner.id,
+        result["memory_id"],
+        RevisionCreate(
+            expected_version=1,
+            parent_revision_id=revision.id,
+            payload=payload(content="Synthetic transcript correction"),
+        ),
+        uuid4(),
+        **capabilities(r),
+    )
+    next_revision = r.db.get(ContentRevision, draft["revision_id"])
+    assert next_revision.derivation_profile == "transcript_derived"
+    assert set(next_revision.required_purposes) == {"recording", "transcription"}
+    assert next_revision.source_scope_id == r.message.id
+
+
+def test_supp_b23_unrelated_audio_source_event_keeps_text_branch(records):
+    r = records
+    result = approved(r)
+    memoir = make_memoir(r, result)
+    original = memoir_service.content(r.db, r.owner.id, memoir["id"], **capabilities(r))
+    unrelated_id = uuid4()
+    # Synthetic source-specific receipt only, not a real audio-sharing Consent adapter.
+    receipt = r.policy.decisions[r.message.id]
+    r.policy.decisions[unrelated_id] = receipt.model_copy(
+        update={"source_scope_id": unrelated_id, "allow": False}
+    )
+    assert memoir_service.content(r.db, r.owner.id, memoir["id"], **capabilities(r)) == original
+    assert (
+        memory_service.get(r.db, r.owner.id, result["memory_id"], **capabilities(r))[
+            "current_content"
+        ]["content"]
+        == payload().content
+    )
+
+
+@pytest.mark.parametrize("purpose", ["recording", "transcription"])
+def test_supp_b23_unused_audio_purpose_epoch_keeps_raw_text(records, purpose):
+    r = records
+    memoir = make_memoir(r, approved(r))
+    before = memoir_service.content(r.db, r.owner.id, memoir["id"], **capabilities(r))
+    stamp = r.policy.decisions[r.message.id]
+    epochs = dict(stamp.purpose_generations)
+    epochs[purpose] += 1
+    r.policy.decisions[r.message.id] = stamp.model_copy(update={"purpose_generations": epochs})
+    assert memoir_service.content(r.db, r.owner.id, memoir["id"], **capabilities(r)) == before
+
+
+@pytest.mark.parametrize("purpose", ["recording", "transcription", "family_share/text_derived"])
+def test_supp_b44_related_purpose_epoch_blocks_old_transcript_memoir(records, monkeypatch, purpose):
+    r = records
+    _supp_transcript_source(r)
+    if purpose == "family_share/text_derived":
+        # Explicit synthetic shared branch: ordinary Owner text is not implicitly
+        # shared. Bind the dependency before signing/approving, never edit a proof.
+        derive = review.derive_required_purposes
+        monkeypatch.setattr(
+            review,
+            "derive_required_purposes",
+            lambda source_type, **kwargs: tuple(
+                sorted({*derive(source_type, **kwargs), "family_share/text_derived"})
+            ),
+        )
+    result = approved(r)
+    memoir = make_memoir(r, result)
+    stamp = r.policy.decisions[r.message.id]
+    epochs = dict(stamp.purpose_generations)
+    epochs[purpose] += 1
+    r.policy.decisions[r.message.id] = stamp.model_copy(update={"purpose_generations": epochs})
+    assert_error(
+        "CONTENT_RESTRICTED",
+        lambda: memoir_service.content(r.db, r.owner.id, memoir["id"], **capabilities(r)),
+        status=403,
+    )
+    assert r.db.get(RevisionProposal, result["proposal_id"]).state == "approved"
+
+
+def test_supp_b38_explicit_restore_needs_new_revision_and_approval(records):
+    r = records
+    initial = approved(r)
+    old_memoir = make_memoir(r, initial)
+    stamp = r.policy.decisions[r.message.id]
+    r.policy.decisions[r.message.id] = stamp.model_copy(
+        update={"source_generation": stamp.source_generation + 1, "restore_verified": False}
+    )
+    assert_error(
+        "CONTENT_RESTRICTED",
+        lambda: review.create_memory_revision(
+            r.db,
+            r.owner.id,
+            initial["memory_id"],
+            RevisionCreate(
+                expected_version=1,
+                parent_revision_id=initial["memory_revision_id"],
+                payload=payload(content="Synthetic restored version"),
+            ),
+            uuid4(),
+            **capabilities(r),
+        ),
+        status=403,
+    )
+    # Explicit source restoration is a receipt injection, not implementation of C4.
+    restored = r.policy.decisions[r.message.id].model_copy(update={"restore_verified": True})
+    r.policy.decisions[r.message.id] = restored
+    assert_error(
+        "CONTENT_RESTRICTED",
+        lambda: memoir_service.content(r.db, r.owner.id, old_memoir["id"], **capabilities(r)),
+        status=403,
+    )
+    # A fresh draft uses the restored source's current receipt and needs approval.
+    # This proves offline gates, not C4's future clone of the same old Memory.
+    # The old parent cannot authorize reuse after its epoch becomes invalid.
+    draft, _ = review.create_memory_revision(
+        r.db,
+        r.owner.id,
+        r.legacy.id,
+        RevisionCreate(
+            expected_version=0,
+            parent_revision_id=None,
+            payload=payload(content="Synthetic explicitly restored draft"),
+        ),
+        uuid4(),
+        **capabilities(r),
+    )
+    assert memory_service.get(r.db, r.owner.id, r.legacy.id)["current_content"] is None
+    review.submit(
+        r.db,
+        r.owner.id,
+        draft["proposal_id"],
+        ProposalSubmit(expected_version=0, expected_target_version=0),
+        uuid4(),
+        **capabilities(r),
+    )
+    adopted, _ = review.approve(
+        r.db,
+        r.owner.id,
+        draft["proposal_id"],
+        ProposalApprove(expected_version=1, expected_target_version=0),
+        uuid4(),
+        **capabilities(r),
+    )
+    assert (
+        memory_service.get(r.db, r.owner.id, adopted["memory_id"], **capabilities(r))[
+            "current_content"
+        ]["content"]
+        == "Synthetic explicitly restored draft"
+    )
+    assert r.db.get(RevisionProposal, initial["proposal_id"]).state == "approved"
+    assert_error(
+        "CONTENT_RESTRICTED",
+        lambda: memoir_service.content(r.db, r.owner.id, old_memoir["id"], **capabilities(r)),
+        status=403,
+    )
+
+
+def test_supp_b39_purged_revision_replay_does_not_recreate_body(records):
+    from sqlalchemy import func, update
+
+    r = records
+    key = uuid4()
+    created, _ = review.manual_candidate(
+        r.db,
+        r.owner.id,
+        r.member.id,
+        ManualCandidateCreate(source_message_id=r.message.id, payload=payload()),
+        key,
+        **capabilities(r),
+    )
+    r.db.execute(
+        update(ContentRevision)
+        .where(ContentRevision.id == created["revision_id"])
+        .values(
+            body_state="purged",
+            payload=None,
+            content_digest=None,
+            digest_scheme=None,
+            digest_key_id=None,
+        )
+    )
+    r.db.commit()
+    stamp = r.policy.decisions[r.message.id]
+    r.policy.decisions[r.message.id] = stamp.model_copy(update={"body_available": False})
+    count_before = r.db.scalar(select(func.count()).select_from(ContentRevision))
+    replayed, status = review.manual_candidate(
+        r.db,
+        r.owner.id,
+        r.member.id,
+        ManualCandidateCreate(source_message_id=r.message.id, payload=payload()),
+        key,
+        **capabilities(r),
+    )
+    assert status == 200
+    assert RevisionCreated.model_validate(replayed) == RevisionCreated.model_validate(created)
+    assert r.db.get(ContentRevision, created["revision_id"]).payload is None
+    assert r.db.scalar(select(func.count()).select_from(ContentRevision)) == count_before
+    assert_error(
+        "CONTENT_RESTRICTED",
+        lambda: review.get_revision_content(
+            r.db, r.owner.id, created["revision_id"], **capabilities(r)
+        ),
+        status=403,
+    )
+    assert_error(
+        "CONTENT_RESTRICTED",
+        lambda: review.create_candidate_revision(
+            r.db,
+            r.owner.id,
+            created["candidate_id"],
+            RevisionCreate(
+                expected_version=0,
+                parent_revision_id=created["revision_id"],
+                payload=payload(content="Must not restore"),
+            ),
+            uuid4(),
+            **capabilities(r),
+        ),
+        status=403,
+    )

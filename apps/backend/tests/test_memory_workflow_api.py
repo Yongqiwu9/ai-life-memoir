@@ -529,3 +529,398 @@ def test_http_exact_memoir_rejects_legacy_memory_ids_payload(client, http_graph,
         json={"title": PRIVATE_TITLE, "memory_ids": [str(uuid.uuid4())]},
     )
     _error(response, 422, "INVALID_MEMORY_REQUEST")
+
+
+def _supp_route_matrix(graph, batch, created, approved, memoir_id, section_id):
+    member, session = graph.member.id, graph.session.id
+    candidate, proposal = created["candidate_id"], created["proposal_id"]
+    revision, memory = created["revision_id"], approved["memory_id"]
+    command = {"expected_version": 0}
+    revision_data = {
+        "expected_version": 0,
+        "parent_revision_id": str(revision),
+        "payload": _payload(),
+    }
+    routes = [
+        (
+            "extract",
+            "post",
+            f"/sessions/{session}/memory-extractions",
+            {"source_message_id": str(graph.message.id)},
+        ),
+        ("batch", "get", f"/memory-extractions/{batch}", None),
+        ("batches", "get", f"/sessions/{session}/memory-extractions", None),
+        ("cancel", "post", f"/memory-extractions/{batch}/cancel", command),
+        (
+            "manual",
+            "post",
+            f"/family-members/{member}/memory-candidates/manual",
+            {"source_message_id": str(graph.message.id), "payload": _payload()},
+        ),
+        ("candidates", "get", f"/family-members/{member}/memory-candidates", None),
+        ("candidate_revisions", "get", f"/memory-candidates/{candidate}/revisions", None),
+        ("candidate_revise", "post", f"/memory-candidates/{candidate}/revisions", revision_data),
+        ("memory_revise", "post", f"/memories/{memory}/revisions", revision_data),
+        ("memory_revisions", "get", f"/memories/{memory}/revisions", None),
+        ("proposal", "get", f"/revision-proposals/{proposal}", None),
+        ("reject", "post", f"/revision-proposals/{proposal}/reject", command),
+        ("withdraw", "post", f"/revision-proposals/{proposal}/withdraw", command),
+        (
+            "lookup",
+            "get",
+            f"/family-members/{member}/memory-commands/memory.extract/{uuid.uuid4()}",
+            None,
+        ),
+        ("memory", "get", f"/memories/{memory}", None),
+        ("memory_list", "get", f"/family-members/{member}/memories", None),
+        ("legacy", "get", f"/memories/{memory}/legacy-snapshot", None),
+        (
+            "old_post",
+            "post",
+            f"/family-members/{member}/memories",
+            {
+                "source_message_id": str(graph.message.id),
+                "title": PRIVATE_TITLE,
+                "content": PRIVATE_TEXT,
+            },
+        ),
+        ("old_patch", "patch", f"/memories/{memory}", {"content": PRIVATE_TEXT}),
+        (
+            "memoir_create",
+            "post",
+            f"/family-members/{member}/memoirs",
+            {
+                "title": PRIVATE_TITLE,
+                "sections": [
+                    {
+                        "memory_id": str(memory),
+                        "memory_revision_id": str(approved["memory_revision_id"]),
+                        "approval_proposal_id": str(proposal),
+                    }
+                ],
+            },
+        ),
+        ("memoir", "get", f"/memoirs/{memoir_id}", None),
+        ("sections", "get", f"/memoirs/{memoir_id}/sections", None),
+        ("memoir_content", "get", f"/memoirs/{memoir_id}/content", None),
+        ("section_content", "get", f"/memoirs/{memoir_id}/sections/{section_id}/content", None),
+    ]
+    # Existing four cross-Owner tests remain; only new principals need those routes.
+    extra = [
+        ("candidate", "get", f"/memory-candidates/{candidate}", None),
+        ("content", "get", f"/content-revisions/{revision}/content", None),
+        (
+            "submit",
+            "post",
+            f"/revision-proposals/{proposal}/submit",
+            {"expected_version": 0, "expected_target_version": 0},
+        ),
+        (
+            "approve",
+            "post",
+            f"/revision-proposals/{proposal}/approve",
+            {"expected_version": 1, "expected_target_version": 0},
+        ),
+    ]
+    return routes, extra
+
+
+@pytest.mark.parametrize("principal", ["other_owner", "collaborator", "rights_only", "invalid_jwt"])
+def test_supp_b01_b02_all_missing_route_principal_combinations(
+    client,
+    db_session,
+    http_graph,
+    http_capabilities,
+    monkeypatch,
+    principal,
+):
+    from unittest.mock import Mock
+
+    from app.crud import memory_workflow as workflow_crud
+
+    graph = http_graph
+    extraction = client.post(
+        f"/api/v1/sessions/{graph.session.id}/memory-extractions",
+        headers=_headers(graph.owner, key=uuid.uuid4()),
+        json={"source_message_id": str(graph.message.id)},
+    )
+    assert extraction.status_code == 201
+    created = _manual(client, graph)
+    approved = _approve(client, graph, created)
+    memoir = client.post(
+        f"/api/v1/family-members/{graph.member.id}/memoirs",
+        headers=_headers(graph.owner, key=uuid.uuid4()),
+        json={
+            "title": PRIVATE_TITLE,
+            "sections": [
+                {
+                    "memory_id": approved["memory_id"],
+                    "memory_revision_id": approved["memory_revision_id"],
+                    "approval_proposal_id": approved["proposal_id"],
+                }
+            ],
+        },
+    )
+    assert memoir.status_code == 201
+    md = memoir.json()
+    routes, extra = _supp_route_matrix(
+        graph,
+        extraction.json()["batch_id"],
+        created,
+        approved,
+        md["memoir_id"],
+        md["section_ids"][0],
+    )
+    if principal == "collaborator":
+        db_session.add(
+            FamilyMembership(
+                family_id=graph.family.id,
+                user_id=graph.stranger.id,
+                role="collaborator",
+                state="active",
+                generation=1,
+                joined_at=datetime.now(UTC),
+            )
+        )
+        db_session.commit()
+        routes += [item for item in extra if item[0] not in {"content", "approve"}]
+    elif principal != "other_owner":
+        routes += extra
+    if principal == "rights_only":
+        user = User(principal_kind="rights_only", email=None, password_hash=None)
+        db_session.add(user)
+        db_session.commit()
+        token = create_rights_token(
+            subject=str(user.id),
+            principal_kind="rights_only",
+            auth_generation=1,
+            challenge_id=str(uuid.uuid4()),
+            contact_id=str(uuid.uuid4()),
+            lifetime_seconds=60,
+        )
+        headers = {"Authorization": "Bearer " + token}
+        routes = [item for item in routes if item[0] != "candidates"]  # Already tested.
+    elif principal == "invalid_jwt":
+        headers = {"Authorization": "Bearer synthetic-invalid-jwt"}
+    else:
+        headers = _headers(graph.stranger)
+    forbidden = Mock(side_effect=AssertionError("Unauthorized request cannot load body"))
+    monkeypatch.setattr(workflow_crud, "source_content", forbidden)
+    monkeypatch.setattr(workflow_crud, "revision_body", forbidden)
+    calls_before = len(http_capabilities.provider.requests)
+    for name, method, path, payload in routes:
+        kwargs = {"json": payload} if payload is not None else {}
+        response = getattr(client, method)(
+            "/api/v1" + path, headers={**headers, "Idempotency-Key": str(uuid.uuid4())}, **kwargs
+        )
+        assert response.status_code == (
+            401 if principal in {"rights_only", "invalid_jwt"} else 404
+        ), name
+        assert PRIVATE_TEXT not in response.text and PRIVATE_TITLE not in response.text
+        if principal not in {"rights_only", "invalid_jwt"}:
+            # Same valid request shape and same actor, with every resource UUID replaced.
+            missing = path
+            for identifier in (
+                graph.member.id,
+                graph.session.id,
+                extraction.json()["batch_id"],
+                created["candidate_id"],
+                created["revision_id"],
+                created["proposal_id"],
+                approved["memory_id"],
+                md["memoir_id"],
+                md["section_ids"][0],
+            ):
+                missing = missing.replace(str(identifier), str(uuid.uuid4()))
+            absent = getattr(client, method)(
+                "/api/v1" + missing,
+                headers={**headers, "Idempotency-Key": str(uuid.uuid4())},
+                **kwargs,
+            )
+            assert absent.status_code == 404 and absent.json() == response.json(), name
+    forbidden.assert_not_called()
+    assert len(http_capabilities.provider.requests) == calls_before
+
+
+def test_supp_b07_saving_text_and_ending_session_never_extracts(
+    client,
+    db_session,
+    http_graph,
+    http_capabilities,
+):
+    from sqlalchemy import update
+
+    graph = http_graph
+    db_session.execute(
+        update(InterviewSession)
+        .where(InterviewSession.id == graph.session.id)
+        .values(status="active")
+    )
+    db_session.commit()
+    started = client.post(
+        f"/api/v1/sessions/{graph.session.id}/agent-turns",
+        headers=_headers(graph.owner, key=uuid.uuid4()),
+        json={"contract_version": "interview-agent.v2", "action": "start", "expected_version": 0},
+    )
+    assert started.status_code == 201, started.text
+    message = client.post(
+        f"/api/v1/sessions/{graph.session.id}/messages",
+        headers=_headers(graph.owner),
+        json={
+            "role": "user",
+            "source": "text",
+            "content": PRIVATE_TEXT + " Synthetic continuation",
+        },
+    )
+    assert message.status_code == 201, message.text
+    assert db_session.scalar(select(func.count()).select_from(ExtractionBatch)) == 0
+    ended = client.post(
+        f"/api/v1/sessions/{graph.session.id}/agent-turns",
+        headers=_headers(graph.owner, key=uuid.uuid4()),
+        json={"contract_version": "interview-agent.v2", "action": "end", "expected_version": 1},
+    )
+    assert ended.status_code == 201, ended.text
+    db_session.expire_all()
+    assert db_session.get(InterviewSession, graph.session.id).status == "completed"
+    assert db_session.scalar(select(func.count()).select_from(ExtractionBatch)) == 0
+    assert db_session.scalar(select(func.count()).select_from(MemoryCandidate)) == 0
+    assert http_capabilities.provider.requests == []
+
+
+@pytest.mark.parametrize("target", ["interview", "member", "family"])
+@pytest.mark.parametrize("debug", [True, False])
+@pytest.mark.parametrize("fault", ["protected_fk", "unexpected"])
+def test_supp_b54_delete_debug_actual_asgi_path(
+    db_session,
+    http_graph,
+    http_capabilities,
+    monkeypatch,
+    caplog,
+    target,
+    debug,
+    fault,
+):
+    from unittest.mock import Mock
+
+    from app.api.v1 import families, family_members, interviews
+    from app.crud import memory_workflow as workflow_crud
+    from app.services import family as family_service
+    from app.services import family_member as member_service
+    from app.services import interview as interview_service
+
+    graph = http_graph
+    # A real SQLite FK restriction with a deliberately stale first metadata precheck.
+    created, _ = memory_review.manual_candidate(
+        db_session,
+        graph.owner.id,
+        graph.member.id,
+        memory_workflow.ManualCandidateCreate(
+            source_message_id=graph.message.id, payload=_payload()
+        ),
+        uuid.uuid4(),
+        policy=http_capabilities.policy,
+        integrity=http_capabilities.integrity,
+    )
+    original = workflow_crud.has_workflow_references
+    probes = []
+    if fault == "protected_fk":
+
+        def stale(db, **scope):
+            probes.append(scope)
+            return False if len(probes) == 1 else original(db, **scope)
+
+        monkeypatch.setattr(workflow_crud, "has_workflow_references", stale)
+    else:
+        module, function = {
+            "interview": (interview_service, "delete_interview"),
+            "member": (member_service, "delete_family_member"),
+            "family": (family_service, "delete_family"),
+        }[target]
+        monkeypatch.setattr(
+            module,
+            function,
+            Mock(
+                side_effect=RuntimeError("Synthetic SQL parameters and traceback " + PRIVATE_TEXT)
+            ),
+        )
+    local = FastAPI(debug=debug)
+    local.add_middleware(MemoryPrivacyMiddleware)
+    for router in (families.router, family_members.router, interviews.router):
+        local.include_router(router, prefix="/api/v1")
+    local.dependency_overrides[get_db] = lambda: db_session
+    path = {
+        "interview": f"/interviews/{graph.interview.id}",
+        "member": f"/families/{graph.family.id}/members/{graph.member.id}",
+        "family": f"/families/{graph.family.id}",
+    }[target]
+    with TestClient(local, raise_server_exceptions=False) as actual:
+        response = actual.delete("/api/v1" + path, headers=_headers(graph.owner))
+    _error(
+        response,
+        409 if fault == "protected_fk" else 500,
+        "RESOURCE_IN_USE" if fault == "protected_fk" else "MEMORY_INTERNAL_ERROR",
+    )
+    assert "Traceback" not in response.text and "SQL parameters" not in response.text
+    assert PRIVATE_TEXT not in caplog.text
+    if fault == "protected_fk":
+        assert len(probes) >= 2
+    db_session.expire_all()
+    assert db_session.get(InterviewMessage, graph.message.id).content == PRIVATE_TEXT
+    assert db_session.get(MemoryCandidate, created["candidate_id"]) is not None
+    for entity in (graph.family, graph.member, graph.interview):
+        assert db_session.get(type(entity), entity.id) is not None
+
+
+@pytest.mark.parametrize("target", ["interview", "member", "family"])
+def test_supp_b53_delete_wrong_actor_and_url_rejects_before_probe(
+    client,
+    http_graph,
+    monkeypatch,
+    target,
+):
+    from unittest.mock import Mock
+
+    from app.crud import memory_workflow as workflow_crud
+
+    graph = http_graph
+    probe = Mock(side_effect=AssertionError("Scope must reject before reference probe"))
+    monkeypatch.setattr(workflow_crud, "has_workflow_references", probe)
+    path = {
+        "interview": f"/interviews/{graph.interview.id}",
+        "member": f"/families/{graph.family.id}/members/{graph.member.id}",
+        "family": f"/families/{graph.family.id}",
+    }[target]
+    existing = client.delete("/api/v1" + path, headers=_headers(graph.stranger))
+    missing = path
+    for value in (graph.family.id, graph.member.id, graph.interview.id):
+        missing = missing.replace(str(value), str(uuid.uuid4()))
+    absent = client.delete("/api/v1" + missing, headers=_headers(graph.stranger))
+    _error(existing, 404, "NOT_FOUND")
+    assert absent.status_code == 404 and absent.json() == existing.json()
+    if target == "member":
+        wrong = client.delete(
+            f"/api/v1/families/{uuid.uuid4()}/members/{graph.member.id}",
+            headers=_headers(graph.owner),
+        )
+        _error(wrong, 404, "NOT_FOUND")
+    probe.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [("expected_version", None), ("expected_version", -1), ("expected_version", True)],
+)
+def test_supp_b56_malformed_versions_have_safe_http_errors(
+    client,
+    http_graph,
+    http_capabilities,
+    field,
+    value,
+):
+    created = _manual(client, http_graph)
+    response = client.post(
+        f"/api/v1/revision-proposals/{created['proposal_id']}/submit",
+        headers=_headers(http_graph.owner, key=uuid.uuid4()),
+        json={field: value, "expected_target_version": 0},
+    )
+    _error(response, 422, "INVALID_MEMORY_REQUEST")

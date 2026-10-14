@@ -52,6 +52,14 @@ EXPECTED = (
         for target in ("proof", "body")
         for first in ("create", "clear")
     ),
+    "test_postgres_provider_call_releases_parent_locks",
+    "test_postgres_two_memory_approvals_real_runner_connections",
+    "test_postgres_revision_ordinals_real_runner_connections[candidate]",
+    "test_postgres_revision_ordinals_real_runner_connections[memory]",
+    *(
+        f"test_postgres_parent_delete_vs_new_reference_real_runner_connections[{target}]"
+        for target in ("interview", "member", "family")
+    ),
 )
 CONCURRENT = frozenset(
     name for name in EXPECTED if "real_runner_connections" in name or "two_commit_orders" in name
@@ -138,7 +146,7 @@ def sanitized_junit(raw: bytes) -> tuple[bytes, dict]:
     failures = sum(len(case.findall("failure")) + len(case.findall("error")) for case in cases)
     skipped = sum(len(case.findall("skipped")) for case in cases)
     require(
-        sum(int(suite.get("tests", "-1")) for suite in suites) == 28,
+        sum(int(suite.get("tests", "-1")) for suite in suites) == 35,
         "JUnitCountMismatch",
     )
     clean = ET.Element("testsuites")
@@ -146,7 +154,7 @@ def sanitized_junit(raw: bytes) -> tuple[bytes, dict]:
         clean,
         "testsuite",
         name="B PostgreSQL",
-        tests="28",
+        tests="35",
         failures=str(failures),
         errors="0",
         skipped=str(skipped),
@@ -161,7 +169,7 @@ def sanitized_junit(raw: bytes) -> tuple[bytes, dict]:
         for kind in ("failure", "error", "skipped"):
             if case.find(kind) is not None:
                 ET.SubElement(output, kind, message="Details omitted from public evidence")
-    summary = {"tests": 28, "failures": failures, "skipped": skipped, "concurrent": 5}
+    summary = {"tests": 35, "failures": failures, "skipped": skipped, "concurrent": 11}
     return ET.tostring(clean, encoding="utf-8", xml_declaration=True), summary
 
 
@@ -334,7 +342,8 @@ class Manager:
         require(milliseconds >= 1, "StageSQLBudgetExhausted")
         try:
             connection.execute(
-                "SELECT set_config('statement_timeout',%s,false)", (f"{milliseconds}ms",)
+                "SELECT set_config('statement_timeout',%s,false)",
+                (f"{milliseconds}ms",),
             )
         except Exception:  # noqa: BLE001 -- timeout configuration outcome is unknown.
             self.safe = False
@@ -575,7 +584,10 @@ class Manager:
             )
         except GateError:
             try:
-                require(receipt.is_file() and not receipt.is_symlink(), "ChildReceiptMissing")
+                require(
+                    receipt.is_file() and not receipt.is_symlink(),
+                    "ChildReceiptMissing",
+                )
                 result = json.loads(receipt.read_text())
                 expected_code = self.record["processes"][-1]["exit"]
                 require(
@@ -974,11 +986,11 @@ class Manager:
 
 def self_check() -> int:
     """Pure contract checks, not real PostgreSQL/CI evidence."""
-    require(len(EXPECTED) == 28 and len(set(EXPECTED)) == 28, "ExpectedCaseCount")
-    require(len(CONCURRENT) == 5, "ConcurrencyCount")
+    require(len(EXPECTED) == 35 and len(set(EXPECTED)) == 35, "ExpectedCaseCount")
+    require(len(CONCURRENT) == 11, "ConcurrencyCount")
     checks = 2
     root = ET.Element("testsuites")
-    suite = ET.SubElement(root, "testsuite", tests="28")
+    suite = ET.SubElement(root, "testsuite", tests="35")
     for name in EXPECTED:
         ET.SubElement(
             suite,
@@ -989,7 +1001,7 @@ def self_check() -> int:
     original = ET.tostring(root)
     public, result = sanitized_junit(original)
     require(
-        result == {"tests": 28, "failures": 0, "skipped": 0, "concurrent": 5},
+        result == {"tests": 35, "failures": 0, "skipped": 0, "concurrent": 11},
         "SummaryMismatch",
     )
     require(b"testsuites" in public, "PublicEvidenceMissing")
@@ -1139,7 +1151,8 @@ def self_check() -> int:
                 manager.process(["mock-only"], {}, 60, "synthetic")
             except (OSError, GateError):
                 require(
-                    not manager.safe and manager.handles[0][0] is fake, "OriginalProcessNotRetained"
+                    not manager.safe and manager.handles[0][0] is fake,
+                    "OriginalProcessNotRetained",
                 )
                 checks += 1
             else:

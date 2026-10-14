@@ -1,6 +1,17 @@
 # AI人生回忆录平台_开发日志_V1.0
 
-## 2026-10-14 — B CI定向复审通过（最新）
+## 2026-10-14 — 9.6-B 补验完成与 SUP-IR-01 关闭（当前）
+
+- 当前 Git 基线 `0099016455f21cd32bed3bbe1c3d24a313ab140d`；补验源码与本次文档同步尚未提交。本节更新此前“最新”记录，旧条目按各自执行时点保留。
+- 完整工作区 Fast **886 passed / 120 deselected / 179.28s**；包含新增 109 项离线用例（其中 HTTP/ASGI 23 项）。AI Service **58 passed / 0.56s**，未连接真实模型。工作区含既有未提交内容，不等于远程基线的测试数量。
+- 真实 PostgreSQL **16.15 / 160015**：**35 passed / 3.69s，11 项竞争测试全部通过，0 skipped**；旧 28 项加新增 7 项。Provider 锁释放探针另列，B32/B33/B52 指定竞争证据已补齐。Manager fresh upgrade 到 `b196f0d47a21`、测试前后 current/check 均 PASS。
+- PG run `074c4869-3c51-4e91-8b10-c33ec4922db7`：使用现有容器中唯一新库与独立 owner/受限 Runner；进程/线程确认退出；库、两角色、相关会话已核验不存在，HBA 原始哈希恢复、规则错误 0，历史库/角色元数据不变，临时凭据载体已删除。308 个既有受保护文件和 Git 状态未变，旧 v3 UNKNOWN 不被替代。
+- 「9.6-A Review」五文件只读独立复审 PASS WITH FINDINGS，无阻塞 PG 问题。唯一新增 Low SUP-IR-01 随后仅收紧终态重放断言为 failed503/discarded409/cancelled200；**3 passed / 0.55s**、Ruff/format 通过，定向复审 PASS / CLOSED。886/58 是这次断言修复前快照，修复后未重跑完整 Fast 或 PG。
+- 已有 exact commit `0099016...` 的远程双 job 成功满足 B-PC-01 原接线关闭条件；旧远程 B 为 28／5，本地新增 35／11 尚未推送/远程验证。E-01 仅补齐指定差集，不整体关闭；57 项完整对账和未单独覆盖回退分支限制仍在。
+- 本轮为 Documentation Only，未运行测试/数据库/Docker，未改代码/迁移/workflow，未暂存/提交/推送；16 项历史删除、`ad`、ignored `.env.test` 及 C3/BM-01 既有修改保留。真实 Provider、C4/C6、生产部署均不因通过而完成，保持 NOT PRODUCTION READY。
+- 详细汇总及原始证据索引：[补充验收记录](../05_开发阶段记录/Part9.6-B_Supplemental-Validation_Report_2026-10-14.md)。下一步仅为只读 Pre-Commit Audit；不直接封板，Git 各步骤另获批准。
+
+## 2026-10-14 — B CI定向复审通过（补验前历史）
 
 - 「9.6-A Review」仅对CI-IR-01～04定向只读复审，结论PASS；四项CLOSED — STATIC，6文件初末hash匹配。未运行脚本/DB/CI，不将模拟阶段/退出证据当成真实权限或清理成功。
 - 实施者验证43项纯mock合同/故障注入检查、script Ruff/format、workflow YAML/接线均PASS；本机激活在资源前拒绝，未做本机Docker/PG操作。42个业务实施文件未变化。
@@ -23,7 +34,7 @@
 - 状态：IMPLEMENTED LOCALLY / IMPLEMENTATION REVIEW PENDING / REMOTE CI NOT RUN；B-PC-01 REMEDIATION IMPLEMENTED但仍OPEN，E-01保持。业务源码、现有测试门禁和迁移未改，未扩建通用BM-01平台。
 - 暂存区保持为空；未commit/push。详细设计和门禁只保存于[CI接线合同](../05_开发阶段记录/Part9.6-B_PostgreSQL-CI-Wiring_Implementation-Contract_V1.0.md)。独立实现复审通过后重新核对提交union和三份混合文档的精确hunks，不因旧50路径已审计就自动认可新增CI内容。
 
-## 2026-10-14 — 9.6-B 验证闭环状态（最新）
+## 2026-10-14 — 9.6-B 验证闭环状态（补验前历史）
 
 - 已批准的42文件离线实施写入工作区，未提交；B-IR-01～04 经「9.6-A Review」独立复核 CLOSED。
 - 独立复核：**PASS WITH FINDINGS**；详细记录见 [闭环独立复核报告](../05_开发阶段记录/Part9.6-B_Validation-Closure_Independent-Review_2026-10-14.md)。

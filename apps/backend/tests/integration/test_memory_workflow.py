@@ -48,13 +48,15 @@ from app.models.memory_workflow import (
 from app.models.user import User
 from app.schemas.memoir import MemoirCreate
 from app.schemas.memory_workflow import (
+    ExtractionCreate,
     ManualCandidateCreate,
     ProposalApprove,
     ProposalSubmit,
     RevisionCreate,
 )
 from app.services import memoir as memoir_service
-from app.services import memory_review
+from app.services import memory_extraction, memory_review
+from app.services.ai_memory_client import DeterministicMockMemoryClient
 from app.services.memory_integrity import MemoryIntegrity, SyntheticKeyProvider
 from app.services.memory_policy import PURPOSES, DecisionStamp, SyntheticMemoryPolicy
 
@@ -202,6 +204,399 @@ def _payload():
         "emotion": None,
         "uncertainties": [],
     }
+
+
+def _supp_multi_connection_gate(allocation):
+    if os.environ.get("MEMORY_B_MULTI_CONNECTION_RUN_ID") != str(allocation.run_id):
+        pytest.skip("Supplement requires verified Manager/Runner multi-connection authorization")
+
+
+def _supp_seed(engine, *, promote=False):
+    with Session(engine, autoflush=False, expire_on_commit=False) as db:
+        graph = _graph(db)
+        db.commit()
+        policy, integrity = _capabilities(graph)
+        created, status = memory_review.manual_candidate(
+            db,
+            graph.owner.id,
+            graph.member.id,
+            ManualCandidateCreate(source_message_id=graph.message.id, payload=_payload()),
+            uuid.uuid4(),
+            policy=policy,
+            integrity=integrity,
+        )
+        assert status == 201
+        if promote:
+            memory_review.submit(
+                db,
+                graph.owner.id,
+                created["proposal_id"],
+                ProposalSubmit(expected_version=0, expected_target_version=0),
+                uuid.uuid4(),
+                policy=policy,
+                integrity=integrity,
+            )
+            created, status = memory_review.approve(
+                db,
+                graph.owner.id,
+                created["proposal_id"],
+                ProposalApprove(expected_version=1, expected_target_version=0),
+                uuid.uuid4(),
+                policy=policy,
+                integrity=integrity,
+            )
+            assert status == 200
+        return graph, policy, integrity, created
+
+
+def _supp_serialized_workers(engine, monkeypatch, *, candidate, command):
+    """Observe actual server lock blocking at the service's own target lock."""
+    barrier = threading.Barrier(2)
+    held, attempted = threading.Event(), threading.Event()
+    pids, outcomes = {}, Queue()
+    original = memory_review.owned if candidate else memory_review.owned_memory
+    table = "memory_candidates" if candidate else "memories"
+
+    def owned(db, *args, **kwargs):
+        result = original(db, *args, **kwargs)
+        if kwargs.get("lock") and db.info.get("supp_worker") == 0:
+            if candidate and args[0] is not MemoryCandidate:
+                return result
+            held.set()
+            assert attempted.wait(5)
+            deadline = time.monotonic() + 5
+            while time.monotonic() < deadline:
+                blockers = db.scalar(text("SELECT pg_blocking_pids(:pid)"), {"pid": pids[1]})
+                if pids[0] in blockers:
+                    return result
+                time.sleep(0.01)
+            raise AssertionError("Actual target lock blocking not observed")
+        return result
+
+    monkeypatch.setattr(memory_review, "owned" if candidate else "owned_memory", owned)
+
+    def worker(index):
+        try:
+            with Session(engine, autoflush=False, expire_on_commit=False) as db:
+                db.info["supp_worker"] = index
+                db.execute(text("SET LOCAL lock_timeout = '10s'"))
+                db.execute(text("SET LOCAL statement_timeout = '12s'"))
+                pids[index] = db.scalar(text("SELECT pg_backend_pid()"))
+
+                def before_execute(state):
+                    if (
+                        index == 1
+                        and getattr(state.statement, "_for_update_arg", None) is not None
+                        and table in str(state.statement)
+                    ):
+                        attempted.set()
+
+                event.listen(db, "do_orm_execute", before_execute)
+                try:
+                    barrier.wait(5)
+                    if index == 1:
+                        assert held.wait(5)
+                    snapshot, status = command(db, index)
+                    outcomes.put((index, status, snapshot))
+                finally:
+                    event.remove(db, "do_orm_execute", before_execute)
+        except AppException as exc:
+            outcomes.put((index, exc.status_code, exc.code))
+        except Exception as exc:  # noqa: BLE001 -- no private driver error text.
+            outcomes.put((index, "unexpected", type(exc).__name__))
+
+    threads = [threading.Thread(target=worker, args=(i,), daemon=False) for i in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(25)
+    if any(thread.is_alive() for thread in threads):
+        pytest.fail("Runner exit uncertain: STOP and retain allocation for Manager review")
+    assert len(pids) == 2 and pids[0] != pids[1]
+    assert outcomes.qsize() == 2 and held.is_set() and attempted.is_set()
+    return {i: (status, result) for i, status, result in (outcomes.get(), outcomes.get())}
+
+
+def test_postgres_provider_call_releases_parent_locks(db_session, memory_b_allocation):
+    _supp_multi_connection_gate(memory_b_allocation)
+    engine = db_session.get_bind().engine
+    # Keep the caller's physical connection checked out after reserve commit;
+    # a second Runner cannot merely reuse the same idle pool connection.
+    with (
+        engine.connect() as connection,
+        Session(connection, autoflush=False, expire_on_commit=False) as caller,
+    ):
+        graph = _graph(caller)
+        caller.commit()
+        policy, integrity = _capabilities(graph)
+        caller_pid = caller.scalar(text("SELECT pg_backend_pid()"))
+        caller.rollback()
+        observed = []
+        key = uuid.uuid4()
+
+        class Client:
+            provider_id = "mock"
+
+            def extract(self, request):
+                assert not caller.in_transaction()
+                with Session(engine) as other:
+                    pid = other.scalar(text("SELECT pg_backend_pid()"))
+                    assert pid != caller_pid
+                    assert other.execute(text("SELECT current_database(), current_user")).one() == (
+                        memory_b_allocation.database,
+                        memory_b_allocation.runner,
+                    )
+                    for row in (
+                        graph.family,
+                        graph.member,
+                        graph.interview,
+                        graph.session,
+                        graph.message,
+                    ):
+                        assert (
+                            other.scalar(
+                                select(type(row))
+                                .where(type(row).id == row.id)
+                                .with_for_update(nowait=True)
+                            )
+                            is not None
+                        )
+                    assert (
+                        other.scalar(
+                            select(ExtractionBatch)
+                            .where(ExtractionBatch.id == request.request_id)
+                            .with_for_update(nowait=True)
+                        ).state
+                        == "pending"
+                    )
+                    command = other.scalar(
+                        select(CommandIdempotencyRecord)
+                        .where(
+                            CommandIdempotencyRecord.actor_user_id == graph.owner.id,
+                            CommandIdempotencyRecord.idempotency_key == key,
+                        )
+                        .with_for_update(nowait=True)
+                    )
+                    assert command is not None and command.state == "processing"
+                    observed.append(pid)
+                return DeterministicMockMemoryClient().extract(request)
+
+        result, status = memory_extraction.start(
+            caller,
+            graph.owner.id,
+            graph.session.id,
+            ExtractionCreate(source_message_id=graph.message.id),
+            key,
+            policy=policy,
+            integrity=integrity,
+            client=Client(),
+        )
+        assert status == 201 and result["state"] == "completed"
+        assert result["candidate_count"] == 1 and len(observed) == 1
+        assert caller.get(InterviewMessage, graph.message.id).content == "Synthetic source"
+
+
+@pytest.mark.parametrize("target", ["candidate", "memory"])
+def test_postgres_revision_ordinals_real_runner_connections(
+    db_session, memory_b_allocation, monkeypatch, target
+):
+    _supp_multi_connection_gate(memory_b_allocation)
+    engine = db_session.get_bind().engine
+    graph, policy, integrity, created = _supp_seed(engine, promote=target == "memory")
+    target_id = created["candidate_id" if target == "candidate" else "memory_id"]
+    parent_id = created["revision_id" if target == "candidate" else "memory_revision_id"]
+    version = 0 if target == "candidate" else 1
+
+    def command(db, index):
+        method = (
+            memory_review.create_candidate_revision
+            if target == "candidate"
+            else memory_review.create_memory_revision
+        )
+        return method(
+            db,
+            graph.owner.id,
+            target_id,
+            RevisionCreate(
+                expected_version=version,
+                parent_revision_id=parent_id,
+                payload={**_payload(), "title": f"Synthetic revision {index}"},
+            ),
+            uuid.uuid4(),
+            policy=policy,
+            integrity=integrity,
+        )
+
+    results = _supp_serialized_workers(
+        engine, monkeypatch, candidate=target == "candidate", command=command
+    )
+    assert [result[0] for result in results.values()] == [201, 201]
+    with Session(engine) as verify:
+        model = MemoryCandidate if target == "candidate" else Memory
+        row = verify.get(model, target_id)
+        assert row.version == version and row.revision_counter == 3
+        field = ContentRevision.candidate_id if target == "candidate" else ContentRevision.memory_id
+        revisions = verify.scalars(select(ContentRevision).where(field == target_id)).all()
+        assert sorted(item.ordinal for item in revisions) == [1, 2, 3]
+        assert all(item.source_scope_id == graph.message.id for item in revisions)
+        if target == "memory":
+            assert row.current_revision_id == parent_id
+        else:
+            assert row.promoted_memory_id is None
+
+
+def test_postgres_two_memory_approvals_real_runner_connections(
+    db_session, memory_b_allocation, monkeypatch
+):
+    _supp_multi_connection_gate(memory_b_allocation)
+    engine = db_session.get_bind().engine
+    graph, policy, integrity, approved = _supp_seed(engine, promote=True)
+    with Session(engine, autoflush=False, expire_on_commit=False) as setup:
+        proposals = []
+        for index in range(2):
+            result, _ = memory_review.create_memory_revision(
+                setup,
+                graph.owner.id,
+                approved["memory_id"],
+                RevisionCreate(
+                    expected_version=1,
+                    parent_revision_id=approved["memory_revision_id"],
+                    payload={**_payload(), "title": f"Synthetic approval {index}"},
+                ),
+                uuid.uuid4(),
+                policy=policy,
+                integrity=integrity,
+            )
+            memory_review.submit(
+                setup,
+                graph.owner.id,
+                result["proposal_id"],
+                ProposalSubmit(expected_version=0, expected_target_version=1),
+                uuid.uuid4(),
+                policy=policy,
+                integrity=integrity,
+            )
+            proposals.append(result["proposal_id"])
+
+    def command(db, index):
+        return memory_review.approve(
+            db,
+            graph.owner.id,
+            proposals[index],
+            ProposalApprove(expected_version=1, expected_target_version=1),
+            uuid.uuid4(),
+            policy=policy,
+            integrity=integrity,
+        )
+
+    results = _supp_serialized_workers(engine, monkeypatch, candidate=False, command=command)
+    assert results[0][0] == 200 and results[1] == (409, "PROPOSAL_STALE")
+    with Session(engine) as verify:
+        memory = verify.get(Memory, approved["memory_id"])
+        proof = verify.get(RevisionProposal, proposals[0])
+        assert memory.version == 2 and memory.revision_counter == 3
+        assert memory.current_revision_id == proof.result_memory_revision_id
+        assert memory.current_approval_proposal_id == proof.id
+        assert proof.result_memory_id == memory.id and proof.state == "approved"
+        stale = verify.get(RevisionProposal, proposals[1])
+        assert stale.state == "stale" and stale.result_memory_revision_id is None
+        assert verify.get(InterviewMessage, graph.message.id).content == "Synthetic source"
+
+
+@pytest.mark.parametrize("target", ["interview", "member", "family"])
+def test_postgres_parent_delete_vs_new_reference_real_runner_connections(
+    db_session, memory_b_allocation, monkeypatch, target
+):
+    """Real immediate FK race, not a manufactured deferred/commit-time FK."""
+    from app.crud import memory_workflow as workflow_crud
+    from app.services import family, family_member, interview
+
+    _supp_multi_connection_gate(memory_b_allocation)
+    engine = db_session.get_bind().engine
+    with Session(engine, autoflush=False, expire_on_commit=False) as setup:
+        graph = _graph(setup)
+        setup.commit()
+    prechecked, inserted = threading.Event(), threading.Event()
+    barrier = threading.Barrier(2)
+    pids, errors, results = {}, [], Queue()
+    original = workflow_crud.has_workflow_references
+
+    def check(db, **kwargs):
+        answer = original(db, **kwargs)
+        if db.info.get("supp_delete") and not prechecked.is_set():
+            assert answer is False
+            prechecked.set()
+            assert inserted.wait(5)
+        return answer
+
+    def record_error(context):
+        orig = context.original_exception
+        if getattr(orig, "sqlstate", None) == "23503":
+            errors.append((orig.sqlstate, orig.diag.table_name, orig.diag.constraint_name))
+
+    monkeypatch.setattr(workflow_crud, "has_workflow_references", check)
+    event.listen(engine, "handle_error", record_error)
+
+    def worker(role):
+        try:
+            with Session(engine, autoflush=False, expire_on_commit=False) as db:
+                db.execute(text("SET LOCAL lock_timeout = '10s'"))
+                db.execute(text("SET LOCAL statement_timeout = '12s'"))
+                pids[role] = db.scalar(text("SELECT pg_backend_pid()"))
+                barrier.wait(5)
+                if role == "insert":
+                    assert prechecked.wait(5)
+                    batch = _batch(graph)
+                    db.add(batch)
+                    db.commit()
+                    inserted.set()
+                    results.put((role, 201, batch.id))
+                else:
+                    db.info["supp_delete"] = True
+                    if target == "family":
+                        family.delete_family(db, user_id=graph.owner.id, family_id=graph.family.id)
+                    elif target == "member":
+                        family_member.delete_family_member(
+                            db,
+                            user_id=graph.owner.id,
+                            family_id=graph.family.id,
+                            member_id=graph.member.id,
+                        )
+                    else:
+                        interview.delete_interview(
+                            db, user_id=graph.owner.id, interview_id=graph.interview.id
+                        )
+                    results.put((role, "unexpected_success", None))
+        except AppException as exc:
+            results.put((role, exc.status_code, exc.code))
+        except Exception as exc:  # noqa: BLE001 -- fixed worker outcome only.
+            results.put((role, "unexpected", type(exc).__name__))
+
+    threads = [
+        threading.Thread(target=worker, args=(role,), daemon=False) for role in ("delete", "insert")
+    ]
+    try:
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(25)
+        if any(thread.is_alive() for thread in threads):
+            pytest.fail("Runner exit uncertain: STOP and retain allocation for Manager review")
+    finally:
+        event.remove(engine, "handle_error", record_error)
+    assert pids["delete"] != pids["insert"] and inserted.is_set()
+    assert results.qsize() == 2
+    outcomes = {role: (status, result) for role, status, result in (results.get(), results.get())}
+    assert outcomes["delete"] == (409, "RESOURCE_IN_USE") and outcomes["insert"][0] == 201
+    assert errors and all(
+        code == "23503" and (table, name) in PROTECTED_DELETE_FK_MANIFEST
+        for code, table, name in errors
+    )
+    with Session(engine) as verify:
+        assert verify.get(ExtractionBatch, outcomes["insert"][1]).state == "pending"
+        for row in (graph.family, graph.member, graph.interview, graph.session, graph.message):
+            assert verify.get(type(row), row.id) is not None
+        assert verify.get(InterviewMessage, graph.message.id).content == "Synthetic source"
 
 
 def _batch(graph, state="pending"):

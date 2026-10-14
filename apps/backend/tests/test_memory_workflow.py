@@ -1727,3 +1727,586 @@ def test_b_ir02_section_flush_failure_rolls_back_parent_and_all_sections(records
     assert len(seen) == 2
     assert count(r, Memoir) == count(r, MemoirSection) == 0
     assert count(r, CommandIdempotencyRecord) == before_commands
+
+
+# Supplemental contract V1.0: synthetic branches; no production Consent claims.
+def _supp_source(r, scope):
+    owner = r.other if scope == "other_owner" else r.user
+    if scope in {"other_family", "other_owner"}:
+        family = Family(owner_id=owner.id, name="Synthetic alternate archive")
+        r.db.add(family)
+        r.db.flush()
+    else:
+        family = r.family
+    if scope == "other_session":
+        member = r.member
+    else:
+        member = FamilyMember(family_id=family.id, name="Synthetic alternate subject")
+        r.db.add(member)
+        r.db.flush()
+    interview = Interview(family_member_id=member.id, title="Synthetic alternate interview")
+    r.db.add(interview)
+    r.db.flush()
+    session = InterviewSession(interview_id=interview.id, status="completed")
+    r.db.add(session)
+    r.db.flush()
+    source = InterviewMessage(
+        session_id=session.id, role="user", source="text", sequence=1, content="Synthetic alternate"
+    )
+    r.db.add(source)
+    r.db.commit()
+    return source
+
+
+@pytest.mark.parametrize("scope", ["other_session", "other_member", "other_family", "other_owner"])
+def test_supp_b03_extraction_wrong_subject_before_body(records, monkeypatch, scope):
+    r = records
+    other = _supp_source(r, scope)
+    body = Mock(side_effect=AssertionError("Wrong subject cannot read source"))
+    provider = SimpleNamespace(provider_id="mock", extract=Mock())
+    monkeypatch.setattr(workflow_crud, "source_content", body)
+    failure = error(
+        "NOT_FOUND",
+        lambda: extraction.start(
+            r.db,
+            r.user.id,
+            r.session.id,
+            ExtractionCreate(source_message_id=other.id),
+            uuid.uuid4(),
+            policy=r.policy,
+            integrity=r.integrity,
+            client=provider,
+        ),
+    )
+    assert failure.status_code == 404
+    body.assert_not_called()
+    provider.extract.assert_not_called()
+    assert count(r, ExtractionBatch) == count(r, MemoryCandidate) == 0
+
+
+@pytest.mark.parametrize(
+    "role,source", [("assistant", "ai_generated"), ("system", "text"), ("user", "audio_transcript")]
+)
+def test_supp_b04_ai_source_categories_rejected_before_body(records, monkeypatch, role, source):
+    r = records
+    r.source.role, r.source.source = role, source
+    r.db.commit()
+    body = Mock(side_effect=AssertionError("Invalid category cannot read source"))
+    monkeypatch.setattr(workflow_crud, "source_content", body)
+    provider = SimpleNamespace(provider_id="mock", extract=Mock())
+    failure = error("INVALID_SOURCE", lambda: extract(r, provider))
+    assert failure.status_code == 422
+    body.assert_not_called()
+    provider.extract.assert_not_called()
+    assert count(r, ExtractionBatch) == 0
+
+
+@pytest.mark.parametrize("state", ["failed", "discarded", "cancelled"])
+def test_supp_b12_terminal_replay_never_calls_provider(records, monkeypatch, state):
+    r = records
+    key = uuid.uuid4()
+
+    class Provider:
+        provider_id = "mock"
+
+        def extract(self, request):
+            if state == "failed":
+                raise TimeoutError("Synthetic timeout")
+            if state == "cancelled":
+                extraction.cancel_batch(
+                    r.db,
+                    r.user.id,
+                    request.request_id,
+                    VersionCommand(expected_version=0),
+                    uuid.uuid4(),
+                )
+            else:
+                old = r.policy.decisions[r.source.id]
+                r.policy.decisions[r.source.id] = old.model_copy(
+                    update={"source_generation": old.source_generation + 1}
+                )
+            return r.client.extract(request)
+
+    if state == "failed":
+        error("AI_PROVIDER_TIMEOUT", lambda: extract(r, Provider(), key))
+    else:
+        assert extract(r, Provider(), key)["state"] == state
+    before = (count(r, ExtractionBatch), count(r, MemoryCandidate), count(r, ContentRevision))
+    forbidden = SimpleNamespace(extract=Mock(side_effect=AssertionError("Replay cannot generate")))
+    monkeypatch.setattr(
+        workflow_crud, "source_content", Mock(side_effect=AssertionError("Replay cannot read body"))
+    )
+    result, status = extraction.start(
+        r.db,
+        r.user.id,
+        r.session.id,
+        ExtractionCreate(source_message_id=r.source.id),
+        key,
+        policy=r.policy,
+        integrity=r.integrity,
+        client=forbidden,
+    )
+    assert result["state"] == state
+    assert status == {"failed": 503, "discarded": 409, "cancelled": 200}[state]
+    forbidden.extract.assert_not_called()
+    assert before == (
+        count(r, ExtractionBatch),
+        count(r, MemoryCandidate),
+        count(r, ContentRevision),
+    )
+
+
+def test_supp_b13_rerun_preserves_manual_revision_and_approved_memory(records):
+    r = records
+    initial = extract(r)
+    cid = initial["candidate_ids"][0]
+    candidate = review.get_candidate(r.db, r.user.id, cid)
+    edited, _ = review.create_candidate_revision(
+        r.db,
+        r.user.id,
+        cid,
+        RevisionCreate(
+            expected_version=0,
+            parent_revision_id=candidate["revision_ids"][0],
+            payload=payload("Synthetic corrected draft"),
+        ),
+        uuid.uuid4(),
+        policy=r.policy,
+        integrity=r.integrity,
+    )
+    approved = approve(r, {**edited, "candidate_id": cid})
+    snapshots = {
+        row.id: (row.payload.copy(), row.content_digest, row.ordinal)
+        for row in r.db.scalars(select(ContentRevision))
+    }
+    current = r.db.get(Memory, approved["memory_id"]).current_revision_id
+    again = extract(r)
+    assert again["batch_id"] != initial["batch_id"] and again["candidate_ids"] != [cid]
+    for rid, value in snapshots.items():
+        row = r.db.get(ContentRevision, rid)
+        assert (row.payload, row.content_digest, row.ordinal) == value
+    assert r.db.get(Memory, approved["memory_id"]).current_revision_id == current
+    assert count(r, Memory) == 1
+
+
+def test_supp_b14_changed_source_and_revision_version_conflict(records):
+    r = records
+    second = InterviewMessage(
+        session_id=r.session.id, role="user", source="text", sequence=2, content="Second synthetic"
+    )
+    r.db.add(second)
+    r.db.commit()
+    key = uuid.uuid4()
+    extract(r, key=key)
+    error(
+        "IDEMPOTENCY_CONFLICT",
+        lambda: extraction.start(
+            r.db,
+            r.user.id,
+            r.session.id,
+            ExtractionCreate(source_message_id=second.id),
+            key,
+            policy=r.policy,
+            integrity=r.integrity,
+            client=r.client,
+        ),
+    )
+    first = manual(r)
+    revision_key = uuid.uuid4()
+    data = RevisionCreate(
+        expected_version=0, parent_revision_id=first["revision_id"], payload=payload()
+    )
+    review.create_candidate_revision(
+        r.db,
+        r.user.id,
+        first["candidate_id"],
+        data,
+        revision_key,
+        policy=r.policy,
+        integrity=r.integrity,
+    )
+    before = count(r, ContentRevision)
+    error(
+        "IDEMPOTENCY_CONFLICT",
+        lambda: review.create_candidate_revision(
+            r.db,
+            r.user.id,
+            first["candidate_id"],
+            data.model_copy(update={"expected_version": 1}),
+            revision_key,
+            policy=r.policy,
+            integrity=r.integrity,
+        ),
+    )
+    assert count(r, ExtractionBatch) == 1 and count(r, ContentRevision) == before
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["payload", "source_scope_id", "family_member_id", "derivation_profile", "required_purposes"],
+)
+def test_supp_b15_content_binding_tampering_rejected(records, field):
+    r = records
+    args = {
+        "payload": payload("  合成🙂e\u0301 " * 100),
+        "source_scope_id": r.source.id,
+        "family_member_id": r.member.id,
+        "derivation_profile": "raw_manual",
+        "required_purposes": (),
+    }
+    signed = r.integrity.content_digest(**args)
+    changed = dict(args)
+    changed[field] = {
+        "payload": payload("Different synthetic text"),
+        "source_scope_id": uuid.uuid4(),
+        "family_member_id": uuid.uuid4(),
+        "derivation_profile": "ai_derived",
+        "required_purposes": ("ai_analysis",),
+    }[field]
+    error(
+        "CONTENT_RESTRICTED",
+        lambda: r.integrity.verify_content(
+            **changed,
+            digest=signed.digest,
+            scheme=signed.scheme,
+            key_id=signed.key_id,
+        ),
+    )
+    r.integrity.verify_content(
+        **args,
+        digest=signed.digest,
+        scheme=signed.scheme,
+        key_id=signed.key_id,
+    )
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "actor_user_id",
+        "operation",
+        "idempotency_key",
+        "target_scope",
+        "expected_versions",
+        "payload",
+    ],
+)
+def test_supp_b15_command_envelope_domains_and_binding(records, field):
+    r = records
+    args = {
+        "actor_user_id": r.user.id,
+        "operation": "memory.candidate.manual",
+        "idempotency_key": uuid.uuid4(),
+        "target_scope": {"member": r.member.id, "source": r.source.id},
+        "expected_versions": {"version": 0},
+        "payload": {"content": "  合成🙂e\u0301 " * 100},
+    }
+    original = r.integrity.fingerprint(**args)
+    changed = dict(args)
+    changed[field] = {
+        "actor_user_id": r.other.id,
+        "operation": "memory.revise",
+        "idempotency_key": uuid.uuid4(),
+        "target_scope": {"member": uuid.uuid4()},
+        "expected_versions": {"version": 1},
+        "payload": {"content": "different"},
+    }[field]
+    assert original.digest != r.integrity.fingerprint(**changed).digest
+    assert r.integrity.fingerprint(**args).digest == original.digest
+    assert len(original.digest) == 32 and original.scheme == "memory-command.v1"
+    error(
+        "MEMORY_INTEGRITY_UNAVAILABLE",
+        lambda: r.integrity.fingerprint(**args, scheme="control-sha256.v1"),
+    )
+
+
+def _supp_proposal_state(r, state):
+    from datetime import UTC, datetime
+
+    created = manual(r)
+    if state in {"submitted", "rejected", "approved"}:
+        submit(r, created)
+    if state == "approved":
+        review.approve(
+            r.db,
+            r.user.id,
+            created["proposal_id"],
+            ProposalApprove(expected_version=1, expected_target_version=0),
+            uuid.uuid4(),
+            policy=r.policy,
+            integrity=r.integrity,
+        )
+    elif state == "rejected":
+        review.reject(
+            r.db,
+            r.user.id,
+            created["proposal_id"],
+            ProposalReject(expected_version=1),
+            uuid.uuid4(),
+        )
+    elif state == "withdrawn":
+        review.withdraw(
+            r.db,
+            r.user.id,
+            created["proposal_id"],
+            VersionCommand(expected_version=0),
+            uuid.uuid4(),
+        )
+    elif state in {"stale", "purged"}:
+        values = {"state": state, "version": 2}
+        if state == "stale":
+            values.update(submitted_at=datetime.now(UTC), decided_at=datetime.now(UTC))
+        r.db.execute(
+            update(RevisionProposal)
+            .where(RevisionProposal.id == created["proposal_id"])
+            .values(**values)
+        )
+        r.db.commit()
+    return created, r.db.get(RevisionProposal, created["proposal_id"])
+
+
+_SUPP_ILLEGAL = [
+    (state, action)
+    for state in ("draft", "submitted", "approved", "rejected", "withdrawn", "stale", "purged")
+    for action in ("submit", "approve", "reject", "withdraw")
+    if (state, action)
+    not in {
+        ("draft", "submit"),
+        ("submitted", "approve"),
+        ("submitted", "reject"),
+        ("draft", "withdraw"),
+        ("submitted", "withdraw"),
+        ("draft", "approve"),
+        ("draft", "reject"),  # Already tested.
+    }
+]
+
+
+@pytest.mark.parametrize("state,action", _SUPP_ILLEGAL)
+def test_supp_b27_all_remaining_illegal_proposal_edges(records, state, action):
+    r = records
+    created, proposal = _supp_proposal_state(r, state)
+    target = r.db.get(MemoryCandidate, created["candidate_id"])
+    before = (
+        proposal.state,
+        proposal.version,
+        proposal.input_revision_id,
+        count(r, CommandIdempotencyRecord),
+    )
+    args = {"expected_version": proposal.version}
+    if action in {"submit", "approve"}:
+        args["expected_target_version"] = target.version
+    data = {
+        "submit": ProposalSubmit,
+        "approve": ProposalApprove,
+        "reject": ProposalReject,
+        "withdraw": VersionCommand,
+    }[action](**args)
+    kwargs = (
+        {"policy": r.policy, "integrity": r.integrity} if action in {"submit", "approve"} else {}
+    )
+    error(
+        "PROPOSAL_STATE_CONFLICT",
+        lambda: getattr(review, action)(
+            r.db,
+            r.user.id,
+            proposal.id,
+            data,
+            uuid.uuid4(),
+            **kwargs,
+        ),
+    )
+    r.db.expire_all()
+    row = r.db.get(RevisionProposal, proposal.id)
+    assert (
+        row.state,
+        row.version,
+        row.input_revision_id,
+        count(r, CommandIdempotencyRecord),
+    ) == before
+    assert r.db.get(ContentRevision, created["revision_id"]).payload == payload().model_dump(
+        mode="json"
+    )
+
+
+@pytest.mark.parametrize("state", ["draft", "submitted"])
+def test_supp_b36_withdraw_without_capabilities(records, state):
+    r = records
+    created, proposal = _supp_proposal_state(r, state)
+    r.keys.keys.clear()
+    r.policy.decisions.clear()
+    result, status = review.withdraw(
+        r.db,
+        r.user.id,
+        proposal.id,
+        VersionCommand(expected_version=proposal.version),
+        uuid.uuid4(),
+    )
+    assert status == 200 and result["state"] == "withdrawn"
+    assert count(r, Memory) == 0
+    assert r.db.get(ContentRevision, created["revision_id"]).payload == payload().model_dump(
+        mode="json"
+    )
+
+
+def test_supp_b28_rejected_revision_has_new_proposal(records):
+    r = records
+    created, old = _supp_proposal_state(r, "rejected")
+    old_digest = old.payload_digest
+    revised, status = review.create_candidate_revision(
+        r.db,
+        r.user.id,
+        created["candidate_id"],
+        RevisionCreate(
+            expected_version=0,
+            parent_revision_id=created["revision_id"],
+            payload=payload("Synthetic correction after rejection"),
+        ),
+        uuid.uuid4(),
+        policy=r.policy,
+        integrity=r.integrity,
+    )
+    assert status == 201 and revised["proposal_id"] != old.id
+    assert r.db.get(RevisionProposal, old.id).state == "rejected"
+    assert r.db.get(RevisionProposal, old.id).payload_digest == old_digest
+    assert r.db.get(ContentRevision, created["revision_id"]).payload == payload().model_dump(
+        mode="json"
+    )
+
+
+def test_supp_b35_approval_commit_fault_is_unknown_and_atomic(records, monkeypatch):
+    r = records
+    created = manual(r)
+    submit(r, created)
+    monkeypatch.setattr(r.db, "commit", Mock(side_effect=RuntimeError("Synthetic commit boundary")))
+    failure = error(
+        "COMMAND_OUTCOME_UNKNOWN",
+        lambda: review.approve(
+            r.db,
+            r.user.id,
+            created["proposal_id"],
+            ProposalApprove(expected_version=1, expected_target_version=0),
+            uuid.uuid4(),
+            policy=r.policy,
+            integrity=r.integrity,
+        ),
+    )
+    assert (
+        failure.details["outcome"] == "unknown"
+    )  # Injected before commit, not a PG transport test.
+    r.db.expire_all()
+    assert count(r, Memory) == 0 and count(r, ContentRevision) == 1
+    assert r.db.get(RevisionProposal, created["proposal_id"]).state == "submitted"
+    assert r.db.get(MemoryCandidate, created["candidate_id"]).promoted_memory_id is None
+    assert r.db.get(InterviewMessage, r.source.id).content == " 合成：小时候常在河边坐着。 "
+
+
+@pytest.mark.parametrize("phase", ["flush", "commit"])
+def test_supp_b52_protected_failure_classification_at_both_boundaries(records, monkeypatch, phase):
+    r = records
+    created = manual(r)
+    # Trusted diagnostics are synthetic. This verifies classification/rollback, not a PG race.
+    failure = IntegrityError(
+        "Synthetic private SQL",
+        {},
+        SimpleNamespace(
+            sqlstate="23503",
+            diag=SimpleNamespace(table_name="memory_candidates", constraint_name="fk_mc_source"),
+        ),
+    )
+    deleting = Mock(return_value=True)
+    if phase == "flush":
+        deleting.side_effect = failure
+    else:
+        monkeypatch.setattr(r.db, "commit", Mock(side_effect=failure))
+    rollback = Mock(wraps=r.db.rollback)
+    monkeypatch.setattr(r.db, "rollback", rollback)
+    result = error(
+        "RESOURCE_IN_USE",
+        lambda: interview_service._delete_with_reference_guard(
+            r.db,
+            has_references=lambda: False,
+            delete=deleting,
+            constraint_names=set(),
+            reauthorize=lambda: review.member_scope(r.db, r.user.id, r.member.id),
+        ),
+    )
+    assert result.status_code == 409 and rollback.called
+    assert r.db.get(InterviewMessage, r.source.id).content == " 合成：小时候常在河边坐着。 "
+    assert r.db.get(MemoryCandidate, created["candidate_id"]) is not None
+
+
+@pytest.mark.parametrize(
+    "state", ["draft", "submitted", "approved", "rejected", "withdrawn", "stale", "purged"]
+)
+@pytest.mark.parametrize("kind", ["interview", "member", "family"])
+def test_supp_b50_revision_and_proposal_states_protect_sources(records, state, kind):
+    r = records
+    created, proposal = _supp_proposal_state(r, state)
+    callbacks = {
+        "interview": lambda: interview_service.delete_interview(
+            r.db, user_id=r.user.id, interview_id=r.interview.id
+        ),
+        "member": lambda: member_service.delete_family_member(
+            r.db, user_id=r.user.id, family_id=r.family.id, member_id=r.member.id
+        ),
+        "family": lambda: family_service.delete_family(
+            r.db, user_id=r.user.id, family_id=r.family.id
+        ),
+    }
+    error("RESOURCE_IN_USE", callbacks[kind])
+    r.db.expire_all()
+    assert r.db.get(RevisionProposal, proposal.id).state == state
+    assert r.db.get(ContentRevision, created["revision_id"]) is not None
+    assert r.db.get(InterviewMessage, r.source.id).content == " 合成：小时候常在河边坐着。 "
+
+
+@pytest.mark.parametrize("action", ["submit", "approve", "reject", "withdraw", "revise", "cancel"])
+def test_supp_b56_existing_target_version_mismatch_is_atomic(records, action):
+    r = records
+    created = manual(r)
+    if action in {"approve", "reject"}:
+        submit(r, created)
+    before = (count(r, CommandIdempotencyRecord), count(r, ContentRevision), count(r, Memory))
+    if action == "cancel":
+        batch = extract(r)
+        before = (count(r, CommandIdempotencyRecord), count(r, ContentRevision), count(r, Memory))
+        callback = lambda: extraction.cancel_batch(
+            r.db, r.user.id, batch["batch_id"], VersionCommand(expected_version=999), uuid.uuid4()
+        )
+    elif action == "revise":
+        callback = lambda: review.create_candidate_revision(
+            r.db,
+            r.user.id,
+            created["candidate_id"],
+            RevisionCreate(
+                expected_version=999, parent_revision_id=created["revision_id"], payload=payload()
+            ),
+            uuid.uuid4(),
+            policy=r.policy,
+            integrity=r.integrity,
+        )
+    else:
+        data_type = {
+            "submit": ProposalSubmit,
+            "approve": ProposalApprove,
+            "reject": ProposalReject,
+            "withdraw": VersionCommand,
+        }[action]
+        values = {"expected_version": 999}
+        if action in {"submit", "approve"}:
+            values["expected_target_version"] = 0
+        kwargs = (
+            {"policy": r.policy, "integrity": r.integrity}
+            if action in {"submit", "approve"}
+            else {}
+        )
+        callback = lambda: getattr(review, action)(
+            r.db, r.user.id, created["proposal_id"], data_type(**values), uuid.uuid4(), **kwargs
+        )
+    error("VERSION_CONFLICT", callback)
+    assert before == (
+        count(r, CommandIdempotencyRecord),
+        count(r, ContentRevision),
+        count(r, Memory),
+    )

@@ -1,5 +1,7 @@
 # Part 9.6-B — 专项 PostgreSQL CI 接线合同 V1.0
 
+> 2026-10-14 当前证据补充：本表与正文保留接线冻结/初次实施时的快照。exact commit `0099016455f21cd32bed3bbe1c3d24a313ab140d` 的 [Backend CI 38512280122](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38512280122)双job已success，旧B专项28项/5竞争及清理通过，满足B-PC-01原接线关闭条件。后续已批准的五文件补验将当前脚本严格清单更新为35项/11竞争；本机真实PG已35 passed、11竞争全过、0skip且清理复验通过，但**该新增清单尚未提交/推送或取得对应远程CI**。纯mock43项自检不能替代真实CI；E-01仅补齐指定竞争差集，不整体关闭。完整证据、SUP-IR-01关闭和生产边界见[补充验收记录](Part9.6-B_Supplemental-Validation_Report_2026-10-14.md)。本次仅同步文档，不修改脚本或workflow，不改变角色、隔离、超时、清理和生产retention政策。
+
 | Metadata | Value |
 | --- | --- |
 | Date | 2026-10-14（Asia/Shanghai） |

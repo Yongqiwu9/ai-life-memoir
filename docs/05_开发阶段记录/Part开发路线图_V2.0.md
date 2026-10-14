@@ -1,5 +1,17 @@
 # AI人生回忆录平台 — Part 开发路线图 V2.0
 
+## 当前 9.6-B 补验状态（2026-10-14）
+
+- 基线 `master @ 0099016455f21cd32bed3bbe1c3d24a313ab140d`，加尚未提交的获批补验；**Fast 886 passed、AI Service 58 passed、PG16.15 35 passed／11 项竞争全部通过／0 skipped**。迁移前后 current/check 与唯一临时库、角色、会话、HBA 恢复均完成核验。
+- 五文件独立复审 PASS WITH FINDINGS，SUP-IR-01 后经精确状态码断言、3 项目标回归和定向只读复审 CLOSED。Fast/AI 完整结果是收紧断言前的快照，后续只执行目标回归；不宣称最新源码重跑了全量。
+- B32/B33/B52 指定竞争证据已补齐；E-01 其余逐项验收与 Legacy 回退分支限制保留。已有基线 exact-commit CI 双 job 成功满足 B-PC-01 原接线关闭条件；当前 35／11 新清单尚无对应 remote CI。
+- **未封板、未进入下一阶段**。下一步：当前文档/测试候选的只读 Pre-Commit Audit → 分别授权暂存、提交、推送 → 新 exact-commit 远程 CI。原 53 路径不能自动视为本轮白名单；混合文档仍须逐 hunk 排除未授权 C3/BM-01 内容。
+- 真实 Provider、完整 C4 Consent/Access Gate 与 C6 删除传播/净化/备份能力未因此完成，生产限制保留。完整证据、清理与边界见 [补充验收记录](Part9.6-B_Supplemental-Validation_Report_2026-10-14.md)。
+
+## 补验前实施记录（历史快照）
+
+以下旧 HEAD、未提交/未执行和待复审状态均对应补验前时点，不覆盖上述当前摘要；不改写既有 C3/BM-01 历史。
+
 > 最新B CI结论（2026-10-14）：六文件专项接线已实施，独立定向源码复审PASS，CI-IR-01～04 CLOSED — STATIC；43项mock、script Ruff/format、YAML检查PASS。真实Linux/PG/remote双job未运行，B-PC-01和E-01保持OPEN。下一门禁是53路径候选union的定向Pre-Commit Audit与三份混合文档hunk核验，然后由用户分别批准暂存/提交/推送。旧待再审条目为历史记录，不表示当前源码阻塞仍未修复。
 
 > B CI修复最新状态（2026-10-14）：独立实现初审FAIL，CI-IR-01～04已作六文件范围内定向修复；43项纯mock检查含启动后IO/通信/超时/残留group、权限准备不确定、共享阶段预算及post-check结果独立记录。待独立定向再审；新job真实Linux/PostgreSQL/Remote CI仍未运行。后文32项及“实现复审待完成”保留首次实施历史，不能替代本次再审结论。

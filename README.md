@@ -4,11 +4,19 @@
 
 ## 当前阶段
 
+**9.6-B 最新补验状态（2026-10-14）**：工作区 Fast **886 passed**、独立 AI Service **58 passed**；真实 PostgreSQL **16.15：35 passed，11 项竞争测试全部通过，0 skipped**，迁移前后 current/check 与精确清理复验通过。五文件独立源码复审 PASS WITH FINDINGS；唯一新增 Low SUP-IR-01 经断言收紧、**3 项目标回归**与定向只读复审 CLOSED。886/58 为修复前完整验证快照，未在断言修复后重跑全量；当前补验尚未提交、推送或取得对应远程 CI，未封板。详细证据与限制见 [补充验收记录](docs/05_开发阶段记录/Part9.6-B_Supplemental-Validation_Report_2026-10-14.md)。
+
+已提交基线 `0099016455f21cd32bed3bbe1c3d24a313ab140d` 的 Backend CI 双 job 已成功，满足 B-PC-01 原接线关闭条件；该远程 run 是 PG 28／竞争 5，不代替当前工作区 35／11 的远程验收。E-01 仅补齐指定竞争证据差集，57 项完整对账与剩余回退分支限制保留。真实 Provider、C4/C6 及生产能力未因此完成，保持 **DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY**。
+
+### B CI 接线历史（补验前快照）
+
 > B CI接线实现最新结论（2026-10-14）：独立定向复审PASS，CI-IR-01～04 CLOSED — STATIC；43项纯mock检查、script Ruff/format和YAML接线检查PASS。新job实际Linux/PostgreSQL/remote CI仍NOT RUN，B-PC-01及E-01保持OPEN；未暂存/提交/推送。后续提交候选为原50路径加workflow/专项脚本/CI合同共53路径，需重新Pre-Commit Audit，三份混合文档仍按hunk排除C3内容。下方待再审记录保留历史，以本段为准。
 
 > B CI定向修复（2026-10-14）：实现初审发现CI-IR-01～03 Blocking Medium及CI-IR-04 Low，已在原专项脚本中修复并扩展至43项纯mock合同/故障注入检查，待独立定向再审。新job真实Linux/PG/remote CI仍NOT RUN，B-PC-01不关闭；下方32项为首次离线检查历史结果。
 
 > 2026-10-14 B CI 接线补充：用户批准六文件实施，workflow已将B用例从原integration入口精确分流至独立PostgreSQL16.15 job；专项Manager/Runner脚本已写入。独立合同审查PASS WITH FINDINGS，32项纯mock合同检查、Ruff/format与YAML接线检查通过；新job真实PG/远程CI尚未运行，实现独立复审待完成。B-PC-01仍OPEN，E-01、57项未全覆盖及未封板边界不变。详情见[CI接线合同](docs/05_开发阶段记录/Part9.6-B_PostgreSQL-CI-Wiring_Implementation-Contract_V1.0.md)。本轮未暂存、提交或推送。
+
+### 当前主线摘要
 
 | Part | 状态与交付边界 |
 | --- | --- |
@@ -16,9 +24,9 @@
 | 9.5.5 | Memory 前置基础设施/架构决策阶段；B、C1/C2A/C2B、C3.0 — Completed / Sealed；C — Design Frozen / Implementation In Progress；C3 实施 In Progress；C3.1 Implementation Audit = PASS WITH FINDINGS，已完成本地 PostgreSQL 16.15 与回归验证；Implementation Completed（dormant scope），commit / push / exact remote CI PASS；Final Documentation Seal Preparation in progress；C3.2 Next / NOT STARTED |
 | Memory + Memoir Slice 1 | 人工 Memory 与确定性 Memoir 草稿已实现；不含 AI 提取、不可变 Revision 或正式审批 |
 | 9.6-A | Provider Extension Implementation Completed / COMMITTED LOCALLY；HTTP / PostgreSQL NOT VERIFIED；Real Provider NOT IMPLEMENTED |
-| 9.6-B | 已授权的离线实施写入工作区；独立实现复核 PASS WITH FINDINGS，B-IR-01～04 CLOSED；HTTP 15、PG16.15 28 项及 Legacy/downgrade 18 个场景通过；57 项全覆盖未完成，未提交、未封板 |
+| 9.6-B | 基础实施与双 job CI 已有提交证据；当前补验工作区 Fast 886、AI Service 58、PG16.15 35／竞争 11 通过，SUP-IR-01 CLOSED；补验未提交、未封板，57 项全覆盖未宣称完成 |
 
-9.6-B 最新证据与范围见 [验证闭环独立复核](docs/05_开发阶段记录/Part9.6-B_Validation-Closure_Independent-Review_2026-10-14.md)。E-01为Medium证据限制，B32/B33/B52指定PG并发仍未验证；真实Legacy孤儿/版本化Section等回退分支未单独覆盖。下一步是只读Pre-Commit Audit，仍须用户分别批准暂存、提交、推送。下方2026-10-12的草案/未授权状态保留作历史追溯，以本表最新状态为准。
+9.6-B 当前证据以 [补充验收记录](docs/05_开发阶段记录/Part9.6-B_Supplemental-Validation_Report_2026-10-14.md)为准；[早期独立复核](docs/05_开发阶段记录/Part9.6-B_Validation-Closure_Independent-Review_2026-10-14.md)保留历史原文。B32/B33/B52 指定 PG 竞争已补验；真实 Legacy 孤儿/版本化 Section 等未单独覆盖的回退分支仍保留 E-01 限制。下一步是当前候选差异的只读 Pre-Commit Audit，仍须分别批准暂存、提交、推送。下方早期草案、未授权、未执行及旧 CI 状态均按其历史时点理解，不覆盖本节当前状态，也不改变既有 C3/BM-01 记录。
 
 Part 9.5 完成不代表 Audio upload、Object Storage、STT Provider 或 AI pipeline 已完成。C2A 已实现邀请、Membership 与协作管理权限基础；C2B 已完成 Participant 身份关系、本人确认及最小本人权利入口，并在 PostgreSQL 16.15 上通过 remediation commit 对应的 Backend CI。既有 Family 内容、FamilyMember、Interview、Session、Audio、Transcript、Segment、Message API 仍为 Owner-only。9.6-B 已有离线 Candidate/Revision/审批 profile；完整生产 Consent、C3 来源链路、C5 Artifact 审批接线、删除与净化仍未实现。
 
@@ -93,7 +101,7 @@ C2B 已实现 `InterviewParticipant`、speaker-only V1 role、稳定 `interview_
 - 本次只归档文档；未运行测试、操作数据库或执行 Git 暂存、提交、推送。既有 9.6-A 实现及其验证边界保持原有记录。
 
 
-## Part 9.6-B — 完整设计草案归档（2026-10-12，最新主线状态）
+## Part 9.6-B — 完整设计草案归档（2026-10-12，历史主线快照）
 
 详细 SSOT：[Candidate + Immutable Revision + Human Review — Implementation Contract V1.0](docs/04_AI设计/Part9.6-B_Candidate-Revision-Human-Review_Implementation-Contract_V1.0.md)。
 
@@ -106,11 +114,11 @@ C2B 已实现 `InterviewParticipant`、speaker-only V1 role、稳定 `interview_
 | Next | 定向合同再审 → 用户批准修订后的精确实施范围；归档不构成 Design Freeze 或代码批准 |
 | 9.6-C | FUTURE / NOT STARTED；真实 Provider 与 Consent 门禁另行批准 |
 
-本节取代上方旧的提交准备与早期路线状态；历史验证记录保留其日期与范围。详细草案包含单一 RevisionProposal 审批权威的离线 profile、表与 FK、状态机、API 切换、敏感 HMAC、Legacy 迁移、57 项验收及 42 个拟实施源码文件；真实 C3/C4/C6 不因此完成。HTTP/ASGI、PostgreSQL、真实 Provider 和生产验收边界保持原有结论。
+本节保存当时草案与提交准备状态；当前状态见文首“当前阶段”，历史验证记录保留其日期与范围。详细草案包含单一 RevisionProposal 审批权威的离线 profile、表与 FK、状态机、API 切换、敏感 HMAC、Legacy 迁移、57 项验收及 42 个拟实施源码文件；真实 C3/C4/C6 不因此完成。HTTP/ASGI、PostgreSQL、真实 Provider 和生产验收边界按各次验证范围记录。
 
 本次 Documentation Only：未修改 runtime、migration、tests、workflow 或配置，未运行应用/测试、操作数据库/Docker 或暂存、提交、推送；既有未提交内容保留。
 
-## Part 9.6-B — 合同审查最小修订（2026-10-12，最新状态）
+## Part 9.6-B — 合同审查最小修订（2026-10-12，历史状态）
 
 正式独立合同审查：**PASS WITH FINDINGS（Medium 2 / Low 1）**。详细修订与历史审查 hash 保存在 [合同 §15.3](docs/04_AI设计/Part9.6-B_Candidate-Revision-Human-Review_Implementation-Contract_V1.0.md#153-正式独立合同审查与本次修订2026-10-12)。
 
