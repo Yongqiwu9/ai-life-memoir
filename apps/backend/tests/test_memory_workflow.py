@@ -312,6 +312,194 @@ def count(r, model):
     return r.db.scalar(select(func.count()).select_from(model))
 
 
+def _delta_snapshot(db):
+    """Core rows, including source bytes: no cached ORM assertion can mask writes."""
+    return {
+        table.name: [
+            dict(row) for row in db.execute(select(table).order_by(*table.primary_key)).mappings()
+        ]
+        for table in Base.metadata.sorted_tables
+    }
+
+
+@pytest.mark.parametrize("failure", ["timeout", "invalid_response"])
+def test_delta_b18_cancelled_before_late_provider_failure(records, monkeypatch, failure):
+    r = records
+    key = uuid.uuid4()
+    after_cancel = []
+    finish = Mock(wraps=extraction._finish_failure)
+    monkeypatch.setattr(extraction, "_finish_failure", finish)
+
+    class LateFailure:
+        provider_id = "mock"
+        calls = 0
+
+        def extract(self, request):
+            self.calls += 1
+            cancelled, status = extraction.cancel_batch(
+                r.db,
+                r.user.id,
+                request.request_id,
+                VersionCommand(expected_version=0),
+                uuid.uuid4(),
+            )
+            assert status == 200 and cancelled["state"] == "cancelled"
+            after_cancel.append(_delta_snapshot(r.db))
+            if failure == "timeout":
+                raise TimeoutError("synthetic late timeout")
+            return {"invalid": "synthetic invalid wire result"}
+
+    provider = LateFailure()
+    result, status = extraction.start(
+        r.db,
+        r.user.id,
+        r.session.id,
+        ExtractionCreate(source_message_id=r.source.id),
+        key,
+        policy=r.policy,
+        integrity=r.integrity,
+        client=provider,
+    )
+    assert result["state"] == "cancelled" and status == 200
+    finish.assert_called_once()
+    assert finish.call_args.args[-2:] == (
+        ("AI_PROVIDER_TIMEOUT", 503) if failure == "timeout" else ("AI_INVALID_RESPONSE", 502)
+    )
+    assert _delta_snapshot(r.db) == after_cancel[0]
+    replay, replay_status = extraction.start(
+        r.db,
+        r.user.id,
+        r.session.id,
+        ExtractionCreate(source_message_id=r.source.id),
+        key,
+        policy=r.policy,
+        integrity=r.integrity,
+        client=provider,
+    )
+    assert json.dumps(replay, sort_keys=True, default=str) == json.dumps(
+        result, sort_keys=True, default=str
+    )
+    assert replay_status == 200 and provider.calls == 1
+    assert _delta_snapshot(r.db) == after_cancel[0]
+    for model in (MemoryCandidate, ContentRevision, RevisionProposal, Memory):
+        assert count(r, model) == 0
+
+
+@pytest.mark.parametrize("code", [787, 1811])
+@pytest.mark.parametrize("phase", ["flush", "commit"])
+def test_delta_b54_sqlite_reference_classification(records, monkeypatch, code, phase):
+    _delta_sqlite_classification(records, monkeypatch, code, phase, referenced=True)
+
+
+@pytest.mark.parametrize("code", [787, 1811])
+def test_delta_b54_sqlite_fk_shape_without_references(records, monkeypatch, code):
+    _delta_sqlite_classification(records, monkeypatch, code, "flush", referenced=False)
+
+
+def _delta_sqlite_classification(r, monkeypatch, code, phase, *, referenced):
+    import sqlite3
+
+    if referenced:
+        manual(r)
+    before = _delta_snapshot(r.db)
+    diagnostic = sqlite3.IntegrityError("FOREIGN KEY constraint failed")
+    diagnostic.sqlite_errorcode = code
+    failure = IntegrityError("synthetic diagnostic, not actual engine SQL", {}, diagnostic)
+    order, probes = [], []
+    original_rollback = r.db.rollback
+
+    def rollback():
+        order.append("rollback")
+        return original_rollback()
+
+    def reauthorize():
+        order.append("reauthorize")
+        review.member_scope(r.db, r.user.id, r.member.id)
+
+    def has_references():
+        order.append("probe")
+        probes.append(True)
+        return len(probes) > 1 and workflow_crud.has_workflow_references(
+            r.db, scope_kind="interview", scope_id=r.interview.id
+        )
+
+    monkeypatch.setattr(r.db, "rollback", rollback)
+    deleting = Mock(side_effect=failure) if phase == "flush" else Mock(return_value=True)
+    if phase == "commit":
+        monkeypatch.setattr(r.db, "commit", Mock(side_effect=failure))
+    action = lambda: interview_service._delete_with_reference_guard(
+        r.db,
+        has_references=has_references,
+        delete=deleting,
+        constraint_names=set(),
+        reauthorize=reauthorize,
+    )
+    if referenced:
+        caught = error("RESOURCE_IN_USE", action)
+        assert caught.status_code == 409
+    else:
+        with pytest.raises(IntegrityError) as caught:
+            action()
+        assert caught.value is failure
+    assert order[:4] == ["probe", "rollback", "reauthorize", "probe"]
+    assert diagnostic.sqlite_errorcode == code and len(probes) == 2
+    assert _delta_snapshot(r.db) == before
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "missing_resource_id",
+        "missing_resource",
+        "unsupported_resource_kind",
+        "malformed_terminal_snapshot",
+    ],
+)
+def test_delta_b57_unverifiable_existing_command(records, monkeypatch, case):
+    r = records
+    key = uuid.uuid4()
+    resource = manual(r)
+    record = CommandIdempotencyRecord(
+        actor_user_id=r.user.id,
+        operation="memory.candidate.manual",
+        idempotency_key=key,
+        request_digest=b"d" * 32,
+        state="completed",
+        resource_kind="candidate",
+        resource_id=resource["candidate_id"],
+        response_status=201,
+        response_body={"unregistered": "synthetic malformed metadata"},
+    )
+    if case == "missing_resource_id":
+        record.resource_id = None
+    elif case == "missing_resource":
+        record.resource_id = uuid.uuid4()
+    elif case == "unsupported_resource_kind":
+        record.resource_kind = "unsupported_synthetic"
+    r.db.add(record)
+    r.db.commit()
+    before = _delta_snapshot(r.db)
+    with monkeypatch.context() as guarded:
+        blocked = Mock(
+            side_effect=AssertionError("readonly reconciliation cannot write/read source")
+        )
+        for method in ("commit", "flush"):
+            guarded.setattr(r.db, method, blocked)
+        for method in ("begin", "begin_memory"):
+            guarded.setattr(commands, method, blocked)
+        guarded.setattr(workflow_crud, "source_content", blocked)
+        guarded.setattr(extraction, "get_memory_client", blocked)
+        outcome = error(
+            "COMMAND_OUTCOME_UNKNOWN",
+            lambda: review.command_status(
+                r.db, r.user.id, r.member.id, "memory.candidate.manual", key
+            ),
+        )
+        assert outcome.status_code == 503
+        blocked.assert_not_called()
+    assert _delta_snapshot(r.db) == before
+
+
 def test_b01_fk_on_and_per_case_synthetic(records):
     assert records.db.scalar(text("PRAGMA foreign_keys")) == 1
     assert count(records, MemoryCandidate) == 0

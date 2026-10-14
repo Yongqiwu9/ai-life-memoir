@@ -62,6 +62,116 @@ def _with_key(headers: dict[str, str], key: uuid.UUID | None = None):
     return {**headers, "Idempotency-Key": str(key or uuid.uuid4())}
 
 
+def _delta_c2_record(db):
+    owner = User(email=f"delta-c2-{uuid.uuid4().hex}@example.com", password_hash="synthetic")
+    db.add(owner)
+    db.flush()
+    record = CommandIdempotencyRecord(
+        actor_user_id=owner.id,
+        operation="identity_verification.invitation_challenge",
+        idempotency_key=uuid.uuid4(),
+        request_digest=b"c" * 32,
+        state="failed_retryable",
+        resource_kind="challenge",
+        resource_id=uuid.uuid4(),
+        response_status=202,
+        response_body={"status": "accepted"},
+        completed_at=datetime.now(UTC),
+    )
+    db.add(record)
+    db.commit()
+    return record
+
+
+def _delta_c2_begin(db, record, *, digest=None):
+    return idempotency_service.begin(
+        db,
+        actor_user_id=record.actor_user_id,
+        operation=record.operation,
+        idempotency_key=record.idempotency_key,
+        digest=record.request_digest if digest is None else digest,
+    )
+
+
+def _delta_c2_snapshot(db):
+    table = CommandIdempotencyRecord.__table__
+    return [dict(row) for row in db.execute(select(table).order_by(table.c.id)).mappings()]
+
+
+def test_delta_b47_c2_failed_retryable_resets_same_record(db_session):
+    db = db_session
+    record = _delta_c2_record(db)
+    identity = (
+        record.id,
+        record.actor_user_id,
+        record.operation,
+        record.idempotency_key,
+        record.request_digest,
+    )
+    reset, replayed = _delta_c2_begin(db, record)
+    assert reset is record and replayed is False and record.state == "processing"
+    assert all(
+        getattr(record, field) is None
+        for field in (
+            "resource_kind",
+            "resource_id",
+            "response_status",
+            "response_body",
+            "completed_at",
+        )
+    )
+    assert identity == (
+        record.id,
+        record.actor_user_id,
+        record.operation,
+        record.idempotency_key,
+        record.request_digest,
+    )
+    idempotency_service.complete(
+        record,
+        resource_kind="challenge",
+        resource_id=uuid.uuid4(),
+        response_status=202,
+        snapshot=idempotency_service.ChallengeAcceptedSnapshot(),
+    )
+    db.commit()
+    before = _delta_c2_snapshot(db)
+    replay, replayed = _delta_c2_begin(db, record)
+    assert replay.id == identity[0] and replayed is True
+    assert replay.response_status == 202 and replay.response_body == {"status": "accepted"}
+    assert _delta_c2_snapshot(db) == before and len(before) == 1
+    assert replay.fingerprint_scheme is replay.fingerprint_key_id is None
+
+
+def test_delta_b47_c2_completed_replays_snapshot(db_session):
+    db = db_session
+    record = _delta_c2_record(db)
+    idempotency_service.complete(
+        record,
+        resource_kind="challenge",
+        resource_id=uuid.uuid4(),
+        response_status=202,
+        snapshot=idempotency_service.ChallengeAcceptedSnapshot(),
+    )
+    db.commit()
+    before = _delta_c2_snapshot(db)
+    replay, replayed = _delta_c2_begin(db, record)
+    assert replay is record and replayed is True
+    assert replay.response_body == {"status": "accepted"} and replay.response_status == 202
+    assert _delta_c2_snapshot(db) == before and len(before) == 1
+    assert replay.fingerprint_scheme is replay.fingerprint_key_id is None
+
+
+def test_delta_b47_c2_retryable_digest_conflict_preserves_record(db_session):
+    record = _delta_c2_record(db_session)
+    before = _delta_c2_snapshot(db_session)
+    with pytest.raises(AppException) as caught:
+        _delta_c2_begin(db_session, record, digest=b"x" * 32)
+    assert caught.value.code == "IDEMPOTENCY_CONFLICT" and caught.value.status_code == 409
+    assert record.state == "failed_retryable"
+    assert _delta_c2_snapshot(db_session) == before and len(before) == 1
+
+
 def _create_family(client, headers, name="Collaboration family"):
     response = client.post("/api/v1/families", json={"name": name}, headers=headers)
     assert response.status_code == 201

@@ -25,7 +25,12 @@ from app.models.interview import Interview
 from app.models.interview_message import InterviewMessage
 from app.models.interview_session import InterviewSession
 from app.models.memory import Memory
-from app.models.memory_workflow import ExtractionBatch, MemoryCandidate
+from app.models.memory_workflow import (
+    ContentRevision,
+    ExtractionBatch,
+    MemoryCandidate,
+    RevisionProposal,
+)
 from app.models.user import User
 from app.services import memory as memory_service
 from app.services import memory_extraction, memory_review
@@ -44,6 +49,125 @@ from app.services.memory_policy import (
 
 PRIVATE_TEXT = "__SYNTHETIC_PRIVATE_SOURCE__ 我记得在河边坐过。"
 PRIVATE_TITLE = "__SYNTHETIC_PRIVATE_TITLE__"
+
+
+def _delta_http_snapshot(db):
+    from app.database.base import Base
+
+    return {
+        table.name: [
+            dict(row) for row in db.execute(select(table).order_by(*table.primary_key)).mappings()
+        ]
+        for table in Base.metadata.sorted_tables
+    }
+
+
+@pytest.mark.parametrize("target", ["interview", "member", "family"])
+@pytest.mark.parametrize("state", ["pending", "completed", "failed", "discarded", "cancelled"])
+def test_delta_b49_old_delete_all_batch_states(client, db_session, http_graph, target, state):
+    graph = http_graph
+    assert db_session.connection().exec_driver_sql("PRAGMA foreign_keys").scalar_one() == 1
+    batch = ExtractionBatch(
+        requested_by_user_id=graph.owner.id,
+        session_id=graph.session.id,
+        family_member_id=graph.member.id,
+        family_scope_id=graph.family.id,
+        source_message_id=graph.message.id,
+        source_scope_id=graph.message.id,
+        contract_version="memory-extraction.v1",
+        policy_version="synthetic-delta",
+        permission_stamp={},
+        provider_id="mock",
+        request_fingerprint=b"b" * 32,
+        idempotency_key=uuid.uuid4(),
+        state=state,
+        version=0,
+        candidate_count=0 if state == "completed" else None,
+        failure_code="AI_PROVIDER_TIMEOUT" if state == "failed" else None,
+        discard_reason={"discarded": "synthetic_discard", "cancelled": "cancelled_by_owner"}.get(
+            state
+        ),
+        finished_at=None if state == "pending" else datetime.now(UTC),
+    )
+    db_session.add(batch)
+    db_session.commit()
+    before = _delta_http_snapshot(db_session)
+    path = {
+        "interview": f"/api/v1/interviews/{graph.interview.id}",
+        "member": f"/api/v1/families/{graph.family.id}/members/{graph.member.id}",
+        "family": f"/api/v1/families/{graph.family.id}",
+    }[target]
+    response = client.delete(path, headers=_headers(graph.owner))
+    _error(response, 409, "RESOURCE_IN_USE")
+    assert all(
+        value not in response.text for value in ("SQL", "Traceback", "fk_mxb", "candidate_count")
+    )
+    assert _delta_http_snapshot(db_session) == before
+    for model in (MemoryCandidate, ContentRevision, RevisionProposal, Memory):
+        assert db_session.scalar(select(func.count()).select_from(model)) == 0
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "missing_resource_id",
+        "missing_resource",
+        "unsupported_resource_kind",
+        "malformed_terminal_snapshot",
+    ],
+)
+def test_delta_b57_unverifiable_existing_command_http(
+    client,
+    db_session,
+    http_graph,
+    http_capabilities,
+    monkeypatch,
+    case,
+):
+    from unittest.mock import Mock
+
+    from app.crud import memory_workflow as workflow_crud
+    from app.services import command_idempotency as commands
+
+    graph = http_graph
+    created = _manual(client, graph)
+    key = uuid.uuid4()
+    record = CommandIdempotencyRecord(
+        actor_user_id=graph.owner.id,
+        operation="memory.candidate.manual",
+        idempotency_key=key,
+        request_digest=b"d" * 32,
+        state="completed",
+        resource_kind="candidate",
+        resource_id=uuid.UUID(created["candidate_id"]),
+        response_status=201,
+        response_body={"unregistered": "synthetic malformed metadata"},
+    )
+    if case == "missing_resource_id":
+        record.resource_id = None
+    elif case == "missing_resource":
+        record.resource_id = uuid.uuid4()
+    elif case == "unsupported_resource_kind":
+        record.resource_kind = "unsupported_synthetic"
+    db_session.add(record)
+    db_session.commit()
+    before = _delta_http_snapshot(db_session)
+    calls_before = len(http_capabilities.provider.requests)
+    blocked = Mock(side_effect=AssertionError("status query must not start/write/read source"))
+    with monkeypatch.context() as guarded:
+        for method in ("begin", "begin_memory"):
+            guarded.setattr(commands, method, blocked)
+        guarded.setattr(workflow_crud, "source_content", blocked)
+        guarded.setattr(db_session, "commit", blocked)
+        guarded.setattr(db_session, "flush", blocked)
+        response = client.get(
+            f"/api/v1/family-members/{graph.member.id}/memory-commands/memory.candidate.manual/{key}",
+            headers=_headers(graph.owner),
+        )
+        _error(response, 503, "COMMAND_OUTCOME_UNKNOWN")
+        blocked.assert_not_called()
+    assert len(http_capabilities.provider.requests) == calls_before == 0
+    assert _delta_http_snapshot(db_session) == before
 
 
 class RecordingMockMemoryClient(DeterministicMockMemoryClient):

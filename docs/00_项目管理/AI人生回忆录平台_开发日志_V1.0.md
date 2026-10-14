@@ -1,6 +1,16 @@
 # AI人生回忆录平台_开发日志_V1.0
 
-## 2026-10-14 — 9.6-B 补验完成与 SUP-IR-01 关闭（当前）
+## 2026-10-14 — 六项补验差集完成与独立复核（当前）
+
+- 基线c25c3f85ea9f3c379001653a5109c523faa20162已推送，exact-commit Backend CI38554717815双job成功，B35／竞争11通过；下方此前“未提交/未推送”保留历史时点，不覆盖本节。
+- 用户批准五文件44新增实例，新增合成34 passed（Service15/实际ASGI19）、完整工作区Fast920 passed/130 deselected/215.53s；含未提交C3，非远程数量。Ruff/format与43项CI mock自检通过，AI Service58仅沿用旧证据未重跑。
+- 真实PG16.15/160015仅新增B34十项：10 passed/35 deselected/7.71s/0skip，逐项实际SQLSTATE与有限约束集合匹配；fresh b196及前后current/check通过。run b11b1369-3894-4b25-90dc-a9135ad1e1d2，库/两角色/会话不存在、HBA恢复、历史OID/ACL和310源码哈希不变；锁进程exit0、线程0。首轮选择gate零测试启动失败清理后，仅修临时入口并全新分配通过，项目未因启动器整改而变化。
+- 「9.6-A Review」合同定向复审、五文件实现复审、PG及清理证据复核均PASS；B18/34/47/49/54/57按相应层级关闭，B54两码为模拟diagnostic，非真实引擎双码证明。
+- B38同旧Memory恢复正例后置C4；B48已有18场景＋静态约束证明收敛。新CI45／竞争11尚无对应远程执行；未封板，不自动关闭E-01或宣称全57项全层验证。真实Provider/C4/C6/生产边界和旧UNKNOWN保留。
+- 本次仅同步文档，五源码和migration/runtime/workflow未再修改，未运行测试/PG/Docker，未暂存/提交/推送；下一步「Git Commit Review」只读Pre-Commit Audit，混合文档按hunk排除C3/BM-01。
+- 结果及原始证据：[六项补验结果](../05_开发阶段记录/Part9.6-B_Six-Item-Validation-Delta_Report_2026-10-14.md)。
+
+## 2026-10-14 — 9.6-B 补验完成与 SUP-IR-01 关闭（此前历史快照）
 
 - 当前 Git 基线 `0099016455f21cd32bed3bbe1c3d24a313ab140d`；补验源码与本次文档同步尚未提交。本节更新此前“最新”记录，旧条目按各自执行时点保留。
 - 完整工作区 Fast **886 passed / 120 deselected / 179.28s**；包含新增 109 项离线用例（其中 HTTP/ASGI 23 项）。AI Service **58 passed / 0.56s**，未连接真实模型。工作区含既有未提交内容，不等于远程基线的测试数量。

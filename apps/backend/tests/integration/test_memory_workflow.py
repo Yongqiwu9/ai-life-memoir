@@ -24,7 +24,7 @@ from queue import Queue
 from types import SimpleNamespace
 
 import pytest
-from sqlalchemy import delete, event, func, inspect, select, text
+from sqlalchemy import delete, event, func, inspect, select, text, update
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -61,6 +61,165 @@ from app.services.memory_integrity import MemoryIntegrity, SyntheticKeyProvider
 from app.services.memory_policy import PURPOSES, DecisionStamp, SyntheticMemoryPolicy
 
 pytestmark = pytest.mark.integration
+
+
+DELTA_B34_CASES = {
+    "current_missing_revision": ("23514", {("memories", "ck_memories_current_pair")}),
+    "current_missing_proof": ("23514", {("memories", "ck_memories_current_pair")}),
+    "current_cross_memory": ("23503", {("memories", "fk_memories_current_proof")}),
+    "result_missing_memory": (
+        "23514",
+        {
+            ("revision_proposals", "ck_rp_result_pair"),
+            ("revision_proposals", "ck_rp_lifecycle"),
+        },
+    ),
+    "result_missing_revision": ("23514", {("revision_proposals", "ck_rp_result_pair")}),
+    "result_cross_memory": (
+        "23503",
+        {
+            ("revision_proposals", "fk_rp_result_memory"),
+            ("memories", "fk_memories_current_proof"),
+        },
+    ),
+    "section_missing_revision": ("23514", {("memoir_sections", "ck_memoir_sections_proof_pair")}),
+    "section_missing_proof": ("23514", {("memoir_sections", "ck_memoir_sections_proof_pair")}),
+    "section_cross_revision": (
+        "23503",
+        {
+            ("memoir_sections", "fk_memoir_sections_revision_memory"),
+            ("memoir_sections", "fk_memoir_sections_proof"),
+        },
+    ),
+    "section_cross_proof": ("23503", {("memoir_sections", "fk_memoir_sections_proof")}),
+}
+
+
+def _delta_pg_snapshot(db):
+    from app.database.base import Base
+
+    return {
+        table.name: [
+            dict(row) for row in db.execute(select(table).order_by(*table.primary_key)).mappings()
+        ]
+        for table in Base.metadata.sorted_tables
+    }
+
+
+@pytest.mark.parametrize("violation", list(DELTA_B34_CASES))
+def test_delta_b34_postgres_reference_constraints(db_session, violation):
+    """Real Core negative writes, with valid service-created proofs and savepoint rollback."""
+    db = db_session
+    graph = _graph(db)
+    db.commit()
+    policy, integrity = _capabilities(graph)
+    approvals = []
+    for _ in range(2):
+        created, _ = memory_review.manual_candidate(
+            db,
+            graph.owner.id,
+            graph.member.id,
+            ManualCandidateCreate(source_message_id=graph.message.id, payload=_payload()),
+            uuid.uuid4(),
+            policy=policy,
+            integrity=integrity,
+        )
+        memory_review.submit(
+            db,
+            graph.owner.id,
+            created["proposal_id"],
+            ProposalSubmit(expected_version=0, expected_target_version=0),
+            uuid.uuid4(),
+            policy=policy,
+            integrity=integrity,
+        )
+        approved, _ = memory_review.approve(
+            db,
+            graph.owner.id,
+            created["proposal_id"],
+            ProposalApprove(expected_version=1, expected_target_version=0),
+            uuid.uuid4(),
+            policy=policy,
+            integrity=integrity,
+        )
+        approvals.append(
+            {
+                "memory": uuid.UUID(str(approved["memory_id"])),
+                "revision": uuid.UUID(str(approved["memory_revision_id"])),
+                "proof": uuid.UUID(str(created["proposal_id"])),
+            }
+        )
+    first, second = approvals
+    section_id = None
+    if violation.startswith("section_"):
+        memoir, _ = memoir_service.create(
+            db,
+            graph.owner.id,
+            graph.member.id,
+            MemoirCreate(
+                title="Synthetic constraint fixture",
+                sections=[
+                    {
+                        "memory_id": first["memory"],
+                        "memory_revision_id": first["revision"],
+                        "approval_proposal_id": first["proof"],
+                    }
+                ],
+            ),
+            uuid.uuid4(),
+            policy=policy,
+            integrity=integrity,
+        )
+        section_id = uuid.UUID(str(memoir["section_ids"][0]))
+    statements = {
+        "current_missing_revision": update(Memory)
+        .where(Memory.id == first["memory"])
+        .values(current_revision_id=None),
+        "current_missing_proof": update(Memory)
+        .where(Memory.id == first["memory"])
+        .values(current_approval_proposal_id=None),
+        "current_cross_memory": update(Memory)
+        .where(Memory.id == first["memory"])
+        .values(
+            current_revision_id=second["revision"],
+            current_approval_proposal_id=second["proof"],
+        ),
+        "result_missing_memory": update(RevisionProposal)
+        .where(RevisionProposal.id == first["proof"])
+        .values(result_memory_id=None),
+        "result_missing_revision": update(RevisionProposal)
+        .where(RevisionProposal.id == first["proof"])
+        .values(result_memory_revision_id=None),
+        "result_cross_memory": update(RevisionProposal)
+        .where(RevisionProposal.id == first["proof"])
+        .values(result_memory_id=second["memory"]),
+        "section_missing_revision": update(MemoirSection)
+        .where(MemoirSection.id == section_id)
+        .values(memory_revision_id=None),
+        "section_missing_proof": update(MemoirSection)
+        .where(MemoirSection.id == section_id)
+        .values(approval_proposal_id=None),
+        "section_cross_revision": update(MemoirSection)
+        .where(MemoirSection.id == section_id)
+        .values(memory_revision_id=second["revision"]),
+        "section_cross_proof": update(MemoirSection)
+        .where(MemoirSection.id == section_id)
+        .values(approval_proposal_id=second["proof"]),
+    }
+    before = _delta_pg_snapshot(db)
+    with pytest.raises(IntegrityError) as caught, db.begin_nested():
+        db.execute(statements[violation].execution_options(synchronize_session=False))
+        db.flush()
+    expected_state, expected_pairs = DELTA_B34_CASES[violation]
+    diagnostic = caught.value.orig.diag
+    assert caught.value.orig.sqlstate == expected_state
+    assert (diagnostic.table_name, diagnostic.constraint_name) in expected_pairs
+    db.expire_all()
+    assert _delta_pg_snapshot(db) == before
+    assert (
+        db.scalar(select(InterviewMessage.content).where(InterviewMessage.id == graph.message.id))
+        == graph.message.content
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)

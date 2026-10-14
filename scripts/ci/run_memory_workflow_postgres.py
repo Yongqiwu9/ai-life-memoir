@@ -35,6 +35,21 @@ DOCKER = "/usr/bin/docker"
 EXPECTED = (
     "test_postgres_schema_constraints_match_workflow_metadata",
     *(
+        f"test_delta_b34_postgres_reference_constraints[{violation}]"
+        for violation in (
+            "current_missing_revision",
+            "current_missing_proof",
+            "current_cross_memory",
+            "result_missing_memory",
+            "result_missing_revision",
+            "result_cross_memory",
+            "section_missing_revision",
+            "section_missing_proof",
+            "section_cross_revision",
+            "section_cross_proof",
+        )
+    ),
+    *(
         f"test_postgres_zero_candidate_batch_restricts_parent_delete[{target}-{state}]"
         for target in ("interview", "member", "family")
         for state in ("pending", "completed", "failed", "discarded", "cancelled")
@@ -146,7 +161,7 @@ def sanitized_junit(raw: bytes) -> tuple[bytes, dict]:
     failures = sum(len(case.findall("failure")) + len(case.findall("error")) for case in cases)
     skipped = sum(len(case.findall("skipped")) for case in cases)
     require(
-        sum(int(suite.get("tests", "-1")) for suite in suites) == 35,
+        sum(int(suite.get("tests", "-1")) for suite in suites) == 45,
         "JUnitCountMismatch",
     )
     clean = ET.Element("testsuites")
@@ -154,7 +169,7 @@ def sanitized_junit(raw: bytes) -> tuple[bytes, dict]:
         clean,
         "testsuite",
         name="B PostgreSQL",
-        tests="35",
+        tests="45",
         failures=str(failures),
         errors="0",
         skipped=str(skipped),
@@ -169,7 +184,7 @@ def sanitized_junit(raw: bytes) -> tuple[bytes, dict]:
         for kind in ("failure", "error", "skipped"):
             if case.find(kind) is not None:
                 ET.SubElement(output, kind, message="Details omitted from public evidence")
-    summary = {"tests": 35, "failures": failures, "skipped": skipped, "concurrent": 11}
+    summary = {"tests": 45, "failures": failures, "skipped": skipped, "concurrent": 11}
     return ET.tostring(clean, encoding="utf-8", xml_declaration=True), summary
 
 
@@ -986,11 +1001,11 @@ class Manager:
 
 def self_check() -> int:
     """Pure contract checks, not real PostgreSQL/CI evidence."""
-    require(len(EXPECTED) == 35 and len(set(EXPECTED)) == 35, "ExpectedCaseCount")
+    require(len(EXPECTED) == 45 and len(set(EXPECTED)) == 45, "ExpectedCaseCount")
     require(len(CONCURRENT) == 11, "ConcurrencyCount")
     checks = 2
     root = ET.Element("testsuites")
-    suite = ET.SubElement(root, "testsuite", tests="35")
+    suite = ET.SubElement(root, "testsuite", tests="45")
     for name in EXPECTED:
         ET.SubElement(
             suite,
@@ -1001,7 +1016,7 @@ def self_check() -> int:
     original = ET.tostring(root)
     public, result = sanitized_junit(original)
     require(
-        result == {"tests": 35, "failures": 0, "skipped": 0, "concurrent": 11},
+        result == {"tests": 45, "failures": 0, "skipped": 0, "concurrent": 11},
         "SummaryMismatch",
     )
     require(b"testsuites" in public, "PublicEvidenceMissing")

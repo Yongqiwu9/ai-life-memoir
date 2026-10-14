@@ -4,9 +4,9 @@
 
 ## 当前阶段
 
-**9.6-B 最新补验状态（2026-10-14）**：工作区 Fast **886 passed**、独立 AI Service **58 passed**；真实 PostgreSQL **16.15：35 passed，11 项竞争测试全部通过，0 skipped**，迁移前后 current/check 与精确清理复验通过。五文件独立源码复审 PASS WITH FINDINGS；唯一新增 Low SUP-IR-01 经断言收紧、**3 项目标回归**与定向只读复审 CLOSED。886/58 为修复前完整验证快照，未在断言修复后重跑全量；当前补验尚未提交、推送或取得对应远程 CI，未封板。详细证据与限制见 [补充验收记录](docs/05_开发阶段记录/Part9.6-B_Supplemental-Validation_Report_2026-10-14.md)。
+**9.6-B 当前状态（2026-10-14）**：已提交基线 `c25c3f85ea9f3c379001653a5109c523faa20162` 的远程 Backend CI 双 job 成功（B PG35／竞争11）。其后获批六项差集新增44实例：Service15、实际ASGI19、PG10；合成34 passed、完整工作区Fast920 passed（含未提交C3测试）、新增PG16.15十项passed且清理核验通过。独立合同、实现及PG证据复核PASS。当前五文件增补与结果文档尚未提交，新完整PG45／竞争11 remote CI NOT RUN，未封板。详见[六项补验结果](docs/05_开发阶段记录/Part9.6-B_Six-Item-Validation-Delta_Report_2026-10-14.md)。
 
-已提交基线 `0099016455f21cd32bed3bbe1c3d24a313ab140d` 的 Backend CI 双 job 已成功，满足 B-PC-01 原接线关闭条件；该远程 run 是 PG 28／竞争 5，不代替当前工作区 35／11 的远程验收。E-01 仅补齐指定竞争证据差集，57 项完整对账与剩余回退分支限制保留。真实 Provider、C4/C6 及生产能力未因此完成，保持 **DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY**。
+已提交c25c3f8的[Backend CI 38554717815](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38554717815)已completed/success，Fast608、普通PG48、B35／竞争11及清理通过，B-PC-01原接线关闭事实保留；不代替当前新45／11验收。AI Service58沿用前次证据，本轮未重跑。真实Provider、C4/C6和生产边界不变，保持 **DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY**。
 
 ### B CI 接线历史（补验前快照）
 
@@ -24,9 +24,9 @@
 | 9.5.5 | Memory 前置基础设施/架构决策阶段；B、C1/C2A/C2B、C3.0 — Completed / Sealed；C — Design Frozen / Implementation In Progress；C3 实施 In Progress；C3.1 Implementation Audit = PASS WITH FINDINGS，已完成本地 PostgreSQL 16.15 与回归验证；Implementation Completed（dormant scope），commit / push / exact remote CI PASS；Final Documentation Seal Preparation in progress；C3.2 Next / NOT STARTED |
 | Memory + Memoir Slice 1 | 人工 Memory 与确定性 Memoir 草稿已实现；不含 AI 提取、不可变 Revision 或正式审批 |
 | 9.6-A | Provider Extension Implementation Completed / COMMITTED LOCALLY；HTTP / PostgreSQL NOT VERIFIED；Real Provider NOT IMPLEMENTED |
-| 9.6-B | 基础实施与双 job CI 已有提交证据；当前补验工作区 Fast 886、AI Service 58、PG16.15 35／竞争 11 通过，SUP-IR-01 CLOSED；补验未提交、未封板，57 项全覆盖未宣称完成 |
+| 9.6-B | 已提交c25c3f8双job CI成功；六项差集44新增实例在相应层级通过，Fast920、新增PG10、独立复核PASS；新45／11 remote CI待运行，未封板 |
 
-9.6-B 当前证据以 [补充验收记录](docs/05_开发阶段记录/Part9.6-B_Supplemental-Validation_Report_2026-10-14.md)为准；[早期独立复核](docs/05_开发阶段记录/Part9.6-B_Validation-Closure_Independent-Review_2026-10-14.md)保留历史原文。B32/B33/B52 指定 PG 竞争已补验；真实 Legacy 孤儿/版本化 Section 等未单独覆盖的回退分支仍保留 E-01 限制。下一步是当前候选差异的只读 Pre-Commit Audit，仍须分别批准暂存、提交、推送。下方早期草案、未授权、未执行及旧 CI 状态均按其历史时点理解，不覆盖本节当前状态，也不改变既有 C3/BM-01 记录。
+9.6-B 当前证据以[六项补验结果](docs/05_开发阶段记录/Part9.6-B_Six-Item-Validation-Delta_Report_2026-10-14.md)为准；原[补充验收记录](docs/05_开发阶段记录/Part9.6-B_Supplemental-Validation_Report_2026-10-14.md)及早期报告保留历史。B38同旧Memory恢复正例后置C4；B48采用已有18迁移场景＋约束证明，不新增非法fixture。六项差集关闭不等于57项全层或E-01整体关闭。下一步只读Pre-Commit Audit；暂存、提交、推送分别待批准，历史C3/BM-01内容保持。
 
 Part 9.5 完成不代表 Audio upload、Object Storage、STT Provider 或 AI pipeline 已完成。C2A 已实现邀请、Membership 与协作管理权限基础；C2B 已完成 Participant 身份关系、本人确认及最小本人权利入口，并在 PostgreSQL 16.15 上通过 remediation commit 对应的 Backend CI。既有 Family 内容、FamilyMember、Interview、Session、Audio、Transcript、Segment、Message API 仍为 Owner-only。9.6-B 已有离线 Candidate/Revision/审批 profile；完整生产 Consent、C3 来源链路、C5 Artifact 审批接线、删除与净化仍未实现。
 
