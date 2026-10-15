@@ -1,6 +1,17 @@
 # AI人生回忆录平台_开发日志_V1.0
 
-## 2026-10-14 — 六项补验差集完成与独立复核（当前）
+## 2026-10-15 — 9.6-B 实现CI闭环、E-01定向关闭意见归档与封板文档准备（当前）
+
+- 基线e164c521e2ac5ed5aba992a327ae8e34b94bf00f（test(memory): close six-item validation gaps）已普通推送；exact-commit Backend CI38617553685双job completed/success，HEAD与origin/master一致（推送核验时0/0）。
+- 真实远程Fast642／93 deselected、普通PG48／642 deselected；B专项PostgreSQL16.15完整45项、竞争11、0skip。JUnit节点、manifest源码hash与该commit一致，非旧35加本地10。fresh b196、前后current/check、受限Runner及Manager精确清理verified，进程exit0/EOF，私有载体已清除。
+- B01–B57正式归档：54行约定层执行、B38确认边界、B46静态inventory、B48旧执行＋约束证明。原审查人E-01定向复核PASS；B32/B33/B52竞争、57条对账、Legacy计数歧义及降级分支B范围证据缺口CLOSED；真实能力与历史状态限制拆分保留，旧初审原文不改写。
+- B38同旧Memory恢复正例后置C4；B46不证明实际删除传播；B48不禁FK造孤儿、不声称UNION每谓词独立命中。历史AI58和Legacy18未在最新Backend CI重跑；本地Fast920含未提交C3，仅对应其历史工作区。
+- 真实Provider、生产Consent/C4/C6、备份/第三方清除和生产回退/部署仍未完成；默认真实处理关闭，旧v3 UNKNOWN保留，不宣称Production Ready或BM-01 CLOSED。上一轮开发库检查结果不纳入本次E-01复核或封板证据。
+- 当前为Implementation Completed / Validation Passed（约定范围），Final Documentation Seal Preparation。封板文档未提交/推送，尚无文档提交对应CI；未正式封板，不开始下一阶段。
+- 本轮Documentation Only：归档对账Markdown/JSON与E-01独立回传原文，同步README/路线图/日志；不改代码、测试、workflow、migration或数据库，不重跑验证，不暂存/提交/推送。既有C3/BM-01、AGENTS、16项历史删除、ad、ignored .env.test保持。
+- 后续门禁：交「Git Commit Review」只读文档审计；通过后再分别批准暂存/提交/推送，并待文档exact-commit CI通过后确认正式封板。详见[57项对账](../05_开发阶段记录/Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)与[E-01独立意见](../05_开发阶段记录/Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)。
+
+## 2026-10-14 — 六项补验差集完成与独立复核（提交前历史）
 
 - 基线c25c3f85ea9f3c379001653a5109c523faa20162已推送，exact-commit Backend CI38554717815双job成功，B35／竞争11通过；下方此前“未提交/未推送”保留历史时点，不覆盖本节。
 - 用户批准五文件44新增实例，新增合成34 passed（Service15/实际ASGI19）、完整工作区Fast920 passed/130 deselected/215.53s；含未提交C3，非远程数量。Ruff/format与43项CI mock自检通过，AI Service58仅沿用旧证据未重跑。

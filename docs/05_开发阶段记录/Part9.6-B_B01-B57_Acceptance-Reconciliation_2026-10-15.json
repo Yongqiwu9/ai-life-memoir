@@ -1,0 +1,3107 @@
+{
+  "date": "2026-10-15",
+  "HEAD": "e164c521e2ac5ed5aba992a327ae8e34b94bf00f",
+  "rows": [
+    {
+      "id": "B01",
+      "scene": "全部新旧接口跨Owner、随机/不存在ID",
+      "requirement": "等价404；不提前读正文，不回显存在性",
+      "line": 688,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "owned",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 91
+        },
+        {
+          "alias": "WF",
+          "symbol": "owned_record",
+          "path": "apps/backend/app/crud/memory_workflow.py",
+          "line": 89
+        },
+        {
+          "alias": "RV",
+          "symbol": "member_scope",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 84
+        }
+      ],
+      "tests": [
+        {
+          "alias": "H",
+          "symbol": "test_http_other_owner_and_missing_ids_are_equivalent",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 434,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_supp_b01_b02_all_missing_route_principal_combinations",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 753,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_supp_b53_delete_wrong_actor_and_url_rejects_before_probe",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 999,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "已覆盖B相关新接口及旧Memory/Memoir/删除入口；不是全monorepo任意接口声明。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B02",
+      "scene": "Collaborator / rights_only / invalid JWT",
+      "requirement": "无B内容/审批权；关系/本人身份不能代替Owner权限",
+      "line": 689,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "AU",
+          "symbol": "get_current_user",
+          "path": "apps/backend/app/dependencies/auth.py",
+          "line": 20
+        },
+        {
+          "alias": "RV",
+          "symbol": "member_scope",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 84
+        }
+      ],
+      "tests": [
+        {
+          "alias": "H",
+          "symbol": "test_http_collaborator_does_not_gain_review_or_content_access",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 473,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_rights_token_is_not_account_content_token",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 508,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_supp_b01_b02_all_missing_route_principal_combinations",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 753,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "关系身份不等于内容权限；使用合成账号/JWT。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B03",
+      "scene": "单源scope：跨Session/FamilyMember/Family",
+      "requirement": "拒绝；同Owner的错subject也拒绝",
+      "line": 690,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "source",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 108
+        },
+        {
+          "alias": "EX",
+          "symbol": "_prepare",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 70
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_supp_b03_extraction_wrong_subject_before_body",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1950,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_manual_candidate_retains_source_subject_owner_isolation",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 309,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "同Owner错Session/member/family及跨Owner在正文前拒绝。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B04",
+      "scene": "role/source类别",
+      "requirement": "user/text AI允许；assistant/system/audio_transcript AI提取拒绝；人工来源沿既有校验",
+      "line": 691,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "source",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 108
+        },
+        {
+          "alias": "EX",
+          "symbol": "_prepare",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 70
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_supp_b04_ai_source_categories_rejected_before_body",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1978,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_non_original_manual_source_rejected",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 326,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_supp_b26_transcript_manual_revision_preserves_upstream_dependency",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 659,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "AI仅user/text；人工转录只是合成来源，不启用STT。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B05",
+      "scene": "未知历史Speaker/Consent",
+      "requirement": "Owner只能meta，正文/生成/批准fail closed",
+      "line": 692,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "PL",
+          "symbol": "MemoryPolicy.require",
+          "path": "apps/backend/app/services/memory_policy.py",
+          "line": 109
+        },
+        {
+          "alias": "RV",
+          "symbol": "revision_gate",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 134
+        },
+        {
+          "alias": "MM",
+          "symbol": "legacy_snapshot",
+          "path": "apps/backend/app/services/memory.py",
+          "line": 75
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_legacy_unknown_consent_is_restricted_even_for_owner",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 297,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_default_capabilities_fail_closed_without_provider",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 321,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "未知权限通过默认关闭/合成receipt表达；未实现真实Speaker/Consent核验。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B06",
+      "scene": "默认Policy/Integrity unavailable",
+      "requirement": "503无正文、无Provider、无业务内容落库",
+      "line": 693,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "IN",
+          "symbol": "MemoryIntegrity.require_available",
+          "path": "apps/backend/app/services/memory_integrity.py",
+          "line": 98
+        },
+        {
+          "alias": "EX",
+          "symbol": "_prepare",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 70
+        },
+        {
+          "alias": "PL",
+          "symbol": "MemoryPolicy.require",
+          "path": "apps/backend/app/services/memory_policy.py",
+          "line": 109
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b06_default_capabilities_before_source_body",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1231,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_default_capabilities_fail_closed_without_provider",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 321,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "默认不可用先于正文、Provider与Batch创建。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B07",
+      "scene": "保存文字 / Session结束",
+      "requirement": "不自动提取；结束Session仍可显式整理",
+      "line": 694,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "EX",
+          "symbol": "start",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 235
+        },
+        {
+          "alias": "MSG",
+          "symbol": "create_message",
+          "path": "apps/backend/app/services/interview_message.py",
+          "line": 24
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b07_b09_extraction_from_completed_session_no_auto_memory",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 508,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_supp_b07_saving_text_and_ending_session_never_extracts",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 869,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_extraction_explicit_completed_session_and_replay",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 397,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "保存/结束不自动提取；完成Session仍可显式整理。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B08",
+      "scene": "Provider上下文",
+      "requirement": "一条指定Message；无凭据/其他Session/Memory/家庭资料",
+      "line": 695,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "SC",
+          "symbol": "MemoryExtractionRequest",
+          "path": "apps/backend/app/schemas/memory_workflow.py",
+          "line": 50
+        },
+        {
+          "alias": "EX",
+          "symbol": "_prepare",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 70
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b20_provider_has_no_transaction_and_only_frozen_source",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 683,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_extraction_explicit_completed_session_and_replay",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 397,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "A",
+          "symbol": "test_request_rejects_private_extra_and_limits",
+          "path": "services/ai-service/tests/test_memory_extraction.py",
+          "line": 219,
+          "execution_binding": "历史AI58＋当前源码哈希一致"
+        }
+      ],
+      "evidence": [
+        "R",
+        "A"
+      ],
+      "boundary_or_gap": "冻结DTO仅指定一条原文及标识；无Memory/家庭上下文或凭据。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B09",
+      "scene": "正常0/1/20 Candidate",
+      "requirement": "0completed；全体首Revision＋draft Proposal；从不自动Memory",
+      "line": 696,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "EX",
+          "symbol": "_finalize",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 160
+        },
+        {
+          "alias": "RV",
+          "symbol": "new_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 244
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b09_all_output_cardinalities",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 521,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b07_b09_extraction_from_completed_session_no_auto_memory",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 508,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "A",
+          "symbol": "test_dynamic_offline_provider_cardinality",
+          "path": "services/ai-service/tests/test_memory_extraction.py",
+          "line": 127,
+          "execution_binding": "历史AI58＋当前源码哈希一致"
+        }
+      ],
+      "evidence": [
+        "R",
+        "A"
+      ],
+      "boundary_or_gap": "Backend覆盖0/2/20及正常1，AI覆盖0/1/20；不自动创建Memory。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B10",
+      "scene": "Provider字段/echo/type/数量/超长",
+      "requirement": "extra forbid；错误整批失败，无部分候选",
+      "line": 697,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "SC",
+          "symbol": "RevisionPayload",
+          "path": "apps/backend/app/schemas/memory_workflow.py",
+          "line": 29
+        },
+        {
+          "alias": "SC",
+          "symbol": "MemoryExtractionResult",
+          "path": "apps/backend/app/schemas/memory_workflow.py",
+          "line": 58
+        },
+        {
+          "alias": "EX",
+          "symbol": "start",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 235
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b10_strict_payload_rejects",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 551,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b10_echo_and_output_extras_are_invalid",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 558,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b10_source_size_no_truncate",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 579,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "A",
+          "symbol": "test_result_strict",
+          "path": "services/ai-service/tests/test_memory_extraction.py",
+          "line": 242,
+          "execution_binding": "历史AI58＋当前源码哈希一致"
+        },
+        {
+          "alias": "A",
+          "symbol": "test_echo_binding_mismatch",
+          "path": "services/ai-service/tests/test_memory_extraction.py",
+          "line": 225,
+          "execution_binding": "历史AI58＋当前源码哈希一致"
+        }
+      ],
+      "evidence": [
+        "R",
+        "A"
+      ],
+      "boundary_or_gap": "DTO负例加整批失败路径；只使用离线替身。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B11",
+      "scene": "原文及空格Unicode",
+      "requirement": "Source不改；Revision原字符串保存，不strip/Unicode归一化",
+      "line": 698,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "SC",
+          "symbol": "RevisionPayload",
+          "path": "apps/backend/app/schemas/memory_workflow.py",
+          "line": 29
+        },
+        {
+          "alias": "IN",
+          "symbol": "canonical_bytes",
+          "path": "apps/backend/app/services/memory_integrity.py",
+          "line": 43
+        },
+        {
+          "alias": "RV",
+          "symbol": "new_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 244
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b11_content_spaces_unicode_exact",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 587,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "A",
+          "symbol": "test_payload_exact_limits_and_preservation",
+          "path": "services/ai-service/tests/test_memory_extraction.py",
+          "line": 189,
+          "execution_binding": "历史AI58＋当前源码哈希一致"
+        },
+        {
+          "alias": "A",
+          "symbol": "test_mock_preserves_source_without_fact_invention",
+          "path": "services/ai-service/tests/test_memory_extraction.py",
+          "line": 117,
+          "execution_binding": "历史AI58＋当前源码哈希一致"
+        }
+      ],
+      "evidence": [
+        "R",
+        "A"
+      ],
+      "boundary_or_gap": "Source不改、空格/组合字符原样；不证明真实模型语义忠实性。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B12",
+      "scene": "同key完成/终态/pending重放",
+      "requirement": "同结果metadata；只一次本批Provider；pending202，不orphan重发",
+      "line": 699,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "EX",
+          "symbol": "_prepare",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 70
+        },
+        {
+          "alias": "CM",
+          "symbol": "replay_memory",
+          "path": "apps/backend/app/services/command_idempotency.py",
+          "line": 640
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b12_terminal_and_new_batch_replay",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 602,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b_ir01_replay_does_not_resolve_or_inspect_provider",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1665,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b12_terminal_replay_never_calls_provider",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1993,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_extraction_explicit_completed_session_and_replay",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 397,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "completed200/pending202及failed503/discarded409/cancelled200有精确断言；本次远程已覆盖SUP-IR-01修复后源码。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B13",
+      "scene": "重跑新key",
+      "requirement": "新Batch/Candidate；不匹配覆盖旧内容/人工稿",
+      "line": 700,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "EX",
+          "symbol": "_prepare",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 70
+        },
+        {
+          "alias": "EX",
+          "symbol": "_finalize",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 160
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b12_terminal_and_new_batch_replay",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 602,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b13_rerun_preserves_manual_revision_and_approved_memory",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2047,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "新批次/新Candidate；原人工Revision与批准Memory不被覆盖。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B14",
+      "scene": "同key不同source/payload/版本",
+      "requirement": "409，无正文回显/Provider/新资源",
+      "line": 701,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "CM",
+          "symbol": "begin_memory",
+          "path": "apps/backend/app/services/command_idempotency.py",
+          "line": 533
+        },
+        {
+          "alias": "RV",
+          "symbol": "_command",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 231
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b14_sensitive_replay_and_changed_payload_conflict",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 625,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b14_changed_source_and_revision_version_conflict",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2080,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "同key更改payload/source/version被拒，无新增业务内容。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B15",
+      "scene": "敏感HMAC、domain与canonical",
+      "requirement": "request/body绑定齐全；无裸hash；区分NULL/空串/list顺序；多位文本不truncate",
+      "line": 702,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "IN",
+          "symbol": "canonical_bytes",
+          "path": "apps/backend/app/services/memory_integrity.py",
+          "line": 43
+        },
+        {
+          "alias": "IN",
+          "symbol": "MemoryIntegrity.content_digest",
+          "path": "apps/backend/app/services/memory_integrity.py",
+          "line": 137
+        },
+        {
+          "alias": "IN",
+          "symbol": "MemoryIntegrity.fingerprint",
+          "path": "apps/backend/app/services/memory_integrity.py",
+          "line": 102
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b15_canonical_preserves_null_lists_text_and_no_float",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 636,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b15_content_binding_tampering_rejected",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2136,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b15_command_envelope_domains_and_binding",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2182,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "覆盖正文/来源/主体/用途及命令envelope变更、域隔离和canonical规则。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B16",
+      "scene": "key轮换与旧key缺失",
+      "requirement": "用旧record key；不可用503，不重写记录或用新key伪409",
+      "line": 703,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "CM",
+          "symbol": "begin_memory",
+          "path": "apps/backend/app/services/command_idempotency.py",
+          "line": 533
+        },
+        {
+          "alias": "IN",
+          "symbol": "MemoryIntegrity.fingerprint",
+          "path": "apps/backend/app/services/memory_integrity.py",
+          "line": 102
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b16_rotation_historical_key_and_missing_key",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 644,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "旧record使用旧key，缺失503且不产生新Candidate。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B17",
+      "scene": "幂等snapshot/日志/错误",
+      "requirement": "metadata allowlist；无正文/title/digest/token/异常SQL参数",
+      "line": 704,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "CM",
+          "symbol": "complete_memory",
+          "path": "apps/backend/app/services/command_idempotency.py",
+          "line": 622
+        },
+        {
+          "alias": "RV",
+          "symbol": "candidate_metadata",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 190
+        },
+        {
+          "alias": "MH",
+          "symbol": "memory_exception_response",
+          "path": "apps/backend/app/core/memory_http.py",
+          "line": 90
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b17_snapshots_no_sensitive_body",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 657,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b17_unknown_serializer_only_typed_context_no_http",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1111,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b17_b57_typed_metadata_results_preserve_replay_shape",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1463,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_validation_does_not_echo_private_input",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 576,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "metadata allowlist及日志/异常泄露负例；不包含真实Provider日志路径。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B18",
+      "scene": "Stub TimeoutError 分类/非法Provider/落库失败",
+      "requirement": "Stub主动抛TimeoutError才验503；无五秒deadline/中断证明；受控503/502，无部分候选，失败status条件更新",
+      "line": 705,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "EX",
+          "symbol": "start",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 235
+        },
+        {
+          "alias": "EX",
+          "symbol": "_finish_failure",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 149
+        },
+        {
+          "alias": "EX",
+          "symbol": "_terminal",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 49
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b18_timeout_is_reported_classification_only",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 668,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b10_echo_and_output_extras_are_invalid",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 558,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b18_partial_extraction_failure_has_no_orphan_revision",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1171,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_delta_b18_cancelled_before_late_provider_failure",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 326,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "新增2实例实经cancel提交后迟到TimeoutError/非法wire；wrap真实_finish_failure精确核验503/502分类，最终取消metadata/200不变，重放不再次调用。加既有部分落库rollback证据，在合成范围覆盖。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B19",
+      "scene": "final失败或commit不确定",
+      "requirement": "不伪称确定rollback，不重调；权威状态查询",
+      "line": 706,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "commit",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 66
+        },
+        {
+          "alias": "RV",
+          "symbol": "_command_status",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 775
+        },
+        {
+          "alias": "EX",
+          "symbol": "start",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 235
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b19_uncertain_commit_uses_read_only_reconciliation",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1053,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b19_rollback_failure_keeps_unknown_context_without_database",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1093,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "提交前/实际本地提交后抛错均模拟，保持unknown且只读对账；不声称真实PG断网/丢确认。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B20",
+      "scene": "call阶段无事务/锁",
+      "requirement": "合成call探针与静态路径证明释放；PG层单独验证",
+      "line": 707,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "EX",
+          "symbol": "_prepare",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 70
+        },
+        {
+          "alias": "EX",
+          "symbol": "start",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 235
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b20_provider_has_no_transaction_and_only_frozen_source",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 683,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_provider_call_releases_parent_locks",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 479,
+          "execution_binding": "逐节点PG JUnit成功"
+        }
+      ],
+      "evidence": [
+        "R",
+        "P"
+      ],
+      "boundary_or_gap": "真实独立PID、父链/Batch/Command NOWAIT探针通过。",
+      "pg_nodes": [
+        "test_postgres_provider_call_releases_parent_locks"
+      ]
+    },
+    {
+      "id": "B21",
+      "scene": "Owner取消及迟到结果",
+      "requirement": "cancel可在permit/HMAC/AI关闭时执行；迟到不发布",
+      "line": 708,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "EX",
+          "symbol": "cancel_batch",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 324
+        },
+        {
+          "alias": "EX",
+          "symbol": "_finalize",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 160
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b21_cancel_in_call_without_policy_or_key_late_result",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 703,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b12_terminal_replay_never_calls_provider",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1993,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "cancel不依赖Provider/许可/HMAC读取；迟到成功结果不发布。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B22",
+      "scene": "相关source/purpose epoch在锁外变化",
+      "requirement": "discarded/受限；无Candidate/正式Memory越权发布",
+      "line": 709,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "EX",
+          "symbol": "_finalize",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 160
+        },
+        {
+          "alias": "RV",
+          "symbol": "revision_gate",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 134
+        },
+        {
+          "alias": "PL",
+          "symbol": "SyntheticMemoryPolicy.require",
+          "path": "apps/backend/app/services/memory_policy.py",
+          "line": 131
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b22_changed_context_discarded",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 726,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b_ir02_lock_time_invalidation_no_snapshot",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1831,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "原文/用途generation变更及锁内proof/body/epoch变化拒绝；全部为合成许可。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B23",
+      "scene": "不相关原始音频分享撤回",
+      "requirement": "文本分支按真实依赖判定，不全Family粗粒度失效",
+      "line": 710,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "PL",
+          "symbol": "derive_required_purposes",
+          "path": "apps/backend/app/services/memory_policy.py",
+          "line": 14
+        },
+        {
+          "alias": "RV",
+          "symbol": "revision_gate",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 134
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_supp_b23_unrelated_audio_source_event_keeps_text_branch",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 687,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_supp_b23_unused_audio_purpose_epoch_keeps_raw_text",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 708,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "验证来源/用途分支不粗粒度失效；不是原始音频播放分享授权真实流程。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B24",
+      "scene": "人工首建 / 新草稿",
+      "requirement": "不可变Revision＋draft Proposal，无自动批准",
+      "line": 711,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "manual_candidate",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 313
+        },
+        {
+          "alias": "RV",
+          "symbol": "new_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 244
+        },
+        {
+          "alias": "DB",
+          "symbol": "_protect_revision",
+          "path": "apps/backend/app/models/memory_workflow.py",
+          "line": 496
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b24_b30_no_auto_approval_then_exact_promotion",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 753,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_legacy_first_revision_does_not_rewrite_legacy_bytes",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 555,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "新草稿产生新Revision/draft Proposal，显式审批前无新生效Memory。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B25",
+      "scene": "AI Candidate人工修订",
+      "requirement": "继承AI用途及真实source；不能洗成raw_manual",
+      "line": 712,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "_create_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 376
+        },
+        {
+          "alias": "PL",
+          "symbol": "derive_required_purposes",
+          "path": "apps/backend/app/services/memory_policy.py",
+          "line": 14
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b25_ai_dependency_survives_manual_revision",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 765,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "人工编辑继续ai_derived并保留ai_analysis依赖。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B26",
+      "scene": "transcription人工来源",
+      "requirement": "继承上游purpose/Source；不等于启用STT或AI转写提取",
+      "line": 713,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "source",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 108
+        },
+        {
+          "alias": "RV",
+          "symbol": "_create_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 376
+        },
+        {
+          "alias": "PL",
+          "symbol": "derive_required_purposes",
+          "path": "apps/backend/app/services/memory_policy.py",
+          "line": 14
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_supp_b26_transcript_manual_revision_preserves_upstream_dependency",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 659,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "合成Audio/Transcript/Segment→Message，人工修订继承recording/transcription，不代表STT完成。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B27",
+      "scene": "状态全部非法边/expectedversion",
+      "requirement": "409，不修改终态/正文；purged不重开",
+      "line": 714,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "submit",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 516
+        },
+        {
+          "alias": "RV",
+          "symbol": "approve",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 551
+        },
+        {
+          "alias": "RV",
+          "symbol": "_stop_proposal",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 657
+        },
+        {
+          "alias": "DB",
+          "symbol": "_protect_batch",
+          "path": "apps/backend/app/models/memory_workflow.py",
+          "line": 445
+        },
+        {
+          "alias": "DB",
+          "symbol": "_protect_proposal",
+          "path": "apps/backend/app/models/memory_workflow.py",
+          "line": 531
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b27_draft_cannot_approve_or_reject",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 790,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b27_all_remaining_illegal_proposal_edges",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2274,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b56_existing_target_version_mismatch_is_atomic",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2453,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b27_batch_terminal_cannot_reopen_when_expired",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1278,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b27_proposal_purge_can_clear_digest_but_cannot_replace_it",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1290,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "Proposal非法边/版本与terminal ORM保护有实际断言；不延伸为原生SQL不可变trigger。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B28",
+      "scene": "提交后/拒绝后修订",
+      "requirement": "新Revision新Proposal；旧payload/digest/base不改",
+      "line": 715,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "_create_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 376
+        },
+        {
+          "alias": "RV",
+          "symbol": "new_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 244
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b28_submitted_text_is_not_overwritten",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 813,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b28_rejected_revision_has_new_proposal",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2340,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "提交后、拒绝后新Revision/Proposal；旧正文与拒绝状态/digest保留。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B29",
+      "scene": "Owner自提案批准",
+      "requirement": "必须显式submit＋approve；同Owner也不autoapprove",
+      "line": 716,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "submit",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 516
+        },
+        {
+          "alias": "RV",
+          "symbol": "approve",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 551
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b24_b30_no_auto_approval_then_exact_promotion",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 753,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b27_draft_cannot_approve_or_reject",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 790,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_manual_submit_approve_and_exact_memoir",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 351,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "同Owner必须分开submit/approve，无自动批准。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B30",
+      "scene": "Candidate精确晋升",
+      "requirement": "新MemoryRevision字段/digest/来源/用途一致，origin明确",
+      "line": 717,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "approve",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 551
+        },
+        {
+          "alias": "DB",
+          "symbol": "ContentRevision",
+          "path": "apps/backend/app/models/memory_workflow.py",
+          "line": 184
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b24_b30_no_auto_approval_then_exact_promotion",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 753,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_manual_approval_traceability_and_no_body_on_memory_row",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 344,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_service_promotion_builds_exact_current_proof",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 976,
+          "execution_binding": "逐节点PG JUnit成功"
+        }
+      ],
+      "evidence": [
+        "R",
+        "P"
+      ],
+      "boundary_or_gap": "新MemoryRevision与来源/origin、payload/digest及current/proof一致。",
+      "pg_nodes": [
+        "test_postgres_service_promotion_builds_exact_current_proof"
+      ]
+    },
+    {
+      "id": "B31",
+      "scene": "一Candidate两Proposal竞争",
+      "requirement": "一Memory；另一stale；unique originCandidate safety net",
+      "line": 718,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "_locked_target",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 481
+        },
+        {
+          "alias": "RV",
+          "symbol": "approve",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 551
+        },
+        {
+          "alias": "DB",
+          "symbol": "_protect_candidate",
+          "path": "apps/backend/app/models/memory_workflow.py",
+          "line": 473
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b31_candidate_single_promotion_stales_other",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 832,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b31_candidate_promoted_pointer_write_once_when_expired",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1261,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_two_candidate_approvals_real_runner_connections",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 1045,
+          "execution_binding": "逐节点PG JUnit成功"
+        }
+      ],
+      "evidence": [
+        "R",
+        "P"
+      ],
+      "boundary_or_gap": "一胜一stale、只有一个Memory；数据库唯一origin safety net还见迁移结构。",
+      "pg_nodes": [
+        "test_postgres_two_candidate_approvals_real_runner_connections"
+      ]
+    },
+    {
+      "id": "B32",
+      "scene": "已有Memory编辑竞争",
+      "requirement": "只有一个批准推进current；版本/指针/proof/result原子一致",
+      "line": 719,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "approve",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 551
+        },
+        {
+          "alias": "RV",
+          "symbol": "owned_memory",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 101
+        }
+      ],
+      "tests": [
+        {
+          "alias": "P",
+          "symbol": "test_postgres_two_memory_approvals_real_runner_connections",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 607,
+          "execution_binding": "逐节点PG JUnit成功"
+        }
+      ],
+      "evidence": [
+        "P"
+      ],
+      "boundary_or_gap": "真实锁阻塞、两个PID；只有一个推进current/version/proof，另一stale。",
+      "pg_nodes": [
+        "test_postgres_two_memory_approvals_real_runner_connections"
+      ]
+    },
+    {
+      "id": "B33",
+      "scene": "ordinal并发",
+      "requirement": "唯一、同归属；revision_counter与生效version分开",
+      "line": 720,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "new_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 244
+        },
+        {
+          "alias": "RV",
+          "symbol": "_create_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 376
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b33_revision_sequence_separate_effective_version",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 876,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_revision_ordinals_real_runner_connections",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 559,
+          "execution_binding": "逐节点PG JUnit成功"
+        }
+      ],
+      "evidence": [
+        "R",
+        "P"
+      ],
+      "boundary_or_gap": "candidate与memory两参数真实竞争；ordinal[1,2,3]和counter/effective version分开。",
+      "pg_nodes": [
+        "test_postgres_revision_ordinals_real_runner_connections[candidate]",
+        "test_postgres_revision_ordinals_real_runner_connections[memory]"
+      ]
+    },
+    {
+      "id": "B34",
+      "scene": "DB XOR/复合FK/NULL/CHECK",
+      "requirement": "input/result/current/section对应同一Memory/Revision；不借NULL跳过两支",
+      "line": 721,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "DB",
+          "symbol": "ContentRevision",
+          "path": "apps/backend/app/models/memory_workflow.py",
+          "line": 184
+        },
+        {
+          "alias": "DB",
+          "symbol": "RevisionProposal",
+          "path": "apps/backend/app/models/memory_workflow.py",
+          "line": 283
+        },
+        {
+          "alias": "MG",
+          "symbol": "_create_workflow_tables",
+          "path": "apps/backend/alembic/versions/b196f0d47a21_memory_candidate_revision_review.py",
+          "line": 249
+        },
+        {
+          "alias": "MG",
+          "symbol": "upgrade",
+          "path": "apps/backend/alembic/versions/b196f0d47a21_memory_candidate_revision_review.py",
+          "line": 130
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b34_real_sqlite_checks_and_composite_fks",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1415,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_schema_constraints_match_workflow_metadata",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 824,
+          "execution_binding": "逐节点PG JUnit成功"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_revision_target_xor_check",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 906,
+          "execution_binding": "逐节点PG JUnit成功"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_revision_subject_fk_rejects_cross_member",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 930,
+          "execution_binding": "逐节点PG JUnit成功"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_proposal_input_must_belong_to_target",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 942,
+          "execution_binding": "逐节点PG JUnit成功"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_section_has_exact_same_memory_proof",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 1027,
+          "execution_binding": "逐节点PG JUnit成功"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_delta_b34_postgres_reference_constraints",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 110,
+          "execution_binding": "逐节点PG JUnit成功"
+        }
+      ],
+      "evidence": [
+        "R",
+        "P"
+      ],
+      "boundary_or_gap": "原SQLite9类负写、PG XOR/subject/input负写及结构反射保留；新增PG10实际负写覆盖current/result/Section跨Memory与NULL对，均在本次远程45项JUnit中成功。允许的(table,constraint)集合已冻结；本地逐码诊断另存，不能据此捏造CI实际选择了集合中哪个约束。",
+      "pg_nodes": [
+        "test_postgres_schema_constraints_match_workflow_metadata",
+        "test_postgres_revision_target_xor_check[none]",
+        "test_postgres_revision_target_xor_check[both]",
+        "test_postgres_revision_subject_fk_rejects_cross_member",
+        "test_postgres_proposal_input_must_belong_to_target",
+        "test_postgres_section_has_exact_same_memory_proof",
+        "test_delta_b34_postgres_reference_constraints[current_missing_revision]",
+        "test_delta_b34_postgres_reference_constraints[current_missing_proof]",
+        "test_delta_b34_postgres_reference_constraints[current_cross_memory]",
+        "test_delta_b34_postgres_reference_constraints[result_missing_memory]",
+        "test_delta_b34_postgres_reference_constraints[result_missing_revision]",
+        "test_delta_b34_postgres_reference_constraints[result_cross_memory]",
+        "test_delta_b34_postgres_reference_constraints[section_missing_revision]",
+        "test_delta_b34_postgres_reference_constraints[section_missing_proof]",
+        "test_delta_b34_postgres_reference_constraints[section_cross_revision]",
+        "test_delta_b34_postgres_reference_constraints[section_cross_proof]"
+      ]
+    },
+    {
+      "id": "B35",
+      "scene": "批准事务异常",
+      "requirement": "无approved孤儿/半Memory/current未推进；Source不改",
+      "line": 722,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "approve",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 551
+        },
+        {
+          "alias": "RV",
+          "symbol": "_atomic",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 44
+        },
+        {
+          "alias": "RV",
+          "symbol": "commit",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 66
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b35_approval_flush_failure_rolls_back_all_promotion",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1135,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b35_approval_commit_fault_is_unknown_and_atomic",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2365,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "flush异常与commit边界注入分别验证无半Memory/孤儿指针；commit不确定仍unknown。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B36",
+      "scene": "withdrawal/reject控制",
+      "requirement": "许可/HMAC不可用仍可stop；Owner不能由此否决Speaker删除",
+      "line": 723,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "_stop_proposal",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 657
+        },
+        {
+          "alias": "EX",
+          "symbol": "cancel_batch",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 324
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b36_controls_work_without_integrity_or_policy",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 897,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b36_withdraw_without_capabilities",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2321,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b21_cancel_in_call_without_policy_or_key_late_result",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 703,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "本条仅B提案/任务stop控制已证；Speaker删除执行权属C6，不由Owner审批否决，也未宣称该真实流程完成。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B37",
+      "scene": "源撤回后approved/current读取",
+      "requirement": "privacy限制生效；审批状态不变成永久访问票据",
+      "line": 724,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "approved_content",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 742
+        },
+        {
+          "alias": "RV",
+          "symbol": "revision_gate",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 134
+        },
+        {
+          "alias": "MO",
+          "symbol": "_section_gate",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 167
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_withdrawn_source_blocks_current_and_historical_memoir_body",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 509,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "当前Memory与旧Memoir均限制，Proposal仍approved；使用合成withdrawal receipt。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B38",
+      "scene": "re-consent alone",
+      "requirement": "不恢复历史读/旧proof；明确恢复与新Revision新审批分别检查",
+      "line": 725,
+      "status": "按确认边界执行",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "_create_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 376
+        },
+        {
+          "alias": "RV",
+          "symbol": "revision_gate",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 134
+        },
+        {
+          "alias": "PL",
+          "symbol": "SyntheticMemoryPolicy.require",
+          "path": "apps/backend/app/services/memory_policy.py",
+          "line": 131
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_reconsent_generation_does_not_restore_old_approval",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 525,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_supp_b38_explicit_restore_needs_new_revision_and_approval",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 748,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "按用户确认的B边界：re-consent不恢复旧proof/历史读；明确恢复许可、新草稿、新Revision与新审批分别核验。正例使用另一Legacy Memory，不宣称同一旧Memory恢复；同一旧Memory克隆/真实恢复正例后置C4，不列B补验缺口。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B39",
+      "scene": "已删除/正文purged",
+      "requirement": "无任意恢复/幂等重建/章节副本绕过",
+      "line": 726,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "revision_gate",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 134
+        },
+        {
+          "alias": "CM",
+          "symbol": "replay_memory",
+          "path": "apps/backend/app/services/command_idempotency.py",
+          "line": 640
+        },
+        {
+          "alias": "MO",
+          "symbol": "_section_gate",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 167
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_deleted_body_cannot_leak_via_preserved_section_snapshot",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 538,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_supp_b39_purged_revision_replay_does_not_recreate_body",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 826,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "purged正文无读取/重建，保留章节副本也不可绕过；是合成逻辑门禁，不是物理删除证明。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B40",
+      "scene": "Legacy migration fixture",
+      "requirement": "原IDs/字节保留，version0/currentNULL，无伪作者/Consent/approved",
+      "line": 727,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "MG",
+          "symbol": "upgrade",
+          "path": "apps/backend/alembic/versions/b196f0d47a21_memory_candidate_revision_review.py",
+          "line": 130
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_legacy_first_revision_does_not_rewrite_legacy_bytes",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 555,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "L",
+        "R"
+      ],
+      "boundary_or_gap": "历史Legacy专项真实旧schema种9表数据，比较ID/FK/时间/UTF8正文，新增工作流与身份表为空，无伪造授权；不是本次CI重跑的Legacy fixture。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B41",
+      "scene": "Legacy旧GET/list与首修",
+      "requirement": "no implicit body fallback；显式受控legacy-snapshot；首修base=NULL，不改旧字节",
+      "line": 728,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "MM",
+          "symbol": "get",
+          "path": "apps/backend/app/services/memory.py",
+          "line": 33
+        },
+        {
+          "alias": "MM",
+          "symbol": "list_for_member",
+          "path": "apps/backend/app/services/memory.py",
+          "line": 69
+        },
+        {
+          "alias": "MM",
+          "symbol": "legacy_snapshot",
+          "path": "apps/backend/app/services/memory.py",
+          "line": 75
+        },
+        {
+          "alias": "RV",
+          "symbol": "_create_revision",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 376
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_legacy_get_and_list_never_fallback_to_body",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 274,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_explicit_legacy_snapshot_preserves_whitespace",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 286,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_legacy_unknown_consent_is_restricted_even_for_owner",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 297,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_legacy_first_revision_does_not_rewrite_legacy_bytes",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 555,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "显式Legacy入口受控；首修parent/base NULL，不改原字节。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B42",
+      "scene": "旧POST/PATCH直写",
+      "requirement": "Owner核验后409；拒绝旧直接覆盖",
+      "line": 729,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "MM",
+          "symbol": "create",
+          "path": "apps/backend/app/services/memory.py",
+          "line": 55
+        },
+        {
+          "alias": "MM",
+          "symbol": "update",
+          "path": "apps/backend/app/services/memory.py",
+          "line": 62
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_old_create_is_explicitly_disabled_without_new_headers",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 222,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_old_patch_disabled_preserves_legacy_bytes",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 238,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_legacy_post_patch_do_not_require_new_headers",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 528,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "真实HTTP确认旧POST/PATCH不新增幂等/版本头要求，仍Owner后409。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B43",
+      "scene": "Memoir精确refs / no memory_ids fallback",
+      "requirement": "精确proof，任意不合格全rollback，无latest隐式选择",
+      "line": 730,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "MO",
+          "symbol": "create",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 46
+        },
+        {
+          "alias": "MO",
+          "symbol": "_approved_gate",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 145
+        },
+        {
+          "alias": "MO",
+          "symbol": "_section_gate",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 167
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_memoir_rejects_unreviewed_or_mismatched_proof_atomically",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 461,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_memoir_legacy_memory_ids_and_duplicate_reference_rejected",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 469,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b_ir02_duplicate_memory_and_repeated_proof_refs_fail_closed",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1806,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_exact_memoir_rejects_legacy_memory_ids_payload",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 649,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "精确refs、任一不符无parent/section部分发布，无latest fallback。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B44",
+      "scene": "Memoir快照历史与purpose epoch",
+      "requirement": "Memory编辑不改旧稿；相关Consentgeneration变化阻止旧proof读取",
+      "line": 731,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "MO",
+          "symbol": "create",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 46
+        },
+        {
+          "alias": "MO",
+          "symbol": "_approved_gate",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 145
+        },
+        {
+          "alias": "MO",
+          "symbol": "_section_content",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 198
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_new_memory_approval_does_not_mutate_memoir_snapshot",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 379,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_supp_b44_related_purpose_epoch_blocks_old_transcript_memoir",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 720,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_memoir_vs_synthetic_clear_two_commit_orders",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 1141,
+          "execution_binding": "逐节点PG JUnit成功"
+        }
+      ],
+      "evidence": [
+        "R",
+        "P"
+      ],
+      "boundary_or_gap": "旧快照不被新Memory修改；相关purpose变更受限；PG proof/body两方向串行化已证。",
+      "pg_nodes": [
+        "test_postgres_memoir_vs_synthetic_clear_two_commit_orders[proof-create]",
+        "test_postgres_memoir_vs_synthetic_clear_two_commit_orders[proof-clear]",
+        "test_postgres_memoir_vs_synthetic_clear_two_commit_orders[body-create]",
+        "test_postgres_memoir_vs_synthetic_clear_two_commit_orders[body-clear]"
+      ]
+    },
+    {
+      "id": "B45",
+      "scene": "Legacy章节及Section跨parent",
+      "requirement": "Legacy不补proof；同Section必须属于URL parent；unknown fail closed",
+      "line": 732,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "MO",
+          "symbol": "_section_gate",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 167
+        },
+        {
+          "alias": "MO",
+          "symbol": "section_content",
+          "path": "apps/backend/app/services/memoir.py",
+          "line": 227
+        },
+        {
+          "alias": "MM",
+          "symbol": "legacy_snapshot",
+          "path": "apps/backend/app/services/memory.py",
+          "line": 75
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_legacy_memoir_snapshot_never_fabricates_revision_proof",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 582,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_section_wrong_url_parent_is_404",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 449,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_legacy_unknown_consent_is_restricted_even_for_owner",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 297,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "Legacy无补造proof，Section必须属于URL parent；unknown receipt fail closed。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B46",
+      "scene": "Message.content复制传播inventory",
+      "requirement": "Segment/Message/Candidate全Revision/晋升Memory/Section/Legacy列皆列入；不用SET NULL当完成",
+      "line": 733,
+      "status": "静态inventory满足",
+      "implementation": [
+        {
+          "alias": "MSG",
+          "symbol": "create_transcript_message",
+          "path": "apps/backend/app/services/interview_message.py",
+          "line": 54
+        },
+        {
+          "alias": "DB",
+          "symbol": "ContentRevision",
+          "path": "apps/backend/app/models/memory_workflow.py",
+          "line": 184
+        },
+        {
+          "alias": "MS",
+          "symbol": "MemoirSection",
+          "path": "apps/backend/app/models/memoir.py",
+          "line": 45
+        }
+      ],
+      "tests": [
+        {
+          "alias": "M",
+          "symbol": "test_manual_approval_traceability_and_no_body_on_memory_row",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 344,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_deleted_body_cannot_leak_via_preserved_section_snapshot",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 538,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "S",
+        "R"
+      ],
+      "boundary_or_gap": "合同§10.1/10.2完整列出Segment/Message/全Revision/Memory/Section/Legacy等副本；按本条inventory要求静态满足，未验证或实现C6传播。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B47",
+      "scene": "C2幂等兼容",
+      "requirement": "原非敏感snapshot/retry路径不变，B-only rules不回归C2",
+      "line": 734,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "CM",
+          "symbol": "begin",
+          "path": "apps/backend/app/services/command_idempotency.py",
+          "line": 328
+        },
+        {
+          "alias": "CM",
+          "symbol": "_resolve_existing",
+          "path": "apps/backend/app/services/command_idempotency.py",
+          "line": 371
+        },
+        {
+          "alias": "CM",
+          "symbol": "complete",
+          "path": "apps/backend/app/services/command_idempotency.py",
+          "line": 395
+        },
+        {
+          "alias": "CM",
+          "symbol": "begin_memory",
+          "path": "apps/backend/app/services/command_idempotency.py",
+          "line": 533
+        }
+      ],
+      "tests": [
+        {
+          "alias": "C",
+          "symbol": "test_owner_invites_verified_account_and_accept_is_idempotent",
+          "path": "apps/backend/tests/test_collaboration.py",
+          "line": 246,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "C",
+          "symbol": "test_idempotency_result_snapshots_are_operation_specific_and_default_deny",
+          "path": "apps/backend/tests/test_collaboration.py",
+          "line": 681,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "CP",
+          "symbol": "test_postgres_partial_uniques_and_idempotency_digest",
+          "path": "apps/backend/tests/integration/test_collaboration.py",
+          "line": 318,
+          "execution_binding": "最新普通PG48成功套件＋模块执行记录"
+        },
+        {
+          "alias": "C",
+          "symbol": "test_delta_b47_c2_failed_retryable_resets_same_record",
+          "path": "apps/backend/tests/test_collaboration.py",
+          "line": 101,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "C",
+          "symbol": "test_delta_b47_c2_completed_replays_snapshot",
+          "path": "apps/backend/tests/test_collaboration.py",
+          "line": 146,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "C",
+          "symbol": "test_delta_b47_c2_retryable_digest_conflict_preserves_record",
+          "path": "apps/backend/tests/test_collaboration.py",
+          "line": 165,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R",
+        "C"
+      ],
+      "boundary_or_gap": "新增3个C2直接回归：failed_retryable同记录清空五字段再typed complete/replay；completed快照原样重放；digest冲突409且记录不变。最新Fast实际执行；不把C2 retry规则用于B。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B48",
+      "scene": "migration parent/head/downgradeguard",
+      "requirement": "唯一head；有B业务数据必拒downgrade；不用旧body覆盖回退",
+      "line": 735,
+      "status": "执行＋约束证明收敛",
+      "implementation": [
+        {
+          "alias": "MG",
+          "symbol": "upgrade",
+          "path": "apps/backend/alembic/versions/b196f0d47a21_memory_candidate_revision_review.py",
+          "line": 130
+        },
+        {
+          "alias": "MG",
+          "symbol": "downgrade",
+          "path": "apps/backend/alembic/versions/b196f0d47a21_memory_candidate_revision_review.py",
+          "line": 179
+        }
+      ],
+      "tests": [
+        {
+          "alias": "P",
+          "symbol": "test_postgres_schema_constraints_match_workflow_metadata",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 824,
+          "execution_binding": "逐节点PG JUnit成功"
+        }
+      ],
+      "evidence": [
+        "P",
+        "L",
+        "S"
+      ],
+      "boundary_or_gap": "用户确认以已执行18个历史迁移场景＋静态约束证明收敛。合法Memory指针、新版Section必依赖B表行，被B表非空guard涵盖；正常非空FK下孤儿不可达，绕过/损坏时保留防御检查。不造非法fixture，也不称UNION LIMIT1每个谓词独立命中。当前CI另证fresh/head/current/check。",
+      "pg_nodes": [
+        "test_postgres_schema_constraints_match_workflow_metadata"
+      ]
+    },
+    {
+      "id": "B49",
+      "scene": "零Candidate Batch引用旧DELETE",
+      "requirement": "completed count=0及pending/failed/discarded/cancelled；三入口拒绝409；所有源/Batch/父行完整保留",
+      "line": 736,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "WF",
+          "symbol": "has_workflow_references",
+          "path": "apps/backend/app/crud/memory_workflow.py",
+          "line": 182
+        },
+        {
+          "alias": "DL",
+          "symbol": "_delete_with_reference_guard",
+          "path": "apps/backend/app/services/interview.py",
+          "line": 128
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b49_b50_old_delete_protects_all_material",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 917,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_zero_candidate_batch_restricts_parent_delete",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 859,
+          "execution_binding": "逐节点PG JUnit成功"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_delta_b49_old_delete_all_batch_states",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 67,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R",
+        "P"
+      ],
+      "boundary_or_gap": "新增实际HTTP 3入口×5Batch状态=15实例，completed count0；无需新头，均安全409且全表快照/父链/来源/Batch保留。结合PG原15个直接DELETE负例，分清HTTP409与数据库23503层。",
+      "pg_nodes": [
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[interview-pending]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[interview-completed]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[interview-failed]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[interview-discarded]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[interview-cancelled]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[member-pending]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[member-completed]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[member-failed]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[member-discarded]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[member-cancelled]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[family-pending]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[family-completed]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[family-failed]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[family-discarded]",
+        "test_postgres_zero_candidate_batch_restricts_parent_delete[family-cancelled]"
+      ]
+    },
+    {
+      "id": "B50",
+      "scene": "未晋升Candidate / 各态Revision/Proposal",
+      "requirement": "三scope事实检查不依赖Memory或approved状态；无正文加载、无AI/HMAC要求",
+      "line": 737,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "WF",
+          "symbol": "has_workflow_references",
+          "path": "apps/backend/app/crud/memory_workflow.py",
+          "line": 182
+        },
+        {
+          "alias": "DL",
+          "symbol": "_delete_with_reference_guard",
+          "path": "apps/backend/app/services/interview.py",
+          "line": 128
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b49_b50_old_delete_protects_all_material",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 917,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b50_revision_and_proposal_states_protect_sources",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2431,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "三个scope对draft/submitted/approved/rejected/withdrawn/stale/purged均保护；CRUD为metadata/EXISTS路径，无业务HMAC/Provider调用。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B51",
+      "scene": "无B引用旧删除与三个CRUD事务边界",
+      "requirement": "Core DELETE依既有FK、不先置NULL；CRUD仅flush、Service commit；正常204/原Memory保护，既有不相关FK行为不误标PASS",
+      "line": 738,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "DC",
+          "symbol": "delete_interview",
+          "path": "apps/backend/app/crud/interview.py",
+          "line": 66
+        },
+        {
+          "alias": "FC",
+          "symbol": "delete_family",
+          "path": "apps/backend/app/crud/family.py",
+          "line": 51
+        },
+        {
+          "alias": "FMC",
+          "symbol": "delete_family_member",
+          "path": "apps/backend/app/crud/family_member.py",
+          "line": 68
+        },
+        {
+          "alias": "DL",
+          "symbol": "_delete_with_reference_guard",
+          "path": "apps/backend/app/services/interview.py",
+          "line": 128
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b51_old_delete_without_refs_uses_db_cascade",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 950,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "M",
+          "symbol": "test_legacy_parent_deletion_preserves_memory_and_source",
+          "path": "apps/backend/tests/test_memory_memoir.py",
+          "line": 614,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "TF",
+          "symbol": "test_delete_own_family",
+          "path": "apps/backend/tests/test_family.py",
+          "line": 104,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "TFM",
+          "symbol": "test_delete_own_member",
+          "path": "apps/backend/tests/test_family_member.py",
+          "line": 140,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "TI",
+          "symbol": "test_delete_own_interview",
+          "path": "apps/backend/tests/test_interview.py",
+          "line": 136,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "Core DELETE+flush、Service commit静态可核；实际HTTP204与有Memory时保留资料均有回归。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B52",
+      "scene": "预检后并发新增B引用",
+      "requirement": "flush和commit失败均显式rollback、返回受控409及parent/source/workflow数据保留；SQLite模拟与PG真实竞争分开",
+      "line": 739,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "DL",
+          "symbol": "_delete_with_reference_guard",
+          "path": "apps/backend/app/services/interview.py",
+          "line": 128
+        },
+        {
+          "alias": "WF",
+          "symbol": "has_workflow_references",
+          "path": "apps/backend/app/crud/memory_workflow.py",
+          "line": 182
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b52_stale_precheck_real_sqlite_fk_preserves_source",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1312,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_supp_b52_protected_failure_classification_at_both_boundaries",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2393,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_parent_delete_vs_new_reference_real_runner_connections",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 666,
+          "execution_binding": "逐节点PG JUnit成功"
+        }
+      ],
+      "evidence": [
+        "R",
+        "P"
+      ],
+      "boundary_or_gap": "三scope真实PG预检后插引用竞态，23503→409且资料保留；flush/commit classifier分开模拟。不要求制造延期FK伪造commit失败。",
+      "pg_nodes": [
+        "test_postgres_parent_delete_vs_new_reference_real_runner_connections[interview]",
+        "test_postgres_parent_delete_vs_new_reference_real_runner_connections[member]",
+        "test_postgres_parent_delete_vs_new_reference_real_runner_connections[family]"
+      ]
+    },
+    {
+      "id": "B53",
+      "scene": "旧DELETE跨Owner/错URL family/缺失目标",
+      "requirement": "等价404且在引用probe前拒绝；不暴露引用/表/计数；无额外幂等/版本必填",
+      "line": 740,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "member_scope",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 84
+        },
+        {
+          "alias": "DL",
+          "symbol": "_require_delete_owner",
+          "path": "apps/backend/app/services/interview.py",
+          "line": 112
+        },
+        {
+          "alias": "DL",
+          "symbol": "_delete_with_reference_guard",
+          "path": "apps/backend/app/services/interview.py",
+          "line": 128
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b53_current_owner_predicate_prevents_delete_after_precheck",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1203,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_supp_b53_delete_wrong_actor_and_url_rejects_before_probe",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 999,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "实际DELETE owner/缺失ID/错family URL先于引用probe拒绝，不新增请求头要求。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B54",
+      "scene": "DELETE分类器正负例",
+      "requirement": "精确PG23503+table/constraint；表名含多下划线；未知FK/23502/23505/其他IntegrityError不409；SQLite FK/RESTRICT-trigger双code+精确FK形态+回滚后scope引用，无关trigger为负例；实际ASGI DEBUG=true/false无SQL/参数/traceback",
+      "line": 741,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "DL",
+          "symbol": "_delete_with_reference_guard",
+          "path": "apps/backend/app/services/interview.py",
+          "line": 128
+        },
+        {
+          "alias": "MH",
+          "symbol": "memory_exception_response",
+          "path": "apps/backend/app/core/memory_http.py",
+          "line": 90
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b54_pg_classification_is_simulated_only",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 981,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b54_unknown_fk_and_sqlite_trigger_are_not_reference_conflicts",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1350,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b52_stale_precheck_real_sqlite_fk_preserves_source",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1312,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_supp_b54_delete_debug_actual_asgi_path",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 917,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "P",
+          "symbol": "test_postgres_parent_delete_vs_new_reference_real_runner_connections",
+          "path": "apps/backend/tests/integration/test_memory_workflow.py",
+          "line": 666,
+          "execution_binding": "逐节点PG JUnit成功"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_delta_b54_sqlite_reference_classification",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 390,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_delta_b54_sqlite_fk_shape_without_references",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 395,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R",
+        "P"
+      ],
+      "boundary_or_gap": "新增787/1811两码×flush/commit四正例与两无引用负例，实际guard入口、rollback→reauthorize→真实引用顺序核验；这些diagnostic是构造模拟，不宣称真实SQLite引擎分别产生两码。原真实SQLite FK、PG pair与DEBUG双模式ASGI证据保留。",
+      "pg_nodes": [
+        "test_postgres_parent_delete_vs_new_reference_real_runner_connections[interview]",
+        "test_postgres_parent_delete_vs_new_reference_real_runner_connections[member]",
+        "test_postgres_parent_delete_vs_new_reference_real_runner_connections[family]"
+      ]
+    },
+    {
+      "id": "B55",
+      "scene": "Provider timeout验收证据",
+      "requirement": "仅Stub主动TimeoutError→503分类；无watchdog/deadline/中断/五秒上界claim；不使用真实sleep五秒来伪造强保证",
+      "line": 742,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "EX",
+          "symbol": "start",
+          "path": "apps/backend/app/services/memory_extraction.py",
+          "line": 235
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b18_timeout_is_reported_classification_only",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 668,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "A",
+          "symbol": "test_only_stub_timeouterror_no_deadline_claim",
+          "path": "services/ai-service/tests/test_memory_extraction.py",
+          "line": 277,
+          "execution_binding": "历史AI58＋当前源码哈希一致"
+        }
+      ],
+      "evidence": [
+        "R",
+        "A"
+      ],
+      "boundary_or_gap": "仅主动TimeoutError分类；没有5秒上界、watchdog、中断或真实Provider deadline保证。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B56",
+      "scene": "expected_version与禁用写入口",
+      "requirement": "三类新建无版本合法；已有目标按表要求；旧POST/PATCH无新增头/版本仍409，malformed/跨Owner保留安全422/404",
+      "line": 743,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "SC",
+          "symbol": "VersionCommand",
+          "path": "apps/backend/app/schemas/memory_workflow.py",
+          "line": 76
+        },
+        {
+          "alias": "SC",
+          "symbol": "RevisionCreate",
+          "path": "apps/backend/app/schemas/memory_workflow.py",
+          "line": 85
+        },
+        {
+          "alias": "MM",
+          "symbol": "create",
+          "path": "apps/backend/app/services/memory.py",
+          "line": 55
+        },
+        {
+          "alias": "MM",
+          "symbol": "update",
+          "path": "apps/backend/app/services/memory.py",
+          "line": 62
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_supp_b56_existing_target_version_mismatch_is_atomic",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 2453,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_supp_b56_malformed_versions_have_safe_http_errors",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 1037,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_manual_submit_approve_and_exact_memoir",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 351,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_legacy_post_patch_do_not_require_new_headers",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 528,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_supp_b01_b02_all_missing_route_principal_combinations",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 753,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "new命令无expected_version合法；已有目标精确CAS；旧禁用入口不要求新头，malformed安全422、跨Owner404。",
+      "pg_nodes": []
+    },
+    {
+      "id": "B57",
+      "scene": "同key提交不确定只读查询",
+      "requirement": "pending202/原终态200/缺记录或不可确认503unknown；scope匹配；无begin/get-or-create/commit/正文读或Provider重调",
+      "line": 744,
+      "status": "已执行覆盖（限约定层级）",
+      "implementation": [
+        {
+          "alias": "RV",
+          "symbol": "_command_status",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 775
+        },
+        {
+          "alias": "RV",
+          "symbol": "command_status",
+          "path": "apps/backend/app/services/memory_review.py",
+          "line": 821
+        },
+        {
+          "alias": "WF",
+          "symbol": "find_command",
+          "path": "apps/backend/app/crud/memory_workflow.py",
+          "line": 165
+        }
+      ],
+      "tests": [
+        {
+          "alias": "F",
+          "symbol": "test_b57_unknown_reconciliation_is_read_only",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1009,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b57_terminal_reconciliation_does_not_need_key",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1019,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b57_processing_lookup_has_no_body_or_autoflush",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1369,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_b19_uncertain_commit_uses_read_only_reconciliation",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 1053,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_http_reconciliation_unknown_does_not_enumerate_other_actor",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 618,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "F",
+          "symbol": "test_delta_b57_unverifiable_existing_command",
+          "path": "apps/backend/tests/test_memory_workflow.py",
+          "line": 458,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        },
+        {
+          "alias": "H",
+          "symbol": "test_delta_b57_unverifiable_existing_command_http",
+          "path": "apps/backend/tests/test_memory_workflow_api.py",
+          "line": 119,
+          "execution_binding": "最新Fast642成功套件＋模块记录＋未被integration过滤的源码映射；无逐node JUnit"
+        }
+      ],
+      "evidence": [
+        "R"
+      ],
+      "boundary_or_gap": "新增4Service＋4实际HTTP：命令存在但resource_id缺失/资源缺失/kind未知/终态snapshot非法，均503unknown；禁止command begin/flush/commit/正文与Provider，前后完整Core快照不变。有效资源错URL member仍404；只读autobegin与Session清理不是写入。",
+      "pg_nodes": []
+    }
+  ],
+  "counts": {
+    "已执行覆盖（限约定层级）": 54,
+    "按确认边界执行": 1,
+    "静态inventory满足": 1,
+    "执行＋约束证明收敛": 1
+  },
+  "latest_ci": 38617553685,
+  "latest_fast": 642,
+  "latest_ordinary_pg": 48,
+  "latest_b_pg": 45,
+  "concurrent": 11,
+  "AISourceHashesUnchanged": true,
+  "LegacyExecutedScenarios": [
+    "empty_downgrade",
+    "legacy_upgrade_exact_ids_fk_timestamps_utf8_body_and_no_fabricated_authority",
+    "pure_legacy_downgrade_exact_preservation",
+    "refuse_batch_graph_without_data_or_schema_loss",
+    "refuse_candidate_graph_without_data_or_schema_loss",
+    "refuse_revision_graph_without_data_or_schema_loss",
+    "refuse_proposal_graph_without_data_or_schema_loss",
+    "refuse_memory_version",
+    "refuse_memory_counter",
+    "refuse_versioned_memory",
+    "refuse_versioned_memoir",
+    "refuse_null_legacy_title",
+    "refuse_null_legacy_body",
+    "refuse_command_operation_memory.synthetic",
+    "refuse_command_operation_memoir.synthetic",
+    "refuse_command_fingerprint_scheme_memory-command.v1",
+    "refuse_command_fingerprint_key_id_synthetic-key",
+    "final_current_check"
+  ],
+  "SourceSHA256": {
+    "apps/backend/tests/test_memory_workflow.py": "7c07c8e12ef0692aabd88c50ae6f5088e540d47810e58b5f69705936909191ae",
+    "apps/backend/tests/test_memory_memoir.py": "3756f65055b65370719c66b9cdd7523cf5fd1eaa82cef0b12ef1bdf00f7b6e5b",
+    "apps/backend/tests/test_memory_workflow_api.py": "a4d7d174397201cc74e719d297db2acfd8c4f68db7df5d833e7fb599890070e1",
+    "apps/backend/tests/integration/test_memory_workflow.py": "9990452585d0fa8b770fa0d50dd1f11d87bf822f6df7835c91d32cbf79e00957",
+    "services/ai-service/tests/test_memory_extraction.py": "a4fd081e9ca6ccc9e833b811af3dbb437820e767f27e7018425da5b87ca5ad2e",
+    "apps/backend/tests/test_collaboration.py": "bf23f8247b812fdf44215f503cac80bd2d03cb2c2810f8613aae4b90ee2348b8",
+    "apps/backend/tests/integration/test_collaboration.py": "5cd257c3cca09b1b80dcf1b8df533281345f2172b4bc471182e01c388f25f18f",
+    "apps/backend/tests/test_family.py": "3c863ce2e8de1ccf82e412631648d73686931c20db9973c2afbb57e47f88606f",
+    "apps/backend/tests/test_family_member.py": "8a33cfa7ed8e04c7a09aae28c05b96ec8c54ae8ec10d43657e320e951e94703b",
+    "apps/backend/tests/test_interview.py": "b9a222131790945a84fb00c6dcc82f1647d13bf1d61b8b0c7b94ca0fa209e301",
+    "apps/backend/app/services/memory_extraction.py": "d3bdd0d8122298c47d6e53cdd091d77262fcdbc8f07c851086e3549ad9ce6308",
+    "apps/backend/app/services/memory_review.py": "a30f09e9a5373344e79da933fa4d0e33093ca2c5afdd42608389ac9557c88074",
+    "apps/backend/app/crud/memory_workflow.py": "23d55e7a5cfbb5e7ace9bc10263606659d2e86a41baa46885cdbe6acce1dd457",
+    "apps/backend/app/services/memory_policy.py": "dcc6e757669364c4729db8b0c31cf103a000895f5a60efeb03b117b20682d073",
+    "apps/backend/app/services/memory_integrity.py": "58db2503585db2cee4f2651a60eee360abe72148f96e190d12c4772fb194a5fe",
+    "apps/backend/app/services/command_idempotency.py": "0dc1f051ed57063d56eb2dad356fc97f696476613b2eba1559a4c0b6f48fc9bc",
+    "apps/backend/app/services/memory.py": "78571f1e61e65d0df7d8da421ac97bbd2c8ae8d0bb8f22b420b00b3b5cfbe26b",
+    "apps/backend/app/services/memoir.py": "1e8de17ad4ee879ff1fc176e2ae4d0cdcc6ef439a77c85faa161c695fa1c21f9",
+    "apps/backend/app/models/memory_workflow.py": "e221a41e6959c22223b9af68a324256eeac426bc5d577a04ec382670a23c6583",
+    "apps/backend/alembic/versions/b196f0d47a21_memory_candidate_revision_review.py": "f1f89174d268d8eb14a9b783bb2492bd7b689021215b089fb5412f26d9282456",
+    "apps/backend/app/schemas/memory_workflow.py": "24ecaef9604ad18ecacd6b9b54d7a80254877e47362fb58ec2200a704a61f390",
+    "apps/backend/app/dependencies/auth.py": "2417dd52d61d40f441b77134700c09e8b893100ac80863fee8bd565c7daba854",
+    "apps/backend/app/services/interview.py": "b1538747e785db4eea36375b72329050698e9792434f20c2b7e7c842e73655f1",
+    "apps/backend/app/crud/interview.py": "ed8f7dfcfa68fb2050744f45328eae92c0dead5237b40c810aa7c27b7943c872",
+    "apps/backend/app/crud/family.py": "4402eee93d61e6ec4b611a21c2c2ac57eb44cace925aed5c8d98851218782758",
+    "apps/backend/app/crud/family_member.py": "95680a7434cb8c76cdd97d1e0314ca6f9366836f91566d2149db6a93c10677f2",
+    "apps/backend/app/models/memoir.py": "262caeeac5d7e59ca6bff86c0969ae0de51361fa18c3e1a664942d94e1f7595f",
+    "apps/backend/app/services/interview_message.py": "a0973c835670faa2df0b48b68f64d16265d15358190eb992744cd849ef9902bd",
+    "apps/backend/app/core/memory_http.py": "8929a58b5516a6f685b388982e53417553a29e877e1f9cfd49e116d9c0cad82b"
+  },
+  "ProtectedFilesUnchanged": 311,
+  "ProjectWrites": 0,
+  "TestsRun": 0,
+  "DatabaseDockerOperations": 0,
+  "GitWrites": 0
+}
