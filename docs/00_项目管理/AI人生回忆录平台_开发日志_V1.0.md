@@ -1,6 +1,16 @@
 # AI人生回忆录平台_开发日志_V1.0
 
-## 2026-10-15 — 9.6-B最终封板确认与9.6-C/C1合同、审查报告归档（当前）
+## 2026-10-16 — 9.6-C1实施、独立初审与定向复审结果归档（当前）
+
+- 当前状态：**合成离线实施及定向复审通过，Git 闭环待完成**。基线master @ 3873c744eec87af2740731d1098cbd488d145ef2；用户批准的11文件合成离线实施已完成，未暂存、未提交、未推送、未封板，尚无该源码对应的远程CI。
+- 修复前实施记录：C1 183／AI Service全量330 passed，其中既有147；内部自查不替代正式独立实现审查。后续正式独立初审FAIL：三项P2为受限来源的AI历史依赖未覆盖、availability缺项默认可用、Unicode规范化可令合法交付异常；另有C52已消耗额度、C54新输出正在交付的验收缺口。原合同审查PASS及实现初审FAIL均保留，不改写旧结论。
+- 用户批准限定修复后，仅修改原11文件内的5份。元数据预检先于正文摘要/生成/交付，AI祖先依赖随新请求传递，不增加可读正文；availability必填；规范化容量在deliver前受控校验，不截断去重内容。补齐C52与C54实质断言。
+- 最新实际本地执行：修复专项20／C1 203／AI Service全量350（203＋既有147）passed，均0failed/0errors/0skipped，Ruff/format PASS。原审查人定向静态复审PASS，三项问题和两项验收缺口CLOSED；审查人只读核对源码与执行元数据，未独立运行测试。
+- 保留真实语音/STT/TTS、真实Provider/费用门禁、Backend/HTTP接入、数据库、真实个人资料、C4/C6、备份/第三方删除、生产及旧UNKNOWN限制。不关闭BM-01，不把C1内核写成真实日记存储、多来源Memory或语音产品完成。B封板及其PG/CI证据不被本轮本地AI Service数量替代。
+- 本轮Documentation Only归档实施、初审、修复/定向复审与验收元数据，必要同步README/路线图/本日志，随后只读Pre-Commit Audit。未改源码、测试、workflow、Migration、配置或数据库，未重跑测试、HTTP、PG、Docker或Provider。AGENTS、C3/BM-01、16历史删除、ad、ignored .env.test保持；三份入口文档的既有C3 hunks须排除，不能整文件暂存。
+- 详细记录：[实施历史](../05_开发阶段记录/Part9.6-C1_Implementation-and-Validation_Report_2026-10-16.md)、[独立初审FAIL](../05_开发阶段记录/Part9.6-C1_Independent-Implementation-Review_Report_2026-10-16.md)、[修复及定向复审PASS](../05_开发阶段记录/Part9.6-C1_Remediation-and-Targeted-Review_Report_2026-10-16.md)、[执行元数据与源码哈希](../05_开发阶段记录/Part9.6-C1_Validation-Evidence_2026-10-16.json)。后续暂存、提交、推送分别等待用户批准。
+
+## 2026-10-15 — 9.6-B最终封板确认与9.6-C/C1合同、审查报告归档（历史快照）
 
 - 用户批准的B封板文档提交0e39a39b22a72be361833dd0ae42c40f80146b1e已普通推送；exact Backend CI38691707005 completed/success，Fast642／普通PG48／B专项45（其中竞争11、0skip），Ruff/format、Alembic及清理verified。本轮仅引用既有证据，不重跑；用户随后最终确认B Completed / Sealed（约定范围）。
 - 新产品方向已确认：语音/文字连续回忆、独立输入日记笔记；默认轻陪伴、同段静默最多回应一次、用户开口停播；资料显式选具体版本/资料集，新增/改版不自动入当前任务。原始来源不覆盖，AI内容不冒充讲述者事实，仍走精确Revision人工审批。

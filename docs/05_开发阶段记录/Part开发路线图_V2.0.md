@@ -1,14 +1,16 @@
 # AI人生回忆录平台 — Part 开发路线图 V2.0
 
-## 当前阶段：9.6-C工程设计 / C1合同归档（2026-10-15）
+## 当前阶段：9.6-C1合成离线实施及定向复审通过，Git 闭环待完成（2026-10-16）
 
 - 9.6-B已由用户最终确认Completed / Sealed（约定离线/合成/指定PG范围）。文档基线0e39a39b22a72be361833dd0ae42c40f80146b1e已推送，exact Backend CI38691707005双job completed/success，Fast642、普通PG48、B专项PG16.15 45／其中竞争11／0skip，迁移及清理verified。
 - 9.6-C产品目标：语音回忆＋文字回忆＋独立日记/笔记，轻陪伴连续对话，显式选择具体资料版本/资料集后用于整理，保持原文与来源，人工审批后形成Memory/回忆录。
-- C1限定为连续回忆决策内核（合成离线profile）：连续上下文、固定资料清单、静默一次回应、typing/说话抑制、打断/迟到/去重；合同独立静态审查PASS，4项合同问题CLOSED，候选11新增文件，C01–C58均NOT RUN。Implementation Not Started，未授权实施。
+- C1限定为连续回忆决策内核（合成离线profile）：用户已批准11文件实施，包含严格DTO、固定资料版本、纯事件状态机、静默一次回应、typing/说话抑制、打断/迟到/去重及显式离线Stub。合成离线实施及定向复审通过，Git 闭环待完成；未提交、未推送、未封板。
+- 实施初审FAIL历史保留：C1-IR-01～03三项P2（AI历史受限依赖、availability缺省放行、Unicode规范化长度异常）及C52/C54验收缺口，经原审查人定向只读复审PASS/CLOSED。修复只涉及原11文件中的5份；审查人未独立执行测试，不将静态结论写成运行验收。
+- 最新本地执行：修复专项20／C1 203／AI Service全量350（203新模块＋147既有）passed，均0failed/0errors/0skipped；Ruff/format PASS。本轮Documentation Only未重跑，修复前183／330及合同58项旧映射保留为历史，不与最新结果相加。
 - 后续Backend接入、Notes真实存储/来源与Consent、真实Provider/费用、流式ASR/TTS、多来源B兼容/回忆录均需对应合同与验收；全产品未Design Frozen，不把C1通过写成真实功能完成。
 - 费用规则已确认但Provider/模型、数值、币种及能力仍待确认。真实处理默认关闭，C4/C6、备份/第三方、生产和旧UNKNOWN保留，不关闭BM-01。AI58、Legacy18仍是历史证据，不是本轮重跑。
-- 本轮Documentation Only：完整已审合同保真归档＋审查报告归档/链接整理＋必要入口同步；未改代码/测试/workflow/Migration/数据库，未测试/联网调用/暂存/提交/推送。下一步归档只读复核，再另行批准C1实施及Git操作。
-- 详细SSOT：[产品路线与C1合同](../04_AI设计/Part9.6-C_Continuous-Reminiscence_Engineering-Contract_Draft_V1.0.md)、[独立审查报告](Part9.6-C1_Independent-Contract-Review_Report_2026-10-15.md)；[B对账](Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)与[E-01意见](Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)继续保留。下方记录按历史时点保留，不覆盖本节最新状态。
+- 本轮Documentation Only：归档实施、独立初审、修复/定向复审及验收元数据，更新三个入口并进行只读Pre-Commit Audit；未改代码/测试/workflow/Migration/数据库，未重跑测试/联网调用/暂存/提交/推送。基线HEAD3873c744eec87af2740731d1098cbd488d145ef2；C1源码尚无对应远程CI。原C3/BM-01混合文档hunks保持，后续须按hunk排除，Git操作分别授权。
+- 详细SSOT：[产品路线与C1合同](../04_AI设计/Part9.6-C_Continuous-Reminiscence_Engineering-Contract_Draft_V1.0.md)、[合同审查历史](Part9.6-C1_Independent-Contract-Review_Report_2026-10-15.md)、[实施历史](Part9.6-C1_Implementation-and-Validation_Report_2026-10-16.md)、[独立实现初审](Part9.6-C1_Independent-Implementation-Review_Report_2026-10-16.md)、[修复与定向复审](Part9.6-C1_Remediation-and-Targeted-Review_Report_2026-10-16.md)、[验收元数据](Part9.6-C1_Validation-Evidence_2026-10-16.json)；[B对账](Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)与[E-01意见](Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)继续保留。下方记录按历史时点保留，不覆盖本节最新状态；合同中的未实施状态对应当时快照，原文哈希保持。
 
 ## 补验前实施记录（历史快照）
 
