@@ -1,6 +1,17 @@
 # AI人生回忆录平台_开发日志_V1.0
 
-## 2026-10-15 — 9.6-B 实现CI闭环、E-01定向关闭意见归档与封板文档准备（当前）
+## 2026-10-15 — 9.6-B最终封板确认与9.6-C/C1合同、审查报告归档（当前）
+
+- 用户批准的B封板文档提交0e39a39b22a72be361833dd0ae42c40f80146b1e已普通推送；exact Backend CI38691707005 completed/success，Fast642／普通PG48／B专项45（其中竞争11、0skip），Ruff/format、Alembic及清理verified。本轮仅引用既有证据，不重跑；用户随后最终确认B Completed / Sealed（约定范围）。
+- 新产品方向已确认：语音/文字连续回忆、独立输入日记笔记；默认轻陪伴、同段静默最多回应一次、用户开口停播；资料显式选具体版本/资料集，新增/改版不自动入当前任务。原始来源不覆盖，AI内容不冒充讲述者事实，仍走精确Revision人工审批。
+- 完整产品路线及C1合成离线决策内核工程合同已完成两项独立静态审查。初审4项Medium合同问题经修订复审CLOSED：轮次/静默字段、回调与版本、播放/去重关联、来源Scope。旧turn迟到提交不改当前hint/静默额度；受限来源不能用旧Context再次生成。
+- 仅归档批准候选：C1精确11新增文件、58项未来验收；Implementation Not Started，无代码/Migration/API接入或真实语音/笔记存储。全产品后续工作包未冻结；不因静态审查通过认定已实现或授权实施。
+- Provider/模型、预算数值/币种/价格/能力未确认。真实个人资料、C4/C6、来源持久化、多来源B兼容、备份/第三方、生产和旧UNKNOWN保持；AI58/Legacy18为历史执行。B38/B46/B48及BM-01边界不变。
+- 本轮Documentation Only：合同原始UTF-8字节保真（SHA256 F036874A1C8A3401C73A375BC2E833BD745FCAAEBD0F97FADBEA329C06A18563）；报告仅加归档metadata与修正内部链接，保留初审FAIL和各轮意见历史。README/路线图/本日志仅必要同步。
+- 未修改runtime/tests/workflow/Migration/数据库，未运行测试/应用/Provider，未暂存/提交/推送。AGENTS、C3/BM-01、16历史删除、ad、ignored .env.test保持；三入口文档原12个C3 hunks保留并排除候选。
+- 详细SSOT：[合同](../04_AI设计/Part9.6-C_Continuous-Reminiscence_Engineering-Contract_Draft_V1.0.md)与[独立审查报告](../05_开发阶段记录/Part9.6-C1_Independent-Contract-Review_Report_2026-10-15.md)。下一步为Documentation Only归档复核；实施、暂存、提交、推送须分别授权。此前“封板准备/未归档”记录对应当时状态，不回写原报告。
+
+## 2026-10-15 — 9.6-B 实现CI闭环、E-01定向关闭意见归档与封板文档准备（当时快照）
 
 - 基线e164c521e2ac5ed5aba992a327ae8e34b94bf00f（test(memory): close six-item validation gaps）已普通推送；exact-commit Backend CI38617553685双job completed/success，HEAD与origin/master一致（推送核验时0/0）。
 - 真实远程Fast642／93 deselected、普通PG48／642 deselected；B专项PostgreSQL16.15完整45项、竞争11、0skip。JUnit节点、manifest源码hash与该commit一致，非旧35加本地10。fresh b196、前后current/check、受限Runner及Manager精确清理verified，进程exit0/EOF，私有载体已清除。

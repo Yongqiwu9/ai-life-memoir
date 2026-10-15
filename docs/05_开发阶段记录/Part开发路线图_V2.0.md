@@ -1,13 +1,14 @@
 # AI人生回忆录平台 — Part 开发路线图 V2.0
 
-## 当前 9.6-B 封板文档准备（2026-10-15）
+## 当前阶段：9.6-C工程设计 / C1合同归档（2026-10-15）
 
-- Implementation Completed / Validation Passed：仅已确认的离线/合成/指定PG范围。Final Documentation Seal仍为PREPARATION，文档尚未提交/推送或取得对应CI，不写Completed/Sealed。
-- 实现基线master @ e164c521e2ac5ed5aba992a327ae8e34b94bf00f已推送；Backend CI38617553685双job completed/success，远程Fast642、普通PG48、B专项PG16.15 45项／竞争11／0skip、迁移及清理verified。
-- 57项逐项归档：54行约定层执行＋B38用户确认范围＋B46静态inventory＋B48执行和约束证明；不按套件数量相加或称每条所有层验证。原审查人E-01定向复核PASS，B范围证据缺口CLOSED；原初审历史不改写。
-- 保留真实Provider、生产Consent/C4/C6、同旧Memory恢复、备份/第三方传播、生产回退/部署未完成边界及旧v3 UNKNOWN。AI58、Legacy18是历史执行，最新Backend CI未重跑；本地Fast920含未提交C3，不是远程642。
-- 当前仅Documentation Only封板准备；下一步「Git Commit Review」只读文档审计→分别授权暂存/提交/推送→文档exact-commit CI→正式封板状态确认。不开始下一阶段，不把阶段验收当生产可用或BM-01 CLOSED。
-- 详细SSOT：[B01–B57对账](Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)、[E-01独立关闭意见](Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)；下方记录按历史时点保留。
+- 9.6-B已由用户最终确认Completed / Sealed（约定离线/合成/指定PG范围）。文档基线0e39a39b22a72be361833dd0ae42c40f80146b1e已推送，exact Backend CI38691707005双job completed/success，Fast642、普通PG48、B专项PG16.15 45／其中竞争11／0skip，迁移及清理verified。
+- 9.6-C产品目标：语音回忆＋文字回忆＋独立日记/笔记，轻陪伴连续对话，显式选择具体资料版本/资料集后用于整理，保持原文与来源，人工审批后形成Memory/回忆录。
+- C1限定为连续回忆决策内核（合成离线profile）：连续上下文、固定资料清单、静默一次回应、typing/说话抑制、打断/迟到/去重；合同独立静态审查PASS，4项合同问题CLOSED，候选11新增文件，C01–C58均NOT RUN。Implementation Not Started，未授权实施。
+- 后续Backend接入、Notes真实存储/来源与Consent、真实Provider/费用、流式ASR/TTS、多来源B兼容/回忆录均需对应合同与验收；全产品未Design Frozen，不把C1通过写成真实功能完成。
+- 费用规则已确认但Provider/模型、数值、币种及能力仍待确认。真实处理默认关闭，C4/C6、备份/第三方、生产和旧UNKNOWN保留，不关闭BM-01。AI58、Legacy18仍是历史证据，不是本轮重跑。
+- 本轮Documentation Only：完整已审合同保真归档＋审查报告归档/链接整理＋必要入口同步；未改代码/测试/workflow/Migration/数据库，未测试/联网调用/暂存/提交/推送。下一步归档只读复核，再另行批准C1实施及Git操作。
+- 详细SSOT：[产品路线与C1合同](../04_AI设计/Part9.6-C_Continuous-Reminiscence_Engineering-Contract_Draft_V1.0.md)、[独立审查报告](Part9.6-C1_Independent-Contract-Review_Report_2026-10-15.md)；[B对账](Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)与[E-01意见](Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)继续保留。下方记录按历史时点保留，不覆盖本节最新状态。
 
 ## 补验前实施记录（历史快照）
 

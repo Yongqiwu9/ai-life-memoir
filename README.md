@@ -4,9 +4,9 @@
 
 ## 当前阶段
 
-**9.6-B 当前状态（2026-10-15）**：Implementation Completed / Validation Passed（已确认离线/合成/指定PG范围）；**Final Documentation Seal Preparation，尚未正式封板**。基线 `e164c521e2ac5ed5aba992a327ae8e34b94bf00f` 已推送，exact-commit Backend CI双job success：Fast642、普通PG48、B专项PG16.15 **45项／竞争11／0skip**，迁移及清理verified。57项对账与原E-01定向复核PASS已归档；E-01的B范围证据缺口CLOSED，真实能力/历史状态限制保留。详见[57项正式对账](docs/05_开发阶段记录/Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)和[独立关闭意见](docs/05_开发阶段记录/Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)。
+**当前阶段（2026-10-15）**：9.6-B 已由用户最终确认 **Completed / Sealed（约定验收范围）**；封板文档提交 `0e39a39b22a72be361833dd0ae42c40f80146b1e` 已推送，exact-commit Backend CI 38691707005 completed/success。进入 **9.6-C 工程设计 / C1合同静态审查PASS、Implementation Not Started**；仅归档合同，不代表真实语音、笔记存储或多来源整理已实现。详见[完整产品路线与C1合同](docs/04_AI设计/Part9.6-C_Continuous-Reminiscence_Engineering-Contract_Draft_V1.0.md)及[独立审查报告](docs/05_开发阶段记录/Part9.6-C1_Independent-Contract-Review_Report_2026-10-15.md)。
 
-最新[Backend CI 38617553685](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38617553685)绑定exact e164c521，不是旧35＋本地10相加。B-PC-01接线关闭事实保留。AI Service58、Legacy18为历史证据，未在最新Backend CI重跑；完整工作区Fast920含未提交C3，不能与远程642混称同一套。真实Provider、C4/C6和生产能力仍未完成，保持 **DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY**。
+最新已验证[Backend CI 38691707005](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38691707005)绑定exact `0e39a39b22a72be361833dd0ae42c40f80146b1e`：Fast642、普通PG48、B专项PG16.15 **45项／其中竞争11／0skip**，Ruff/format、迁移和清理verified。历史AI Service58、Legacy18未在该CI重跑；工作区Fast920含未提交C3，不与远程642混称。真实Provider、C4/C6、生产及旧UNKNOWN限制保留，保持 **DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY**。
 
 ### B CI 接线历史（补验前快照）
 
@@ -24,9 +24,10 @@
 | 9.5.5 | Memory 前置基础设施/架构决策阶段；B、C1/C2A/C2B、C3.0 — Completed / Sealed；C — Design Frozen / Implementation In Progress；C3 实施 In Progress；C3.1 Implementation Audit = PASS WITH FINDINGS，已完成本地 PostgreSQL 16.15 与回归验证；Implementation Completed（dormant scope），commit / push / exact remote CI PASS；Final Documentation Seal Preparation in progress；C3.2 Next / NOT STARTED |
 | Memory + Memoir Slice 1 | 人工 Memory 与确定性 Memoir 草稿已实现；不含 AI 提取、不可变 Revision 或正式审批 |
 | 9.6-A | Provider Extension Implementation Completed / COMMITTED LOCALLY；HTTP / PostgreSQL NOT VERIFIED；Real Provider NOT IMPLEMENTED |
-| 9.6-B | Implementation Completed / Validation Passed（约定范围）；exact e164c521远程45／竞争11通过，57项对账归档、E-01 B范围CLOSED；Final Documentation Seal Preparation，文档提交及对应CI待另行授权，未开始下一阶段 |
+| 9.6-B | Completed / Sealed（约定范围）；57项对账归档，E-01 B范围证据CLOSED；封板文档exact 0e39a39 / CI38691707005 success，B45／竞争11通过 |
+| 9.6-C / C1 | 完整产品路线与C1合成离线决策内核合同已归档，独立静态审查PASS；候选11新增文件、C01–C58验收未执行；Implementation Not Started，全产品后续工作包未冻结 |
 
-9.6-B 当前对账以[正式归档](docs/05_开发阶段记录/Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)及[原审查人E-01关闭范围](docs/05_开发阶段记录/Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)为准。原初审、合同和补验记录保留各自历史；B38同旧Memory恢复后置C4，B46仅静态inventory，B48已有执行＋约束证明，不宣称57个独立测试全层通过。下一步只读文档审计；暂存、提交、推送分别批准，完成文档提交的exact-commit CI后再确认正式封板。历史C3/BM-01工作、旧v3 UNKNOWN保持。
+9.6-B范围依据[正式对账](docs/05_开发阶段记录/Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)及[E-01独立关闭意见](docs/05_开发阶段记录/Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)保留；B38同旧Memory恢复后置C4，B46静态inventory，B48执行＋约束证明，不宣称57项全层验证。下一步为C1文档归档审计及另行实施批准；本轮不暂存/提交/推送。此前合同/报告的“封板准备”“未归档”保留其历史时点，最新状态以本节为准；历史C3/BM-01与旧v3 UNKNOWN不变。
 
 Part 9.5 完成不代表 Audio upload、Object Storage、STT Provider 或 AI pipeline 已完成。C2A 已实现邀请、Membership 与协作管理权限基础；C2B 已完成 Participant 身份关系、本人确认及最小本人权利入口，并在 PostgreSQL 16.15 上通过 remediation commit 对应的 Backend CI。既有 Family 内容、FamilyMember、Interview、Session、Audio、Transcript、Segment、Message API 仍为 Owner-only。9.6-B 已有离线 Candidate/Revision/审批 profile；完整生产 Consent、C3 来源链路、C5 Artifact 审批接线、删除与净化仍未实现。
 
