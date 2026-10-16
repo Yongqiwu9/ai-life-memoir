@@ -1,0 +1,312 @@
+{
+  "schema": "c1-final-seal-evidence.v1",
+  "date": "2026-10-16",
+  "implementation_commit": "6825be4e01345b1992b08f90f864a54fc0fef7e3",
+  "result": "PASS within synthetic offline C1 scope; final documentation Git closure pending",
+  "contract": {
+    "path": "docs/04_AI设计/Part9.6-C_Continuous-Reminiscence_Engineering-Contract_Draft_V1.0.md",
+    "sha256": "f036874a1c8a3401c73a375bc2e833bd745fcaaebd0f97fadbea329c06a18563",
+    "preserved_historical_document": true
+  },
+  "local_evidence_path": "docs/05_开发阶段记录/Part9.6-C1_Validation-Evidence_2026-10-16.json",
+  "local_evidence_sha256": "cc336d1659cf5d02ed4a530aa01ad39447dd4d76b633e22b9bdeb32ca71996ed",
+  "source_sha256": {
+    "services/ai-service/app/dialogue/__init__.py": "f62b633dc3bdcfc168c37680166934c9fdc3e65f6d91a1ba3b4b8e2e18ba37eb",
+    "services/ai-service/app/dialogue/contracts.py": "c22ec0ee8d0c99b4e52b02b5f21a41ef7f5f49e420381d4f4734dfab2c5113df",
+    "services/ai-service/app/dialogue/context.py": "cd50c9f45bc7fe6a2a7e5af38051b61cb4ed0a4b3506c29dccd4d7189f0187aa",
+    "services/ai-service/app/dialogue/controller.py": "d224a039e15277bd10e6fdef91d5c4ebff5e87bb2c2232b63cf7add3fa2fc7a8",
+    "services/ai-service/app/dialogue/provider.py": "e9b4f579412709965c805c4004d678940a12845bff4fe230b503cc7de51fa2f5",
+    "services/ai-service/app/dialogue/mock.py": "55634aaff6d95f4cca2a78cf478e953f0bc435ffcdd2309d1b5d225eff042a2b",
+    "services/ai-service/app/dialogue/runner.py": "26696e86437cbb70f872438496056af0176be1b2c1f76f3225940d60b22383da",
+    "services/ai-service/tests/test_dialogue_contracts.py": "f8cd53fbe22bf0a62a254ccc09ae534a4ad1d1d49d6df4fa1c1f103858a73b98",
+    "services/ai-service/tests/test_dialogue_context.py": "7e6505815c26953f9dba4903ba1033f497a780c8bc7cf57a13a49910d0128c58",
+    "services/ai-service/tests/test_dialogue_controller.py": "d9ae66b8f65a71ef4e299c12c12d1a2bc1347f735cc6b8d7ed1093f3a92ac430",
+    "services/ai-service/tests/test_dialogue_runner.py": "371a431c751d64879bea654a1a6d7dfd4f3adbab5e3bb0eed911738d38f8bb95"
+  },
+  "local_executions": [
+    {
+      "file": "remediation-final.xml",
+      "sha256": "9368fb6d7f4d4418efd0152f292552bd6961f44f7beb9b701a7c13cf19dae6ec",
+      "passed": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "file": "c1-final.xml",
+      "sha256": "a8c99abaab7a3f07e90a96d69be8a66f8d97bab66ff9ce9180cc28ee6437eb18",
+      "passed": 203,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "file": "full-final.xml",
+      "sha256": "cbf15ab9a307060e3833e85d654b94747437238062cabc8067bb621a2675cf9a",
+      "passed": 350,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "local_xml_hashes_and_exact_node_sets_verified": true,
+  "local_tests_rerun_this_task": false,
+  "acceptance_count": 58,
+  "acceptance_mapping_path": "docs/05_开发阶段记录/Part9.6-C1_Validation-Evidence_2026-10-16.json#/current/acceptance_C01_C58",
+  "review_closures": [
+    {
+      "finding": "C1-IR-01",
+      "status": "CLOSED — targeted static review",
+      "description": "Metadata-only ancestry precheck before body digest/use; inherited cancellation dependencies survive raw-source selection changes; raw source access remains unchanged.",
+      "references": [
+        "services/ai-service/app/dialogue/controller.py:222",
+        "services/ai-service/app/dialogue/controller.py:237",
+        "services/ai-service/app/dialogue/controller.py:192",
+        "services/ai-service/app/dialogue/controller.py:252",
+        "services/ai-service/app/dialogue/controller.py:259",
+        "services/ai-service/tests/test_dialogue_controller.py:149",
+        "services/ai-service/tests/test_dialogue_controller.py:291",
+        "services/ai-service/tests/test_dialogue_controller.py:252"
+      ]
+    },
+    {
+      "finding": "C1-IR-02",
+      "status": "CLOSED — targeted static review",
+      "description": "FixtureSource.availability is required; missing declaration is rejected; explicit available/restricted remain valid.",
+      "references": [
+        "services/ai-service/app/dialogue/contracts.py:161",
+        "services/ai-service/tests/test_dialogue_contracts.py:151"
+      ]
+    },
+    {
+      "finding": "C1-IR-03",
+      "status": "CLOSED — targeted static review",
+      "description": "Normalized length checked before deliver using the receipt capacity constant; oversize returns controlled INVALID_RESPONSE; no text truncation.",
+      "references": [
+        "services/ai-service/app/dialogue/controller.py:454",
+        "services/ai-service/app/dialogue/contracts.py:369",
+        "services/ai-service/tests/test_dialogue_controller.py:328"
+      ]
+    },
+    {
+      "finding": "C52 evidence gap",
+      "status": "CLOSED — targeted static review",
+      "description": "B no_reply consumes its allowance before late A commit; current turn/hint/timer/cycle and consumed flag remain unchanged; later tick creates no extra request.",
+      "references": [
+        "services/ai-service/tests/test_dialogue_controller.py:377"
+      ]
+    },
+    {
+      "finding": "C54 evidence gap",
+      "status": "CLOSED — targeted static review",
+      "description": "Six old-callback x new-ready/delivering combinations retain the real new response and started receipt; subsequent legitimate completion succeeds.",
+      "references": [
+        "services/ai-service/tests/test_dialogue_controller.py:427"
+      ]
+    }
+  ],
+  "review_boundary": "Original reviewers performed targeted static review; no independent test execution. Current task is reconciliation, not new independent implementation review.",
+  "remote_ci": {
+    "workflow": "Backend CI",
+    "event": "push",
+    "run_id": "38796788780",
+    "url": "https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38796788780",
+    "head_sha": "6825be4e01345b1992b08f90f864a54fc0fef7e3",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "B PostgreSQL 16.15",
+        "status": "completed",
+        "conclusion": "success",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Initialize containers",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install dependencies",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "B CI script offline contract checks",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "B Manager allocation, migration, Runner tests and verified cleanup",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Upload sanitized B validation evidence",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Stop containers",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "backend",
+        "status": "completed",
+        "conclusion": "success",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Initialize containers",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install dependencies",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Ruff",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Ruff format",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "SQLite fast tests",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Alembic heads",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Fresh PostgreSQL upgrade",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Alembic current",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Alembic check",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "PostgreSQL integration tests",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post-integration Alembic current",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post-integration Alembic check",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Stop containers",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "backend_fast": {
+      "passed": 642,
+      "deselected": 93,
+      "warnings": 1
+    },
+    "backend_integration": {
+      "passed": 48,
+      "deselected": 642,
+      "warnings": 1
+    },
+    "b_specialized_job": "PASS; allocation/migration/Runner tests/verified cleanup and upload steps success; no new independent count assertion",
+    "ai_service_c1_tests_executed_by_this_workflow": false
+  },
+  "retained_limits": [
+    "real voice/STT/TTS",
+    "real Provider and budget/provider capabilities",
+    "Backend/HTTP integration of C1",
+    "C1 database implementation/verification",
+    "C4/C6 and real Consent/deletion/backup/provider cleanup",
+    "real personal data and production",
+    "old UNKNOWN resources; BM-01 not closed"
+  ],
+  "final_seal_documentation_commit": "NOT YET CREATED",
+  "final_seal_documentation_ci": "NOT YET RUN"
+}

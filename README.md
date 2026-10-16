@@ -4,9 +4,9 @@
 
 ## 当前阶段
 
-**当前阶段（2026-10-16）**：9.6-C1 连续回忆决策内核已完成批准的 11 文件合成离线实施及限定修复，**合成离线实施及定向复审通过，Git 闭环待完成**。原独立实现初审的三项 P2 与 C52/C54 验收缺口已在定向范围关闭；本地修复专项 **20**、C1 **203**、AI Service 全量 **350** 项通过，Ruff/format PASS。当前基线 `master @ 3873c744eec87af2740731d1098cbd488d145ef2`，C1 未暂存、未提交、未推送、未封板，尚无 C1 源码对应的远程 CI。详见[实施历史](docs/05_开发阶段记录/Part9.6-C1_Implementation-and-Validation_Report_2026-10-16.md)、[独立初审](docs/05_开发阶段记录/Part9.6-C1_Independent-Implementation-Review_Report_2026-10-16.md)、[修复与定向复审](docs/05_开发阶段记录/Part9.6-C1_Remediation-and-Targeted-Review_Report_2026-10-16.md)。[完整产品路线与C1合同](docs/04_AI设计/Part9.6-C_Continuous-Reminiscence_Engineering-Contract_Draft_V1.0.md)及[合同独立审查历史](docs/05_开发阶段记录/Part9.6-C1_Independent-Contract-Review_Report_2026-10-15.md)保持原快照，不改写为实施或生产证明。
+**当前阶段（2026-10-16）**：9.6-C1 连续回忆决策内核的**合成离线验收闭环通过；Final Seal 文档已准备，文档 Git 闭环待完成**。批准的11文件实施及限定修复已随 `6825be4e01345b1992b08f90f864a54fc0fef7e3` 提交并推送；C01–C58证据对账PASS，三项P2及C52/C54缺口已在定向范围关闭。本地专项 **20**／C1 **203**／AI Service全量 **350** PASS，Ruff/format PASS；本轮未重跑。详见[封板对账](docs/05_开发阶段记录/Part9.6-C1_Final-Seal-Reconciliation_Report_2026-10-16.md)和[CI证据](docs/05_开发阶段记录/Part9.6-C1_Final-Seal-CI-Evidence_2026-10-16.json)。
 
-最新已验证[Backend CI 38691707005](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38691707005)绑定exact `0e39a39b22a72be361833dd0ae42c40f80146b1e`：Fast642、普通PG48、B专项PG16.15 **45项／其中竞争11／0skip**，Ruff/format、迁移和清理verified。历史AI Service58、Legacy18未在该CI重跑；工作区Fast920含未提交C3，不与远程642混称。真实Provider、C4/C6、生产及旧UNKNOWN限制保留，保持 **DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY**。
+该exact commit的[Backend CI 38796788780](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38796788780)为completed/success：Fast642、普通PG48，Ruff/format、Alembic及B PostgreSQL16.15 job通过。**workflow未执行AI Service C1测试**，本地20/203/350与远程Backend验证范围分别记录，不互相替代。当前Final Seal文档尚未提交/推送，其对应CI尚未运行；保持 **DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY**。
 
 ### B CI 接线历史（补验前快照）
 
@@ -25,9 +25,9 @@
 | Memory + Memoir Slice 1 | 人工 Memory 与确定性 Memoir 草稿已实现；不含 AI 提取、不可变 Revision 或正式审批 |
 | 9.6-A | Provider Extension Implementation Completed / COMMITTED LOCALLY；HTTP / PostgreSQL NOT VERIFIED；Real Provider NOT IMPLEMENTED |
 | 9.6-B | Completed / Sealed（约定范围）；57项对账归档，E-01 B范围证据CLOSED；封板文档exact 0e39a39 / CI38691707005 success，B45／竞争11通过 |
-| 9.6-C / C1 | 合成离线实施及定向复审通过，Git 闭环待完成；本地专项20／C1 203／全量350 PASS，11文件实施未提交、未封板；真实语音、Provider、Backend接入及数据库未接入/未验证，全产品后续工作包未冻结 |
+| 9.6-C / C1 | 合成离线验收闭环通过；实施提交6825be4已推送且exact Backend CI成功；本地20／203／350 PASS。Final Seal文档已准备、文档Git闭环待完成；真实语音、Provider、Backend/数据库接入及生产仍关闭 |
 
-9.6-B仍为用户确认的Completed / Sealed（约定范围），依据[正式对账](docs/05_开发阶段记录/Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)及[E-01独立关闭意见](docs/05_开发阶段记录/Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)；B38同旧Memory恢复后置C4，B46静态inventory，B48执行＋约束证明，不宣称57项全层验证。C1下一步为文档同步后的只读Pre-Commit Audit，暂存、提交、推送须分别批准，未直接封板。原183／330属于修复前历史，最新20／203／350证据见[验收元数据](docs/05_开发阶段记录/Part9.6-C1_Validation-Evidence_2026-10-16.json)，不是Backend Fast或PostgreSQL结果。真实语音/STT/TTS、真实Provider、Backend/HTTP接入、数据库、C4/C6、生产及旧UNKNOWN限制保留；历史C3/BM-01不变。
+9.6-B仍为用户确认的Completed / Sealed（约定范围），依据[正式对账](docs/05_开发阶段记录/Part9.6-B_B01-B57_Acceptance-Reconciliation_2026-10-15.md)及[E-01独立关闭意见](docs/05_开发阶段记录/Part9.6-B_E01_Coverage-Closure_Independent-Review_2026-10-15.md)；B38同旧Memory恢复后置C4，B46静态inventory，B48执行＋约束证明。C1下一步为五份封板文档的审计及分别授权的Git闭环；[原合同](docs/04_AI设计/Part9.6-C_Continuous-Reminiscence_Engineering-Contract_Draft_V1.0.md)、原审查及[本地验收元数据](docs/05_开发阶段记录/Part9.6-C1_Validation-Evidence_2026-10-16.json)保持历史。真实语音/STT/TTS、真实Provider、Backend/HTTP接入、C1数据库、C4/C6、生产及旧UNKNOWN限制保留；历史C3/BM-01不变。
 
 Part 9.5 完成不代表 Audio upload、Object Storage、STT Provider 或 AI pipeline 已完成。C2A 已实现邀请、Membership 与协作管理权限基础；C2B 已完成 Participant 身份关系、本人确认及最小本人权利入口，并在 PostgreSQL 16.15 上通过 remediation commit 对应的 Backend CI。既有 Family 内容、FamilyMember、Interview、Session、Audio、Transcript、Segment、Message API 仍为 Owner-only。9.6-B 已有离线 Candidate/Revision/审批 profile；完整生产 Consent、C3 来源链路、C5 Artifact 审批接线、删除与净化仍未实现。
 
