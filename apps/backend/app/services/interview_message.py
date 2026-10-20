@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppException, NotFoundException
+from app.crud import interview_agent as agent_crud
 from app.crud import interview_message as message_crud
 from app.models.interview_message import InterviewMessage
 from app.schemas.interview_message import InterviewMessageCreate
@@ -15,6 +16,10 @@ def _lock_writable_session(db: Session, *, user_id: uuid.UUID, session_id: uuid.
     if locked is None:
         raise NotFoundException("Interview session not found")
     session_service.get_owned_session(db, user_id=user_id, session_id=session_id)
+    if agent_crud.get_integration_profile(db, session_id) is not None:
+        raise AppException(
+            "Use the dialogue command endpoint", code="DIALOGUE_WRITE_REQUIRED", status_code=409
+        )
     if locked.status != "active":
         raise AppException(
             "Interview session is not active", code="SESSION_NOT_ACTIVE", status_code=409
@@ -48,6 +53,11 @@ def list_messages(
     session_id: uuid.UUID,
 ) -> list[InterviewMessage]:
     session_service.get_owned_session(db, user_id=user_id, session_id=session_id)
+    if agent_crud.get_integration_profile(db, session_id) is not None:
+        from app.services.dialogue_checkpoint import source_gate
+        from app.services.dialogue_policy import get_runtime
+
+        source_gate(db, user_id, session_id, get_runtime())
     return message_crud.list_messages(db, session_id=session_id)
 
 

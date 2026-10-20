@@ -1,0 +1,151 @@
+{
+  "result": "PASS — independent static contract review sequence; user acceptance/implementation approval pending",
+  "baseline": "c8824b3c2c1d7c9ae6d633461787431166cd7a07",
+  "current_artifact": "Contract-Addendum-V0.4.md",
+  "sha256": "6589c552f896e40f47a789a7fdae63f2bc91ef18485ae04e75c6aa462918a68c",
+  "history": [
+    {
+      "file": "Contract-Addendum-V0.2.md",
+      "sha256": "21644ac314647d14f367639b60c6a1006f100e0205afe1a30de0a38450481588"
+    },
+    {
+      "file": "Contract-Addendum-V0.3.md",
+      "sha256": "2a4fc495553634554cc59241088c8932253e97ae1b4eb8d8b4de8b03fd4776f5"
+    },
+    {
+      "file": "Contract-Addendum-V0.4.md",
+      "sha256": "6589c552f896e40f47a789a7fdae63f2bc91ef18485ae04e75c6aa462918a68c"
+    }
+  ],
+  "reviewers": [
+    {
+      "reviewer": "c2_schema_contract_review",
+      "scope": "S01/S02 closure in V0.3 and new V0.4 FK/nullable/downgrade direct regression review",
+      "verdict": "PASS — targeted static scope"
+    },
+    {
+      "reviewer": "c2_lifecycle_contract_review",
+      "scope": "Original3 lifecycle findings and V0.4 parent/child preparing correction plus direct regressions",
+      "verdict": "PASS — targeted static scope"
+    },
+    {
+      "reviewer": "c2_privacy_ci_contract_review",
+      "scope": "Context/CI closure and V0.4 attempts/GET/privacy/authorization/CI direct regressions",
+      "verdict": "PASS — targeted static scope"
+    }
+  ],
+  "findings": [
+    {
+      "id": "CR-S01",
+      "original": "34-character profile exceeds String32",
+      "resolution": "Short interview-agent.v3 storage/API identifier; separate VARCHAR64 integration_profile",
+      "status": "CLOSED — targeted static review"
+    },
+    {
+      "id": "CR-S02",
+      "original": "Context reconstruction omitted summary label/frozen delivery",
+      "resolution": "Complete immutable context mapping plus restart/digest tests",
+      "status": "CLOSED — targeted static review"
+    },
+    {
+      "id": "CR-L01",
+      "original": "Repeated manual request cannot legally refresh history/asked_keys",
+      "resolution": "Explicit internal replace_selection prerequisite with child event and manifest/context increment",
+      "status": "CLOSED — targeted static review"
+    },
+    {
+      "id": "CR-L02",
+      "original": "claimed old effect/busy index and UNKNOWN precedence",
+      "resolution": "Fence discards stale publication rights; dispatch observations retained; transaction-order priority",
+      "status": "CLOSED — targeted static review"
+    },
+    {
+      "id": "CR-L03",
+      "original": "idle pause/typing can create unappliable sync queue",
+      "resolution": "Explicit idle no-op/rejection/valid set_mode/end cases",
+      "status": "CLOSED — targeted static review"
+    },
+    {
+      "id": "CR-C01",
+      "original": "New migration breaks original B exact-head checks",
+      "resolution": "Two narrowly added B script/fixture paths advance exact head while preserving45/11 gates",
+      "status": "CLOSED — targeted static review"
+    },
+    {
+      "id": "CR-L04",
+      "original": "Parent and child both preparing violates unique index",
+      "resolution": "Queued parent owns coordination pointer, child alone preparing; explicit pure-transition attempts",
+      "status": "CLOSED — targeted static review"
+    }
+  ],
+  "candidate_new": [
+    "apps/backend/app/schemas/dialogue.py",
+    "apps/backend/app/models/dialogue_runtime.py",
+    "apps/backend/app/crud/dialogue.py",
+    "apps/backend/app/services/dialogue.py",
+    "apps/backend/app/services/dialogue_checkpoint.py",
+    "apps/backend/app/services/dialogue_client.py",
+    "apps/backend/app/services/dialogue_policy.py",
+    "apps/backend/app/api/v1/dialogue.py",
+    "apps/backend/app/core/dialogue_http.py",
+    "apps/backend/tests/test_dialogue_contracts.py",
+    "apps/backend/tests/test_dialogue.py",
+    "apps/backend/tests/test_dialogue_api.py",
+    "apps/backend/tests/integration/test_dialogue.py",
+    "apps/backend/tests/integration/test_dialogue_migration.py",
+    "apps/backend/alembic/versions/c296a4e8d102_session_text_dialogue.py",
+    "services/ai-service/app/dialogue/wire.py",
+    "services/ai-service/app/dialogue/service.py",
+    "services/ai-service/app/dialogue/http.py",
+    "services/ai-service/tests/test_dialogue_wire.py",
+    "services/ai-service/tests/test_dialogue_http.py",
+    "scripts/ci/run_dialogue_postgres.py",
+    ".github/workflows/dialogue-ci.yml"
+  ],
+  "candidate_modified": [
+    "scripts/ci/run_memory_workflow_postgres.py",
+    "apps/backend/tests/integration/test_memory_workflow.py",
+    "apps/backend/app/models/interview_agent.py",
+    "apps/backend/app/models/interview_message.py",
+    "apps/backend/app/schemas/interview_agent.py",
+    "apps/backend/app/crud/interview_agent.py",
+    "apps/backend/app/services/interview_agent.py",
+    "apps/backend/app/services/interview_message.py",
+    "apps/backend/app/database/models_import.py",
+    "apps/backend/app/main.py",
+    "apps/backend/pyproject.toml",
+    "services/ai-service/pyproject.toml",
+    ".github/workflows/backend-ci.yml"
+  ],
+  "candidate_unique_paths": 35,
+  "acceptance": "D01-D73, all NOT RUN",
+  "protected_files_unchanged": 331,
+  "project_files_modified": false,
+  "staging_empty": true,
+  "tests_http_database_docker_network_run": false,
+  "git_writes": false,
+  "real_features_authorized": false,
+  "archive": {
+    "date": "2026-10-16",
+    "status": "CONTRACT STATIC REVIEW PASS / PENDING IMPLEMENTATION APPROVAL",
+    "implementation": "NOT STARTED",
+    "documentation_task_reran_review_or_tests": false,
+    "baseline": "c8824b3c2c1d7c9ae6d633461787431166cd7a07",
+    "contract_path": "docs/04_AI设计/Part9.6-C2_Session-Text-Integration_Implementation-Contract_Draft_V0.4.md",
+    "contract_byte_preserved_sha256": "6589c552f896e40f47a789a7fdae63f2bc91ef18485ae04e75c6aa462918a68c",
+    "report_path": "docs/05_开发阶段记录/Part9.6-C2_Independent-Contract-Review_Report_2026-10-16.md",
+    "source_review_report_sha256": "10696d05abb4238ce627f58a819b5b636c07ca257646ac2835c7a31ec4f25ba6",
+    "historical_drafts": "V0.2/V0.3 original bytes retained outside repository; hashes recorded in history; V0.4 is current reviewed text",
+    "git_operations": "NOT AUTHORIZED in this documentation task",
+    "real_validation": "Requires separate HTTP/ASGI/PG16.15 task authorization; no test executed now"
+  },
+  "prior_C1_seal": {
+    "commit": "c8824b3c2c1d7c9ae6d633461787431166cd7a07",
+    "run_id": 38863558414,
+    "url": "https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38863558414",
+    "status": "completed",
+    "conclusion": "success",
+    "does_not_verify_new_package": true,
+    "ai_service_c1_tests_in_this_workflow": false
+  }
+}

@@ -8,6 +8,13 @@ from app.models.collaboration import (  # noqa: F401
     FamilyInvitation,
     FamilyMembership,
 )
+from app.models.dialogue_runtime import (  # noqa: F401
+    AgentCheckpoint,
+    AgentContext,
+    AgentDependency,
+    AgentEffect,
+    AgentSource,
+)
 from app.models.family import Family  # noqa: F401
 from app.models.family_member import FamilyMember  # noqa: F401
 from app.models.identity_foundation import (  # noqa: F401

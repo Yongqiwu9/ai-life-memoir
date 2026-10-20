@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 CONTRACT_VERSION = "interview-agent.v2"
+DIALOGUE_CONTRACT_VERSION = "interview-agent.v3"
 LEGACY_CONTRACT_VERSION = "interview-agent.v1"
 MOCK_POLICY_VERSION = "synthetic-mock.v1"
 MAX_QUESTIONS = 24

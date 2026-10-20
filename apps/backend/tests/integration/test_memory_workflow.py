@@ -285,9 +285,9 @@ def db_session(memory_b_allocation, postgres_engine):
                 "Manager must migrate the allocated B test database before Runner tests"
             )
         head = connection.execute(text("SELECT version_num FROM alembic_version")).scalars().all()
-        if head != ["b196f0d47a21"]:
+        if head != ["c296a4e8d102"]:
             raise pytest.UsageError(
-                "Allocated test schema is not at the exact B migration revision"
+                "Allocated test schema is not at the exact project migration head c296a4e8d102"
             )
         session = Session(
             bind=connection,

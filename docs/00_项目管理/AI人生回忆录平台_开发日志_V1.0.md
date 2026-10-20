@@ -1,6 +1,49 @@
 # AI人生回忆录平台_开发日志_V1.0
 
-## 2026-10-16 — 9.6-C1最终对账通过与Final Seal文档准备（当前）
+## 2026-10-21 — 9.6-C2最新差集回归与D01–D73总对账（当前）
+
+- 用户要求推进最新完整回归、D01–D73总对账、远程CI和Git闭环。按此前不重复专项HTTP的边界，执行前声明复用代码未变化的C2 HTTP48／AI ASGI6，其余全部Backend顶层Fast及AI纯离线文件新执行；普通API回归仍属于本次Fast，不另跑专项HTTP或PG。
+- 实际新执行：**Backend1008 PASS／AI Service纯离线360 PASS**，无失败/错误/跳过。本地Python3.14.0；Backend退出0、线程0、275个固定纯C1/SQLite/import子进程退出及通信确认，retained=false。仅外部任务目录写证据，未修改项目源码或激活真实C3/BM-01 provisioning。
+- Ruff/format：Backend195／AI30文件通过；B43／Dialogue47纯mock自检通过；脚本Alembic heads为c296a4e8d102单一head，无DB连接。保留32条警告：Starlette/httpx弃用1、Memory测试fixture循环表排序31；不为消警告顺便改实现。
+- [73项验收总对账](../05_开发阶段记录/Part9.6-C2_D01-D73_Acceptance-Reconciliation_2026-10-21.md)与[回归验收证据](../05_开发阶段记录/Part9.6-C2_Full-Regression-Acceptance-Evidence_2026-10-21.json)逐项记录代码、测试和实际执行/静态证明；尚待新增独立总审，不标73项全部PASS。D55依批准边界采用静态防护证明＋既有实际marker拒绝；D60保留历史同型UNKNOWN范围，不由新增P03关闭推定全历史已整改。
+- 提交范围拆分：本地1008项中C3/BM-01合成278项不提交（18＋128＋132）；拟提交主线新执行730＋复用C2 HTTP48覆盖778项，不冒称远程已报778。当前49路径候选（实施36／文档13），三份混合文档仅选6个C2差异块，12个既有C3差异块排除；外部patch只读检查通过，尚未暂存。
+- 复用已清理的PG16.15新run651797b3（迁移4／运行27／其中竞争16）及历史HTTP48/6。1008＋48、360＋6为分日期证据覆盖，不是此次单次Fast1056/AI366新执行；也不拿旧65＋2冒充最新全量。
+- **D61普通PG在新head的完整回归、D70未来exact C2 commit的B/Dialogue等远程job仍待执行**。未创建新commit或触发远程CI，C1 seal c882旧CI不替代。下一步为精确候选及混合文档hunk审计，再分别批准暂存、commit、push，按exact SHA等待CI；暂不封板。
+- 项目既有代码、测试、workflow、Migration、AGENTS及C3/BM-01保持；原报告/失败/复审不回填。暂存区空、16历史删除unstaged、ad未读/untracked、.env.test未读/ignored。本轮无Git写操作，不操作真实PG/Docker/迁移或旧UNKNOWN资源；真实Provider/语音/个人资料、资料集、多来源、C4/C6及生产限制保留。
+
+## 2026-10-20 — 9.6-C2最小补验、SUP-IR-01关闭及新PG证据收尾（历史快照）
+
+- 用户批准的最小补验V1.1限定三个项目文件及现有外部PG脚本；S01–S09离线补验，P01五恢复边界、P02两来源恢复、P03三真实竞争。原17项运行/13项竞争保留，固定清单更新为27项/其中16竞争/迁移4，未改业务、迁移或通用平台。
+- 离线主回归65、末轮差集2 PASS，去重66节点；CI脚本Backend工作目录47项mock自检及Ruff/format通过。原首轮造数失败、旧静默假设失败仍保留；不将65＋2改记为PG生命周期修复后的重跑，不声称最新完整Fast/AI Service已通过。
+- 独立实现复审初判FAIL：SUP-IR-01 Medium指向新增P03两个Session未强引用登记且UNKNOWN时自动close，是测试资源管理问题，不据此认定业务权限漏洞。用户批准仅修复两处：登记至guard.resources，先guard.check再close，UNKNOWN保留，不使用会误判存活线程的finish。原审查人定向静态复审PASS/CLOSED；PG文件新SHA256为6126c6929e4850122830d8f7afefcb58f3f8493099a43bc20d476aa31c1e0ec6，旧FAIL和修复前哈希保留。
+- 随后获专项执行/HBA授权，新run `651797b3-a319-44d9-ac7a-5bef75d88b83` 在PG16.15实际完成**迁移4／运行27（含竞争16）PASS**，零跳过；fresh upgrade、前后current/check通过。Manager与受限Runner分离，34份回执、56个控制进程退出及EOF确认，库/角色名称及OID/会话/本次HBA规则清理核验通过，HBA原文哈希一致。旧UNKNOWN未触碰，无FORCE/任意kill或容器生命周期操作。
+- 运行时361项输入锁匹配；执行前仅按审查哈希更新四份补验文件与三份先前入口文档，旧锁和七条差异有审计。本轮文档同步不回写该历史执行快照。
+- 本轮Documentation Only新增[补验对账](../05_开发阶段记录/Part9.6-C2_Minimal-Supplement-Reconciliation_Report_2026-10-20.md)及[脱敏证据JSON](../05_开发阶段记录/Part9.6-C2_Minimal-Supplement-Evidence_2026-10-20.json)，同步README/路线图/本日志。前次17／13报告、合同、失败与审查历史均保留原文；历史HTTP48/6不重复执行。
+- 状态：**LOCAL MINIMAL SUPPLEMENT PASS / CLEANUP CONFIRMED / NOT SEALED**。最新完整回归、D01–D73总对账、exact新C2远程CI及Git闭环仍待完成。真实Provider/语音/个人资料、资料集、多来源、C3激活/C4/C6、生产、BM-01及旧UNKNOWN限制不变。
+- 本文档任务未运行测试、HTTP、PG、Docker或迁移，未改源码、配置或Git；16历史删除仍unstaged、ad untracked且未读、.env.test ignored且未读，AGENTS及C3/BM-01既有内容保持。暂存、提交、推送仍须分别授权，暂不封板。
+
+## 2026-10-20 — 9.6-C2单用例复审、PG专项通过与文档收尾（前次专项历史）
+
+- 用户授权：复审当前单用例修正→隔离PG专项→证据对账与文档收尾；不扩建启动平台，不重复HTTP，不授权Git写入或封板。
+- `test_parent_lock_sequence` 独立只读定向复审PASS；固定PID与事务连接，核验holder阻塞者，线程结果/脱敏异常回传及有界join/UNKNOWN保留。5/3/10秒与成功写入/消息序号断言保持；Ruff/format PASS。
+- 新唯一临时库PG16.15迁移4、运行17（其中竞争13）全部PASS，零失败/错误/跳过；fresh upgrade、前后current/check PASS，精确head c296a4e8d102。Manager和受限Runner分离，运行后清理核验库/角色/会话均不存在，HBA逐字节恢复。
+- 沿用2026-10-19 Backend合成HTTP48／AI Service ASGI6 PASS，本轮未重跑HTTP或全量Fast/AI Service。旧失败/诊断报告保留，不回填历史通过，不触碰旧UNKNOWN。
+- 新增[专项对账报告](../05_开发阶段记录/Part9.6-C2_Specialist-Validation-Reconciliation_Report_2026-10-20.md)与[脱敏证据JSON](../05_开发阶段记录/Part9.6-C2_Specialist-Validation-Evidence_2026-10-20.json)，同步README/路线图/本日志。本轮未额外修改业务、迁移、workflow或AGENTS；保留C3/BM-01和既有工作区内容、16历史删除、ad与ignored .env.test。无暂存/提交/推送。
+- 状态：**本地专项证据闭环，C2 NOT SEALED；完整D01–D73封板对账、exact C2远程CI和Git闭环待完成**。真实语音/Provider/个人资料、资料集、多来源、C3激活/C4/C6、生产及旧UNKNOWN/BM-01限制不变。
+- 下一门禁：本轮修正及文档差集审查、完整合同证据对账与精确候选审计。不得由本次专项PASS直接宣布整个C2完成或开始下一功能阶段。
+
+## 2026-10-16 — Session合成文字接入合同及独立审查归档（历史快照）
+
+- 用户确认下一工作包范围A：当前Session合成文字接入，暂名9.6-C2。本次只归档合同与审查，不批准实施。
+- 状态：**合同独立静态审查及定向修订闭环PASS；V0.4及35路径实施待用户批准，Implementation NOT STARTED**。验收D01–D73全部NOT RUN。
+- 补齐Checkpoint逐字段保存/重建/敏感隔离、Backend停止fence与故障同步、原文+durable事件事务、父子命令协调及完整约束/迁移/CI范围。原B CI精确head与B fixture维护纳入35路径，B45/竞争11和Manager/Runner门禁不放宽。
+- 独立初审确认6项问题，V0.3发现父/子同时preparing直接回归，最终V0.4均在定向静态范围关闭，共7项。三位审查人只读核对合同及实际源码，未运行测试/HTTP/PG/Docker/网络，旧FAIL和各版hash历史保留。
+- [V0.4合同](../04_AI设计/Part9.6-C2_Session-Text-Integration_Implementation-Contract_Draft_V0.4.md)原始字节保真，SHA256 `6589c552f896e40f47a789a7fdae63f2bc91ef18485ae04e75c6aa462918a68c`；[独立审查](../05_开发阶段记录/Part9.6-C2_Independent-Contract-Review_Report_2026-10-16.md)仅整理归档metadata和内部链接；[审查元数据](../05_开发阶段记录/Part9.6-C2_Contract-Review-Evidence_2026-10-16.json)记录review范围/关闭/候选清单。
+- 前阶段C1封板文档commit `c8824b3c2c1d7c9ae6d633461787431166cd7a07`已推送，exact [Backend CI38863558414](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38863558414) completed/success。Backend CI不包含AI Service C1；本地20/203/350是既有记录，本轮未重跑。下方旧“文档Git待完成”仍为当时快照。
+- 真实Provider/语音/个人资料、资料集、多来源、C4/C6、生产、旧UNKNOWN及BM-01限制继续保留。未改runtime/tests/workflow/Migration/配置/数据库，未运行验证或Git写操作；AGENTS、C3/BM-01、16历史删除、ad及ignored .env.test保持，混合文档按hunk排除。
+- 下一门禁为实施批准；文档暂存/提交/推送、HTTP/ASGI及隔离PG16.15执行仍须对应专项授权。
+
+## 2026-10-16 — 9.6-C1最终对账通过与Final Seal文档准备（历史快照）
 
 - 状态：**合成离线验收闭环通过；Final Seal文档已准备，文档Git闭环待完成**。实施提交`6825be4e01345b1992b08f90f864a54fc0fef7e3`已普通推送；exact [Backend CI 38796788780](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/38796788780) completed/success。推送时本地/实时远端一致，0/0。
 - 本次只读对账确认C01–C58完整、11文件工作区/提交/最终验收哈希一致，原始XML哈希和完整节点集合一致。三项修复及C52/C54已有定向静态关闭意见；未发现阻塞C1合成离线封板的证据缺口，不重复测试。

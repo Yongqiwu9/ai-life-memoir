@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class InterviewMessage(Base):
     __tablename__ = "interview_messages"
     __table_args__ = (
+        UniqueConstraint("session_id", "id", name="uq_dialogue_message_scope"),
         UniqueConstraint("session_id", "sequence", name="uq_interview_messages_session_sequence"),
     )
 

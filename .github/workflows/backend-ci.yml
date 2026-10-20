@@ -40,9 +40,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ".[dev]"
       - name: Ruff
-        run: python -m ruff check --config pyproject.toml app tests alembic test_support ../../scripts/ci/run_memory_workflow_postgres.py
+        run: python -m ruff check --config pyproject.toml app tests alembic test_support ../../scripts/ci/run_memory_workflow_postgres.py ../../scripts/ci/run_dialogue_postgres.py
       - name: Ruff format
-        run: python -m ruff format --config pyproject.toml --check app tests alembic test_support ../../scripts/ci/run_memory_workflow_postgres.py
+        run: python -m ruff format --config pyproject.toml --check app tests alembic test_support ../../scripts/ci/run_memory_workflow_postgres.py ../../scripts/ci/run_dialogue_postgres.py
       - name: SQLite fast tests
         run: python -m pytest -m "not integration"
       - name: Alembic heads
@@ -54,7 +54,7 @@ jobs:
       - name: Alembic check
         run: python -m alembic check
       - name: PostgreSQL integration tests
-        run: python -m pytest -m integration --ignore=tests/integration/test_memory_workflow.py
+        run: python -m pytest -m integration --ignore=tests/integration/test_memory_workflow.py --ignore=tests/integration/test_dialogue.py --ignore=tests/integration/test_dialogue_migration.py
       - name: Post-integration Alembic current
         run: python -m alembic current
       - name: Post-integration Alembic check

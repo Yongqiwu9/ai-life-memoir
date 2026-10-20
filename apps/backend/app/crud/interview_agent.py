@@ -154,3 +154,11 @@ def add_flush(db: Session, record):
     db.add(record)
     db.flush()
     return record
+
+
+def get_integration_profile(db: Session, session_id: UUID):
+    return db.scalar(
+        select(InterviewAgentState.integration_profile).where(
+            InterviewAgentState.session_id == session_id
+        )
+    )

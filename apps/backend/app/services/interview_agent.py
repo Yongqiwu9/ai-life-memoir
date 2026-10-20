@@ -52,6 +52,8 @@ def _owned(db, user_id, session_id, *, lock=False):
     record = crud.owned_session(db, user_id, session_id, lock=lock)
     if record is None:
         raise _error("NOT_FOUND")
+    if crud.get_integration_profile(db, session_id) is not None:
+        raise _error("AGENT_STATE_CONFLICT")
     return record
 
 

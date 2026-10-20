@@ -27,8 +27,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "apps/backend"
 B_FILE = "tests/integration/test_memory_workflow.py"
-HEAD = "b196f0d47a21"
-PARENT = "a196e4c72b08"
+HEAD = "c296a4e8d102"
+PARENT = "b196f0d47a21"
+B_REVISION = "b196f0d47a21"
+B_PARENT = "a196e4c72b08"
 BOOTSTRAP = "ci_b_bootstrap"
 JOB = "memory-workflow-postgres"
 DOCKER = "/usr/bin/docker"
@@ -913,6 +915,7 @@ class Manager:
                 scripts.get_revision(HEAD).down_revision == PARENT,
                 "MigrationParentMismatch",
             )
+            require(scripts.get_revision(B_REVISION).down_revision == B_PARENT, "BAncestryMismatch")
             self.record["source_hashes"] = {
                 str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
                 for path in (
@@ -920,6 +923,7 @@ class Manager:
                     ROOT / ".github/workflows/backend-ci.yml",
                     BACKEND / B_FILE,
                     BACKEND / "alembic/versions/b196f0d47a21_memory_candidate_revision_review.py",
+                    BACKEND / "alembic/versions/c296a4e8d102_session_text_dialogue.py",
                 )
             }
             self.begin_stage("allocation", 60)

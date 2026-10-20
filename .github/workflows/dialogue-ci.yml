@@ -1,0 +1,79 @@
+name: Dialogue CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ai-service:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: services/ai-service
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install synthetic test dependencies
+        run: python -m pip install ".[dev]"
+      - name: AI Service full synthetic suite including original C1
+        run: python -m pytest -q -p no:cacheprovider
+
+  dialogue-postgres:
+    name: Dialogue PostgreSQL 16.15
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: apps/backend
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: ci_d_bootstrap
+          POSTGRES_PASSWORD: ci-d-bootstrap-synthetic-ci-only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd "pg_isready -U ci_d_bootstrap -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev]"
+      - name: Dialogue CI script offline contract checks
+        run: python -I -B ../../scripts/ci/run_dialogue_postgres.py --self-check
+      - name: Dialogue Manager allocation, migration, Runner tests and verified cleanup
+        env:
+          CI_D_SERVICE_ID: ${{ job.services.postgres.id }}
+          CI_D_PORT: ${{ job.services.postgres.ports[5432] }}
+          CI_D_BOOTSTRAP_PASSWORD: ci-d-bootstrap-synthetic-ci-only
+        run: python -I -B ../../scripts/ci/run_dialogue_postgres.py --ci-manager
+      - name: Upload sanitized dialogue validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dialogue-postgres-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/dialogue-postgres-${{ github.run_id }}-${{ github.run_attempt }}/manifest.json
+            ${{ runner.temp }}/dialogue-postgres-${{ github.run_id }}-${{ github.run_attempt }}/summary.json
+            ${{ runner.temp }}/dialogue-postgres-${{ github.run_id }}-${{ github.run_attempt }}/dialogue-postgres.xml
+            ${{ runner.temp }}/dialogue-postgres-${{ github.run_id }}-${{ github.run_attempt }}/dialogue-migration.xml

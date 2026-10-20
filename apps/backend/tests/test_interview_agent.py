@@ -1015,8 +1015,80 @@ def test_migration_source_static_contract_only():
     assert assignments == {"revision": "a196e4c72b08", "down_revision": "f3a96b10d207"}
     assert "question_text_normalized" in source and "output_scope_id" in source
     assert "interview-agent.v2" in source and "downgrade" in source
-    assert len(InterviewAgentState.__table__.columns) == 10
-    assert len(InterviewAgentTurn.__table__.columns) == 29
+    assert set(InterviewAgentState.__table__.columns.keys()) == {
+        # Legacy v1/v2 fields remain complete.
+        "session_id",
+        "contract_version",
+        "status",
+        "version",
+        "generation_epoch",
+        "current_question_message_id",
+        "last_consumed_answer_id",
+        "policy_version",
+        "created_at",
+        "updated_at",
+    } | {
+        # Exact approved C2 additions; unexpected columns must fail.
+        "integration_profile",
+        "persistence_version",
+        "stop_fence",
+        "last_applied_event_seq",
+        "next_command_order",
+        "checkpoint_status",
+        "effective_mode",
+        "current_context_revision",
+        "clock_origin_at",
+        "active_command_id",
+    }
+    assert set(InterviewAgentTurn.__table__.columns.keys()) == {
+        # Legacy v1/v2 fields remain complete.
+        "id",
+        "session_id",
+        "actor_user_id",
+        "idempotency_key",
+        "contract_version",
+        "action",
+        "request_fingerprint",
+        "reserved_version",
+        "reserved_epoch",
+        "execution_status",
+        "context_present",
+        "context_message_id",
+        "context_scope_id",
+        "asked_question_message_ids",
+        "provider_id",
+        "input_answer_id",
+        "output_message_id",
+        "output_scope_id",
+        "question_key",
+        "question_text_normalized",
+        "result_kind",
+        "result_state_contract_version",
+        "resulting_version",
+        "resulting_status",
+        "failure_code",
+        "discard_reason",
+        "created_at",
+        "updated_at",
+        "finished_at",
+    } | {
+        # Exact approved C2 additions; unexpected columns must fail.
+        "integration_profile",
+        "command_order",
+        "event_id",
+        "event_kind",
+        "command_payload",
+        "reserved_event_seq",
+        "applied_event_seq",
+        "reserved_persistence_version",
+        "reserved_stop_fence",
+        "fingerprint_key_id",
+        "result_metadata",
+        "parent_turn_id",
+        "internal_reason",
+        "event_envelope",
+        "transition_attempts",
+    }
 
 
 def test_end_does_not_complete_interview_and_legacy_end_replays(records):

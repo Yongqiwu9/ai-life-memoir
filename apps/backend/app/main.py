@@ -6,6 +6,7 @@ from app.api.v1 import (
     audios,
     auth,
     collaboration,
+    dialogue,
     families,
     family_members,
     identity_verifications,
@@ -42,6 +43,7 @@ app = FastAPI(
 register_exception_handlers(app)
 app.add_middleware(MemoryPrivacyMiddleware, api_prefix=settings.API_V1_PREFIX)
 
+app.include_router(dialogue.router, prefix=settings.API_V1_PREFIX)
 app.include_router(memory_workflow.router, prefix=settings.API_V1_PREFIX)
 app.include_router(memories.router, prefix=settings.API_V1_PREFIX)
 app.include_router(memoirs.router, prefix=settings.API_V1_PREFIX)
