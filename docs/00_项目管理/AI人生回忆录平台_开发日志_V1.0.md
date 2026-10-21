@@ -1,6 +1,17 @@
 # AI人生回忆录平台_开发日志_V1.0
 
-## 2026-10-21 — 9.6-C2最新差集回归与D01–D73总对账（当前）
+## 2026-10-21 — 9.6-C2推送、远程CI闭环与Final Seal文档准备（当前）
+
+- 用户分别批准49路径精确暂存、Staged Audit、commit及push；提交`273cb6b282b39b2e6b060984386f65a816ef0cc6`，message `feat(dialogue): integrate synthetic session text runtime`，parent c8824b3。新增32/修改17，+21813/-37；49份提交blob与候选哈希一致，三份混合文档只纳入6个C2差异块，排除12个既有C3块。
+- 首次push因GitHub443连接失败；用户“继续”后先核对实时远端仍为父提交，再普通push成功。推送后实时远端和本地均273cb6b，ahead/behind0/0。无force/amend/额外commit。本轮文档准备时Git HTTPS再超时，改用只读GitHub API确认master exact，不隐瞒网络失败。
+- exact [Backend CI39567318542](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/39567318542)及[Dialogue CI39567318350](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/39567318350)全部completed/success；四job成功。远程Fast778／普通PG48／B45（竞争11）／Dialogue迁移4及运行27（竞争16）／AI Service366 PASS，Ruff/format、单head及fresh/current/check和集成后current/check通过。
+- 两专项实际PG16.15，manifest均CLEANED、cleanup verified、database_absent/roles_absent=true；B5项/Dialogue14项source_hashes与exact提交匹配，B9份/Dialogue10份进程回执及JUnit节点已核对，竞争零跳过。不是本地旧UNKNOWN清理授权。
+- D61普通PG及D70新head双专项实际执行缺口已补足；D01–D73在[最终对账](../05_开发阶段记录/Part9.6-C2_Final-Seal-Reconciliation_Report_2026-10-21.md)和[最终证据JSON](../05_开发阶段记录/Part9.6-C2_Final-Seal-CI-Evidence_2026-10-21.json)逐项关联。D55静态证明、D60历史UNKNOWN、D65/D72/D73合成故障注入范围保留，不新增独立总审结论。
+- 本地1008＝主线730＋排除C3/BM-01的278；主线730＋复用HTTP48与远程实际778对应，AI纯360＋复用ASGI6与远程实际366对应。不累计本地/远程测试数；原32条Fast、11条普通PG及1条AI warning保留。
+- **实施及约定验证证据闭环通过；Final Seal文档已准备，文档审计/Git闭环待完成**。本轮只新增两份封板资料、同步README/路线图/日志；原报告哈希保留，不改运行时/测试/workflow/Migration/AGENTS，不重跑测试或本地PG/Docker，无暂存/提交/推送。封板文档自身尚无commit/exact CI，不标正式Final Seal CI Passed。
+- 16历史删除仍unstaged、ad未读/untracked、.env.test未读/ignored，C3/BM-01既有内容不变。下一步为五份文档只读审计，再分别批准精确hunk暂存/commit/push及文档exact CI；不启动下一阶段。真实Provider/语音/个人资料、日记/资料集/多来源、C3激活/C4/C6、生产及旧UNKNOWN/BM-01限制不变，NOT PRODUCTION READY。
+
+## 2026-10-21 — 9.6-C2最新差集回归与D01–D73总对账（历史快照）
 
 - 用户要求推进最新完整回归、D01–D73总对账、远程CI和Git闭环。按此前不重复专项HTTP的边界，执行前声明复用代码未变化的C2 HTTP48／AI ASGI6，其余全部Backend顶层Fast及AI纯离线文件新执行；普通API回归仍属于本次Fast，不另跑专项HTTP或PG。
 - 实际新执行：**Backend1008 PASS／AI Service纯离线360 PASS**，无失败/错误/跳过。本地Python3.14.0；Backend退出0、线程0、275个固定纯C1/SQLite/import子进程退出及通信确认，retained=false。仅外部任务目录写证据，未修改项目源码或激活真实C3/BM-01 provisioning。

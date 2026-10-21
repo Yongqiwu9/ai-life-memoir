@@ -4,6 +4,10 @@
 
 ## 当前阶段
 
+**当前阶段（2026-10-21）**：9.6-C2当前Session合成文字Backend接入已提交并推送，**实施及约定验证证据闭环通过；Final Seal文档已准备，文档审计与Git闭环待完成**。实施提交`273cb6b282b39b2e6b060984386f65a816ef0cc6`的[Backend CI39567318542](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/39567318542)及[Dialogue CI39567318350](https://github.com/Yongqiwu9/ai-life-memoir/actions/runs/39567318350)均completed/success：Fast778、普通PG48、B45/竞争11、Dialogue迁移4/运行27/竞争16、AI Service366通过，专项cleanup verified，Ruff/format及Alembic前后检查通过。D61/D70实际执行门禁满足；D55静态证明和D60历史UNKNOWN边界继续保留。本次为证据对账，不冒称新增独立总审。详见[最终对账](docs/05_开发阶段记录/Part9.6-C2_Final-Seal-Reconciliation_Report_2026-10-21.md)及[CI证据](docs/05_开发阶段记录/Part9.6-C2_Final-Seal-CI-Evidence_2026-10-21.json)。封板文档尚无commit/exact CI，不自动标记正式封板；真实Provider/语音/个人资料、资料集/多来源、C3激活/C4/C6、生产及旧UNKNOWN/BM-01限制不变。**DEVELOPMENT SNAPSHOT ONLY / NOT PRODUCTION READY**。
+
+### 2026-10-21 提交前回归历史快照
+
 **当前阶段（2026-10-21）**：9.6-C2当前Session合成文字Backend接入及最小补验已写入，**最新差集回归Backend1008／AI Service纯离线360 PASS**；Ruff/format、B43／Dialogue47纯mock自检通过。1008中278项C3/BM-01合成测试不纳入提交，拟提交主线新执行730项。复用未变化的2026-10-19 C2 HTTP48／AI ASGI6及2026-10-20 PG16.15迁移4／运行27（含竞争16）与清理证据，不冒称此次全部重跑。D01–D73已逐项关联代码、测试和执行/静态证据，尚未经过新增独立总审；**D61普通PG及D70 exact新C2远程job仍待实际执行，NOT SEALED**。详见[73项总对账](docs/05_开发阶段记录/Part9.6-C2_D01-D73_Acceptance-Reconciliation_2026-10-21.md)及[回归验收证据](docs/05_开发阶段记录/Part9.6-C2_Full-Regression-Acceptance-Evidence_2026-10-21.json)。[前次最小补验报告](docs/05_开发阶段记录/Part9.6-C2_Minimal-Supplement-Reconciliation_Report_2026-10-20.md)、17／13报告、初审/复审和失败历史保持原文。暂存、commit、push尚未执行，待精确候选/hunk审计及分别批准；真实Provider/语音/个人资料、资料集、多来源、C3激活/C4/C6、生产、旧UNKNOWN/BM-01限制不变。
 
 ### 2026-10-16 合同归档历史快照
@@ -30,11 +34,11 @@
 | 9.6-A | Provider Extension Implementation Completed / COMMITTED LOCALLY；HTTP / PostgreSQL NOT VERIFIED；Real Provider NOT IMPLEMENTED |
 | 9.6-B | Completed / Sealed（约定范围）；57项对账归档，E-01 B范围证据CLOSED；封板文档exact 0e39a39 / CI38691707005 success，B45／竞争11通过 |
 | 9.6-C / C1 | Completed / Sealed（合成离线范围）；seal c8824b3及exact Backend CI38863558414通过；本地20／203／350证据范围不扩大 |
-| 9.6-C 后续（暂名C2） | 最新差集Backend1008／AI纯360 PASS；73项证据已关联待总审；复用HTTP48/6、PG4/27（竞争16）；普通PG/exact远程CI/Git待完成，NOT SEALED |
+| 9.6-C 后续（暂名C2） | 实施273cb6b已推送；exact双workflow成功：Fast778/普通PG48/B45/Dialogue4及27/AI366；D61/D70执行满足，Final Seal文档审计/Git待完成，不提前正式封板 |
 
 > 2026-10-16范围计划历史快照：9.6-B保持既有约定范围封板。新工作包候选35路径（22新增／13修改）包含原B CI脚本与B fixture的精确head维护，保留B45／竞争11和Manager/Runner门禁，不扩建通用平台。下一步为用户接受最终合同及实施范围；文档Git、实施、HTTP/ASGI、隔离PG16.15、提交与推送按相应授权进行。真实语音/STT/TTS、Provider、真实个人资料、Backend新接入执行、C4/C6、生产及旧UNKNOWN限制保留；C3/BM-01不变。
 
-当前下一步为验收/文档与精确提交候选审计；按分别批准完成暂存、commit、push，再检查新exact commit的普通PG、B及Dialogue/AI Service远程job。D61/D70未满足前不封板；不扩建平台，不重复已充分通过的专项HTTP/PG。
+当前下一步为五份Final Seal文档的只读审计，再分别批准精确hunk暂存、commit、push并检查封板文档exact CI；实施提交D61/D70执行门禁已满足，不重复已充分通过的测试，不启动下一阶段。
 
 Part 9.5 完成不代表 Audio upload、Object Storage、STT Provider 或 AI pipeline 已完成。C2A 已实现邀请、Membership 与协作管理权限基础；C2B 已完成 Participant 身份关系、本人确认及最小本人权利入口，并在 PostgreSQL 16.15 上通过 remediation commit 对应的 Backend CI。既有 Family 内容、FamilyMember、Interview、Session、Audio、Transcript、Segment、Message API 仍为 Owner-only。9.6-B 已有离线 Candidate/Revision/审批 profile；完整生产 Consent、C3 来源链路、C5 Artifact 审批接线、删除与净化仍未实现。
 
